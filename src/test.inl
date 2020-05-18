@@ -31,10 +31,20 @@
 #define TEST_INL_
 
 #include <iostream>
+#include <medusa/models/phi_s/PhisAngularDist.h>
+#include <medusa/models/phi_s/PhisTimeDist.h>
+#include <medusa/models/phi_s/PhisN.h>
 
 int main(int argv, char** argc)
 {
-    std::cout << "Hello world" << std::endl;
+
+    // test compilation
+    medusa::PhisAngularDist<1>   test_angular;
+    medusa::PhisTimeDist<1, false, double> test_time(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    medusa::PhisN<1> test_N(0.0, 0.0, 0.0, 0.0);
+    
+    std::cout << test_angular(0.3, 0.2, 0.4) << std::endl;
+    
     return 0;
 }
 
