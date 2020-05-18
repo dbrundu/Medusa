@@ -55,7 +55,6 @@ namespace medusa {
 
 namespace detail {
 
-    using namespace hydra::math_constants;   
     
     struct _type_A{};
     struct _type_B{};
@@ -158,13 +157,13 @@ namespace detail {
 
 
     
-} // namespace medusa:detail
+} // namespace medusa::detail
 
 
 }  // namespace medusa
 
 
 
-#endif /* PHIS_ANGULAR_FUNCTIONS_H_ */
+#endif /* PHIS_TIME_FUNCTIONS_H_ */
         
 

@@ -69,7 +69,7 @@ namespace detail {
     PHIS_ANGULAR_FUNCTION(9, 2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 ) )
     
     
-} // namespace medusa:detail
+} // namespace medusa::detail
 
 
 }  // namespace medusa
