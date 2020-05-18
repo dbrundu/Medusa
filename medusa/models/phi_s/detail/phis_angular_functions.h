@@ -30,7 +30,9 @@
 
 
 #define PHIS_ANGULAR_FUNCTION(N, formula)\
-template<> inline double phis_angular_functions<N>(double const& theta_h, double const& theta_l, double const& phi){\
+template<>\
+__hydra_dual__ \
+inline double phis_angular_functions<N>(double const& theta_h, double const& theta_l, double const& phi){\
 \
 	return formula;\
 }\
