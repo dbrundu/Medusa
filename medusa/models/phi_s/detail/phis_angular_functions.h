@@ -1,6 +1,7 @@
 /*----------------------------------------------------------------------------
  *
- *   Copyright (C) 2020 Davide Brundu, Antonio Augusto Alves Junior et al.
+ *   Copyright (C) 2020 Davide Brundu, Antonio Augusto Alves Junior,
+ *                      Piera Muzzetto et al.
  *
  *   This file is part of Medusa Library.
  *
