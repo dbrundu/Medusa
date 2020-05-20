@@ -79,14 +79,31 @@ public:
                          phi_0,    phi_par,    phi_perp,    phi_S, 
                          lambda_0, lambda_par, lambda_perp, lambda_S, 
                          delta_0,  delta_par,  delta_perp,  delta_S })
-        {}
+    {}
 
 
+
+    // ctor with array of hydra::Parameter
+    // the user has to respect the parameters order as the main ctor
+    explicit PhisTimeDist( const hydra::Parameter (&Hs)[15] ):
+    ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
+                     Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14] }
+    {}
+    
+    
+    // ctor with array of double
+    // the user has to respect the parameters order as the main ctor
+    explicit PhisTimeDist( const double (&Hs)[15] ):
+    ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
+                     Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14] }
+    {}
+    
+    
 
     __hydra_dual__
     PhisTimeDist( PhisTimeDist<N, B0bar, ArgType> const& other):
-        ThisBaseFunctor(other)
-        {}
+    ThisBaseFunctor(other)
+    {}
 
 
 
@@ -100,7 +117,7 @@ public:
 
 
     __hydra_dual__ 
-    inline double Evaluate( ArgType x )  const  {
+    inline double Evaluate( ArgType const& x )  const  {
     
         const double parameters[12] = {_par[3],  _par[4],  _par[5],  _par[6], 
                                        _par[7],  _par[8],  _par[9],  _par[10], 

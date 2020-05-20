@@ -73,6 +73,20 @@ public:
     PhisN( Param const& A_0,  Param const& A_par,  Param const& A_perp,  Param const& A_S ):
     ThisBaseFunctor({A_0,  A_par,  A_perp,  A_S})
     {}
+    
+    
+    // ctor with array of hydra::Parameter
+    // the user has to respect the parameters order as the main ctor
+    explicit PhisN( const hydra::Parameter (&As)[4] ):
+    ThisBaseFunctor{ As[0], As[1], As[2], As[3] }
+    {}
+    
+    
+    // ctor with array of double
+    // the user has to respect the parameters order as the main ctor
+    explicit PhisN( const double (&As)[4] ):
+    ThisBaseFunctor{ As[0], As[1], As[2], As[3] }
+    {}
 
 
     __hydra_dual__

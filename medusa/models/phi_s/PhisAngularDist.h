@@ -55,10 +55,16 @@
 namespace medusa {
 
 
-template<size_t N, typename T = typename std::enable_if< N < 10, void>::type >
-class PhisAngularDist: public hydra::BaseFunctor< PhisAngularDist<N>, double(double, double, double), 0>
+template<size_t N, 
+         typename ArgType1, 
+         typename ArgType2, 
+         typename ArgType3 , 
+         typename Signature=double(ArgType1, ArgType2, ArgType3), 
+         typename T = typename std::enable_if< N < 10, void>::type >
+class PhisAngularDist: public hydra::BaseFunctor< PhisAngularDist<N, ArgType1, ArgType2, ArgType3>, Signature, 0>
 {
 
+    using ThisBaseFunctor = hydra::BaseFunctor< PhisAngularDist<N, ArgType1, ArgType2, ArgType3>, Signature, 0>;
 
 public:
 
@@ -66,27 +72,26 @@ public:
 
 
     __hydra_dual__
-    PhisAngularDist( PhisAngularDist<N> const& other):
-    hydra::BaseFunctor<PhisAngularDist<N>,  double(double, double, double), 0>(other)
+    PhisAngularDist( PhisAngularDist<N, ArgType1, ArgType2, ArgType3> const& other):
+    ThisBaseFunctor(other)
     {}
 
 
     __hydra_dual__
-    PhisAngularDist& operator=( PhisAngularDist<N> const& other){
+    PhisAngularDist& operator=( PhisAngularDist<N, ArgType1, ArgType2, ArgType3> const& other){
 
         if(this == &other) return *this;
-        hydra::BaseFunctor<PhisAngularDist<N>, double(double, double, double),  0>::operator=(other);
+        ThisBaseFunctor::operator=(other);
         return *this;
     }
 
 
 
     __hydra_dual__ inline
-    double Evaluate(double const& theta_h, double const& theta_l, double const& phi)  const  {
+    double Evaluate(ArgType1 const& theta_h, ArgType2 const& theta_l, ArgType3 const& phi)  const  {
 
         return detail::phis_angular_functions<N>(theta_h, theta_l, phi);
 
-        //return  CHECK_VALUE(r, "theta_h=%f theta_l=%f phi=%f r==%f", theta_h, theta_l, phi, r); 
 
     }
 

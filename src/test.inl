@@ -20,7 +20,7 @@
  *
  *---------------------------------------------------------------------------*/
 /*
- * 
+ *  test.inl
  *
  *  Created on: 07/05/2020
  *      Author: Davide Brundu
@@ -35,14 +35,32 @@
 #include <medusa/models/phi_s/PhisAngularDist.h>
 #include <medusa/models/phi_s/PhisTimeDist.h>
 #include <medusa/models/phi_s/PhisN.h>
+#include <medusa/models/D2hhmumu/D2hhmumuAngularDist.h>
+#include <medusa/models/B2Kstarmumu/KstmumuAngularDist.h>
+
+
+using namespace hydra::arguments;
+
+declarg(theta_h_type, double)
+declarg(theta_l_type, double)
+declarg(phi_type,     double)
+declarg(time_type,    double)
+
 
 int main(int argv, char** argc)
 {
 
+    double pars15[15] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    double pars4[4]   = {0.0, 0.0, 0.0, 0.0};
+    double pars8[8]   = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
     // test compilation
-    medusa::PhisAngularDist<1>   test_angular;
-    medusa::PhisTimeDist<1, false, double> test_time(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    medusa::PhisN<1> test_N(0.0, 0.0, 0.0, 0.0);
+    medusa::PhisAngularDist<1, theta_h_type, theta_l_type, phi_type>   test_angular;
+    medusa::PhisTimeDist<1, false, time_type> test_time(pars15);
+    medusa::PhisN<1> test_N(pars4);
+    medusa::KstmumuAngularDist<medusa::PWave , theta_h_type, theta_l_type, phi_type> test_angularB1(pars8);
+    medusa::KstmumuAngularDist<medusa::PSWave, theta_h_type, theta_l_type, phi_type> test_angularB2(pars15);
+    medusa::D2hhmumuAngularDist<theta_l_type, phi_type> test_angularD(pars8);
     
     std::cout << test_angular(0.3, 0.2, 0.4) << std::endl;
     
