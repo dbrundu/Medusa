@@ -56,9 +56,7 @@ namespace medusa {
 
 /*
  *  @class D2hhmumuAngularDist
- *  Declaration of the B->K*mumu angular distribution class,
- *  the two parametrizations are for P-wave contribution only
- *  or both the S- and P-wave
+ *  Definition of the D0->hhmumu angular distribution class
  */
 template<typename ArgType1, typename ArgType2, typename Signature=double(ArgType1, ArgType2)>
 class D2hhmumuAngularDist : public hydra::BaseFunctor<D2hhmumuAngularDist<ArgType1, ArgType2>, Signature, 8>
