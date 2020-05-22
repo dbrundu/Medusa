@@ -32,6 +32,7 @@
 #define TEST_INL_
 
 #include <iostream>
+#include <medusa/models/phi_s/PhisTimeRes.h>
 #include <medusa/models/phi_s/PhisAngularDist.h>
 #include <medusa/models/phi_s/PhisTimeDist.h>
 #include <medusa/models/phi_s/PhisN.h>
@@ -41,10 +42,11 @@
 
 using namespace hydra::arguments;
 
-declarg(theta_h_type, double)
-declarg(theta_l_type, double)
-declarg(phi_type,     double)
-declarg(time_type,    double)
+declarg(theta_h_type,  double)
+declarg(theta_l_type,  double)
+declarg(phi_type,      double)
+declarg(time_type,     double)
+declarg(Errtime_type,  double)
 
 
 int main(int argv, char** argc)
@@ -55,6 +57,7 @@ int main(int argv, char** argc)
     double pars8[8]   = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     // test compilation
+    medusa::PhisTimeRes<time_type, Errtime_type>   test_timeres(pars4);
     medusa::PhisAngularDist<1, theta_h_type, theta_l_type, phi_type>   test_angular;
     medusa::PhisTimeDist<1, false, time_type> test_time(pars15);
     medusa::PhisN<1> test_N(pars4);

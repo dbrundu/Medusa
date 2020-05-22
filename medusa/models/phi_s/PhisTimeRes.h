@@ -108,15 +108,15 @@ public:
     __hydra_dual__ 
     inline double Evaluate( ArgType1 const& t, ArgType2 const& dt  )  const  {
     
-
-        sigma_eff=_par[1]+_par[2]*dt+_par[3]*dt*dt;
-        return 1./(sigma_eff* ::sqrt(2*PI)) * ::exp( -0.5* ::pow((t - _par[0])/sigma_eff,2 );
+        double sigma_eff= _par[1] + _par[2]*dt + _par[3]*dt*dt;
+        return 1./(sigma_eff * ::sqrt(2*PI)) * ::exp( -0.5* ::pow( (t - _par[0])/sigma_eff, 2 ));
 
     }
 
 
 
 };
+
 
 }  // namespace medusa
 
