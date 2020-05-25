@@ -55,6 +55,18 @@
 namespace medusa {
 
 
+
+/*
+ *  @class PhisAngularDist
+ *  Funtor that provides the angular basis used in phi_s analysis
+ *  The actual implementation is inside the detail/ folder
+ *
+ *  N = index of the sum, this is the N-th component
+ *  ArgType1 = theta_h, 
+ *  ArgType2 = theta_l,
+ *  ArgType3 = phi
+ *
+ */
 template<size_t N, 
          typename ArgType1, 
          typename ArgType2, 

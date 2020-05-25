@@ -55,7 +55,16 @@
 namespace medusa {
 
 
-
+/*
+ *  @class PhisTimeRes
+ *  Effectve resolution for phi_s analysis (single gaussian)
+ *  The sigma is an effective sigma evalueated event-by-event 
+ *  from a quadratic function, using p1, p2 and p3 parameters
+ *
+ *  ArgType1 = time, 
+ *  ArgType2 = time_error
+ *
+ */
 template<typename ArgType1, typename ArgType2, typename Signature=double(ArgType1,ArgType2)>
 class PhisTimeRes: public hydra::BaseFunctor< PhisTimeRes<ArgType1, ArgType2>, Signature, 4 >
 {

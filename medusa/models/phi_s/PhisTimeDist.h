@@ -57,7 +57,16 @@
 namespace medusa {
 
 
-
+/*
+ *  @class PhisTimeDist
+ *  Funtor that provides the time dependent formula used in phi_s analysis
+ *  The actual implementation is inside the detail/ folder
+ *
+ *  N       = index of the sum, this is the N-th component
+ *  B0bar   = boolean to specify if B is B0bar
+ *  ArgType = time 
+ *
+ */
 template<size_t N, bool B0bar, typename ArgType, typename Signature=double(ArgType), typename T = typename std::enable_if< N < 10, void>::type >
 class PhisTimeDist: public hydra::BaseFunctor< PhisTimeDist<N, B0bar, ArgType>, Signature, 15>
 {

@@ -27,8 +27,8 @@
  */
 
 
-#ifndef PHISTagging_H_
-#define PHISTagging_H_
+#ifndef PHISTAGGING_H_
+#define PHISTAGGING_H_
 
 #include <cmath>
 #include <tuple>
@@ -56,7 +56,16 @@
 namespace medusa {
 
 
-
+/*
+ *  @class PhisTagging
+ *  Functor to introduce the tagging in the phi_s fitter
+ *
+ *  B0bar = boolean to specify if B is B0bar
+ *  ArgType1 = qOS, 
+ *  ArgType2 = etaOS, 
+ *  ArgType3 = qSS, 
+ *  ArgType4 = etaSS
+ */
 template<bool B0bar, typename ArgType1, typename ArgType2, typename ArgType3, typename ArgType4, typename Signature=double(ArgType1, ArgType2, ArgType3, ArgType4) >
 class PhisTagging: public hydra::BaseFunctor< PhisTagging< B0bar, ArgType1, ArgType2, ArgType3, ArgType4>, Signature, 10>
 {
@@ -127,4 +136,4 @@ public:
 }  // namespace medusa
 
 
-#endif /* PHISTagging_H_ */
+#endif /* PHISTAGGING_H_ */

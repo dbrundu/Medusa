@@ -57,6 +57,16 @@
 namespace medusa {
 
 
+/*
+ *  @class PhisN
+ *  Funtor that provides the N_k coefficients 
+ *     (that contain the A amplitudes)
+ *  
+ *  The actual implementation is inside the detail/ folder
+ *
+ *  N = index of the sum, this is the N-th component
+ *
+ */
 template<size_t N, typename T = typename std::enable_if< N < 10, void>::type >
 class PhisN: public hydra::BaseFunctor< PhisN<N>, double(double), 4>
 {
