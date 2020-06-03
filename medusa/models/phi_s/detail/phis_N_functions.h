@@ -33,7 +33,7 @@
 #define PHIS_N_FUNCTION(N, formula)\
 template<>\
 __hydra_dual__ \
-inline double phis_N_functions<N>(double const& A_0,  double const& A_par,  double const& A_perp,  double const& A_S){\
+inline double phis_N_functions<N>(double const& A_0, double const& A_perp,  double const& A_S, double const& A_par){\
 \
 	return formula;\
 }\
@@ -46,7 +46,7 @@ namespace detail {
 
 
     template<size_t N>
-    inline double phis_N_functions(double const& A_0,  double const& A_par,  double const& A_perp,  double const& A_S);
+    inline double phis_N_functions(double const& A_0, double const& A_perp,  double const& A_S, double const& A_par);
     
     
     PHIS_N_FUNCTION(0, ::pow(A_0,2) )

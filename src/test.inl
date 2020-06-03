@@ -53,6 +53,7 @@ int main(int argv, char** argc)
 {
 
     double pars15[15] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    double pars3[3]   = {0.0, 0.0, 0.0};
     double pars4[4]   = {0.0, 0.0, 0.0, 0.0};
     double pars8[8]   = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -60,7 +61,7 @@ int main(int argv, char** argc)
     medusa::PhisTimeRes<time_type, Errtime_type>   test_timeres(pars4);
     medusa::PhisAngularDist<1, theta_h_type, theta_l_type, phi_type>   test_angular;
     medusa::PhisTimeDist<1, false, time_type> test_time(pars15);
-    medusa::PhisN<1> test_N(pars4);
+    medusa::PhisN<1> test_N(pars3);
     medusa::KstmumuAngularDist<medusa::PWave , theta_h_type, theta_l_type, phi_type> test_angularB1(pars8);
     medusa::KstmumuAngularDist<medusa::PSWave, theta_h_type, theta_l_type, phi_type> test_angularB2(pars15);
     medusa::D2hhmumuAngularDist<theta_l_type, phi_type> test_angularD(pars8);
