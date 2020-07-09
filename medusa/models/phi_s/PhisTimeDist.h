@@ -62,16 +62,16 @@ namespace medusa {
  *  Funtor that provides the time dependent formula used in phi_s analysis
  *  The actual implementation is inside the detail/ folder
  *
- *  N       = index of the sum, this is the N-th component
- *  B0bar   = boolean to specify if B is B0bar
- *  ArgType = time 
+ *  N           = index of the sum, this is the N-th component
+ *  B0bar       = boolean to specify if B is B0bar
+ *  ArgTypeTime = time 
  *
  */
-template<size_t N, bool B0bar, typename ArgType, typename Signature=double(ArgType), typename T = typename std::enable_if< N < 10, void>::type >
-class PhisTimeDist: public hydra::BaseFunctor< PhisTimeDist<N, B0bar, ArgType>, Signature, 15>
+template<size_t N, bool B0bar, typename ArgTypeTime, typename Signature=double(ArgTypeTime), typename T = typename std::enable_if< N < 10, void>::type >
+class PhisTimeDist: public hydra::BaseFunctor< PhisTimeDist<N, B0bar, ArgTypeTime>, Signature, 15>
 {
     constexpr static int CPstate  =  (B0bar ? -1 : +1);
-    using ThisBaseFunctor = hydra::BaseFunctor< PhisTimeDist<N, B0bar, ArgType>, Signature, 15 >;
+    using ThisBaseFunctor = hydra::BaseFunctor< PhisTimeDist<N, B0bar, ArgTypeTime>, Signature, 15 >;
     using ThisBaseFunctor::_par;
     using Param = hydra::Parameter;
     
@@ -110,14 +110,14 @@ public:
     
 
     __hydra_dual__
-    PhisTimeDist( PhisTimeDist<N, B0bar, ArgType> const& other):
+    PhisTimeDist( PhisTimeDist<N, B0bar, ArgTypeTime> const& other):
     ThisBaseFunctor(other)
     {}
 
 
 
     __hydra_dual__
-    PhisTimeDist<N, B0bar, ArgType>& operator=( PhisTimeDist<N, B0bar, ArgType> const& other){
+    PhisTimeDist<N, B0bar, ArgTypeTime>& operator=( PhisTimeDist<N, B0bar, ArgTypeTime> const& other){
         if(this == &other) return *this;
         ThisBaseFunctor::operator=(other);
         return *this;
@@ -126,13 +126,13 @@ public:
 
 
     __hydra_dual__ 
-    inline double Evaluate( ArgType const& x )  const  {
+    inline double Evaluate( ArgTypeTime const& x )  const  {
     
         const double parameters[12] = {_par[3],  _par[4],  _par[5],  _par[6], 
                                        _par[7],  _par[8],  _par[9],  _par[10], 
                                        _par[11], _par[12], _par[13], _par[14]};
 
-        return 3./(4*PI) * ::exp( -_par[0] * x) *\
+        return 3./(4*PI) * ::exp( -(_par[0] + 0.65789) * x) *\
                           ( detail::phis_time_functions<N , detail::_type_A >(parameters) * ::cosh(0.5*x*_par[1])     +\
                             detail::phis_time_functions<N , detail::_type_B >(parameters) * ::sinh(0.5*x*_par[1])     +\
                             detail::phis_time_functions<N , detail::_type_C >(parameters) * ::cos(x*_par[2])*CPstate  +\

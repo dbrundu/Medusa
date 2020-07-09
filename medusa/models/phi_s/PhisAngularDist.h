@@ -62,21 +62,21 @@ namespace medusa {
  *  The actual implementation is inside the detail/ folder
  *
  *  N = index of the sum, this is the N-th component
- *  ArgType1 = theta_h, 
- *  ArgType2 = theta_l,
- *  ArgType3 = phi
+ *  ArgTypeThetah = theta_h, 
+ *  ArgTypeThetal = theta_l,
+ *  ArgTypePhi    = phi
  *
  */
 template<size_t N, 
-         typename ArgType1, 
-         typename ArgType2, 
-         typename ArgType3 , 
-         typename Signature=double(ArgType1, ArgType2, ArgType3), 
+         typename ArgTypeThetah, 
+         typename ArgTypeThetal, 
+         typename ArgTypePhi , 
+         typename Signature=double(ArgTypeThetah, ArgTypeThetal, ArgTypePhi), 
          typename T = typename std::enable_if< N < 10, void>::type >
-class PhisAngularDist: public hydra::BaseFunctor< PhisAngularDist<N, ArgType1, ArgType2, ArgType3>, Signature, 0>
+class PhisAngularDist: public hydra::BaseFunctor< PhisAngularDist<N, ArgTypeThetah, ArgTypeThetal, ArgTypePhi>, Signature, 0>
 {
 
-    using ThisBaseFunctor = hydra::BaseFunctor< PhisAngularDist<N, ArgType1, ArgType2, ArgType3>, Signature, 0>;
+    using ThisBaseFunctor = hydra::BaseFunctor< PhisAngularDist<N, ArgTypeThetah, ArgTypeThetal, ArgTypePhi>, Signature, 0>;
 
 public:
 
@@ -84,13 +84,13 @@ public:
 
 
     __hydra_dual__
-    PhisAngularDist( PhisAngularDist<N, ArgType1, ArgType2, ArgType3> const& other):
+    PhisAngularDist( PhisAngularDist<N, ArgTypeThetah, ArgTypeThetal, ArgTypePhi> const& other):
     ThisBaseFunctor(other)
     {}
 
 
     __hydra_dual__
-    PhisAngularDist& operator=( PhisAngularDist<N, ArgType1, ArgType2, ArgType3> const& other){
+    PhisAngularDist& operator=( PhisAngularDist<N, ArgTypeThetah, ArgTypeThetal, ArgTypePhi> const& other){
 
         if(this == &other) return *this;
         ThisBaseFunctor::operator=(other);
@@ -100,9 +100,9 @@ public:
 
 
     __hydra_dual__ inline
-    double Evaluate(ArgType1 const& theta_h, ArgType2 const& theta_l, ArgType3 const& phi)  const  {
+    double Evaluate(ArgTypeThetah const& theta_h, ArgTypeThetal const& theta_l, ArgTypePhi const& phi)  const  {
 
-        return detail::phis_angular_functions<N>(theta_h, theta_l, phi);
+        return detail::phis_angular_functions<N>((double)theta_h, (double)theta_l, (double)phi);
 
 
     }
