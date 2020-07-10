@@ -12,6 +12,7 @@ cd build
 export HYDRA_INCLUDE_DIR=<path-to-hydra>
 cmake -DHYDRA_INCLUDE_DIR=$HYDRA_INCLUDE_DIR ../
 make test_phis_JpsiKK_tbb
-./test_phis_JpsiKK_tbb -n=500000
+./test_phis_JpsiKK_tbb -n=500000 -b=1
 ```
+where n is the number of unewighted events to generate and b is a numerical boolean to perform the benchmark (1) or not (0).
 If you have also OMP you could try to compile ```test_phis_JpsiKK_omp```.
