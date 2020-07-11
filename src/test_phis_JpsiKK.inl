@@ -40,12 +40,8 @@
  * ---------------------------------
  */
 #include <iostream>
-#include <assert.h>
-#include <time.h>
-#include <vector>
-#include <array>
 #include <chrono>
-#include <typeinfo>
+
 
 /*---------------------------------
  * command line arguments
@@ -63,19 +59,9 @@
 #include <hydra/PhaseSpace.h>
 #include <hydra/Decays.h>
 #include <hydra/Function.h>
-#include <hydra/FunctorArithmetic.h>
 #include <hydra/Lambda.h>
-#include <hydra/Algorithm.h>
-#include <hydra/Tuple.h>
-#include <hydra/Vector3R.h>
-#include <hydra/Vector4R.h>
-#include <hydra/Distance.h>
-#include <hydra/multiarray.h>
 #include <hydra/multivector.h>
-#include <hydra/DenseHistogram.h>
-#include <hydra/Placeholders.h>
 #include <hydra/Random.h>
-#include <hydra/detail/Sum.h>
 #include <hydra/SeedRNG.h>
 #include <hydra/Plain.h>
 #include <hydra/Sobol.h>
@@ -125,8 +111,6 @@ declarg(theta_h_t,  double)
 declarg(theta_l_t,  double)
 declarg(chi_t,      double)
 declarg(dtime_t,    double)
-declarg(M13Sq_t,    double)
-declarg(M23Sq_t,    double)
 
 
 
@@ -140,7 +124,7 @@ int main(int argv, char** argc)
 {
 
     hydra::Print::SetLevel(hydra::WARNING);
-    
+
     size_t  nentries   = 0; // number of events to generate, to be get from command line
     bool do_benchmark  = true;
 
@@ -153,7 +137,7 @@ int main(int argv, char** argc)
                 "Number of events to generate. Default is [ 10e6 ].",
                 true, 10e6, "unsigned long");
         cmd.add(NArg);
-        
+
         TCLAP::ValueArg<bool> DoBenchmark("b", "benchmark",
                 "Choose wether to do the benchmark or not. Default is true.",
                 true, true, "bool");
@@ -175,7 +159,7 @@ int main(int argv, char** argc)
 
 
     /*----------------------------/
-    *  Constants 
+    *  Constants
     *--------------------------- */
     const double B0_mass   = 5.336688;
     const double Jpsi_mass = 3.0969;
@@ -183,72 +167,72 @@ int main(int argv, char** argc)
     const double K_mass    = 0.493677;
     const double pi_mass   = 0.13957061;
     const double mu_mass   = 0.1056583745;
-    
-    
+
+
     /*----------------------------/
-    *  Model parameters 
+    *  Model parameters
     *--------------------------- */
     const bool   B0bar      = false;
-    
+
     const double A0         = ::sqrt(0.542);
     const double Aperp      = ::sqrt(0.206);
     const double AS         = ::sqrt(0.0037);
-    
+
     const double phi0       = -0.082;
     const double phipar     = -0.043 + phi0;
     const double phiperp    = -0.074 + phi0;
     const double phiS       = 0.021 + phi0;
-    
+
     const double lambda0    = 0.955;
     const double lambdapar  = 0.978*lambda0;
     const double lambdaperp = 1.23*lambda0;
     const double lambdaS    = 1.28*lambda0;
-    
+
     const double delta0     = 0.0;
     const double deltapar   = 3.030 + delta0;
     const double deltaperp  = 2.60  + delta0;
     const double deltaS     = -0.30 + delta0;
-    
+
     const double deltagammasd = -0.0044;
     const double deltagammas  = 0.0782;
     const double deltams      = 17.713;
-    
-    std::vector<double> parameters = {A0,     Aperp,     AS,         deltagammasd, 
+
+    std::vector<double> parameters = {A0,     Aperp,     AS,         deltagammasd,
                                       deltagammas, deltams,
                                       phi0,    phipar,    phiperp,    phiS,
                                       lambda0, lambdapar, lambdaperp, lambdaS,
                                       delta0,  deltapar,  deltaperp,  deltaS};
-    
+
     auto A0_p             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001);
     auto Aperp_p          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001);
     auto AS_p             = hydra::Parameter::Create("AS" ).Value(AS).Error(0.0001);
-    
+
     auto DeltaGamma_sd_p  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd).Error(0.0001);
     auto DeltaGamma_p     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas).Error(0.0001);
     auto DeltaM_p         = hydra::Parameter::Create("DeltaM" ).Value(deltams).Error(0.0001);
-    
+
     auto phi_0_p          = hydra::Parameter::Create("phi_0").Value(phi0).Error(0.0001);
     auto phi_par_p        = hydra::Parameter::Create("phi_par" ).Value(phipar).Error(0.0001);
     auto phi_perp_p       = hydra::Parameter::Create("phi_perp").Value(phiperp).Error(0.0001);
     auto phi_S_p          = hydra::Parameter::Create("phi_S" ).Value(phiS).Error(0.0001);
-    
+
     auto lambda_0_p       = hydra::Parameter::Create("lambda_0").Value(lambda0).Error(0.0001);
     auto lambda_par_p     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar).Error(0.0001);
     auto lambda_perp_p    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp).Error(0.0001);
     auto lambda_S_p       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS).Error(0.0001);
-    
+
     auto delta_0_p        = hydra::Parameter::Create("delta_0").Value(delta0).Error(0.0001);
     auto delta_par_p      = hydra::Parameter::Create("delta_par").Value(deltapar).Error(0.0001);
     auto delta_perp_p     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp).Error(0.0001);
     auto delta_S_p        = hydra::Parameter::Create("delta_S").Value(deltaS).Error(0.0001);
-    
-    hydra::Parameter hydraparams[18] = {A0_p, Aperp_p, AS_p, 
+
+    hydra::Parameter hydraparams[18] = {A0_p, Aperp_p, AS_p,
                                         DeltaGamma_sd_p, DeltaGamma_p, DeltaM_p,
                                         phi_0_p,    phi_par_p,    phi_perp_p,    phi_S_p,
                                         lambda_0_p, lambda_par_p, lambda_perp_p, lambda_S_p,
                                         delta_0_p,  delta_par_p,  delta_perp_p,   delta_S_p};
-                  
-                  
+
+
     auto MODEL  = medusa::PhisSignalOnly< B0bar, dtime_t, theta_h_t, theta_l_t, chi_t>(hydraparams);
 
 
@@ -257,21 +241,21 @@ int main(int argv, char** argc)
     /*------------------------------------------------------/
      *  Unweighted dataset generation
      *-----------------------------------------------------*/
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::device::sys_t> dataset;
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::host::sys_t> dataset_h;
+
+    generate_dataset(hydra::device::sys, MODEL, dataset_h, nentries, 2*nentries);
+
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+    hydra::copy(dataset_h , dataset_d);
 
 
-    generate_dataset(hydra::device::sys, MODEL, dataset, nentries, 2*nentries);
 
-    
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::host::sys_t> dataset_h(dataset.size());
-    hydra::copy(dataset, dataset_h);
-    
-    
     if(do_benchmark){
-        
+
         /*------------------------------------------------------/
          *  Benchmark of Integration
          *-----------------------------------------------------*/
+
         const double min_t     = 0.0;
         const double max_t     = 20.0;
         const double min_theta = 0.0;
@@ -282,74 +266,76 @@ int main(int argv, char** argc)
 
         hydra::Plain<4,  hydra::device::sys_t, hydra::sobol<4> > Integrator( {min_t , min_theta, min_theta, min_chi},
                                                            {max_t , max_theta, max_theta, max_chi}, 1000000);
-                                                           
-                                                           
-                                                           
+
+
+
+
         double sumtime = 0.0;
-        
-        for(size_t k=0 ; k<N; ++k) 
+
+
+        for(size_t k=0 ; k<N; ++k)
         {
-            
+
             auto start = std::chrono::high_resolution_clock::now();
-            
+
             auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
-            
+
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed = end - start;
             sumtime += elapsed.count();
-            
+
 
         }
-        
+
         std::cout << "| Integration - Time (ms)                        :"<< sumtime/N   << std::endl;
 
-        
-        
+
+
         /*------------------------------------------------------/
          *  Benchmark of Evaluation + cached integration
          *-----------------------------------------------------*/
         auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
 
         sumtime = 0.0;
-       
-        for(size_t k=0 ; k<N; ++k) 
+
+        for(size_t k=0 ; k<N; ++k)
         {
-            auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset);
-            
+            auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+
             auto start = std::chrono::high_resolution_clock::now();
-            
+
             fcn(parameters);
-            
+
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed = end - start;
             sumtime += elapsed.count();
-            
+
         }
-        
+
         std::cout << "| Eval + Integration (cached) - Time (ms)        :"<< sumtime/N   << std::endl;
-        
-        
-        
+
+
+
         /*------------------------------------------------------/
          *  Benchmark of Evaluation + Integration (not cached)
          *-----------------------------------------------------*/
         sumtime = 0.0;
-       
-        for(size_t k=0 ; k<N; ++k) 
+
+        for(size_t k=0 ; k<N; ++k)
         {
-            auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset);
+            auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
             parameters[0] *= 1.01;
-            
+
             auto start = std::chrono::high_resolution_clock::now();
-            
+
             fcn(parameters);
-            
+
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed = end - start;
             sumtime += elapsed.count();
-            
+
         }
-        
+
         std::cout << "| Eval + Integration - Time (ms)                 :"<< sumtime/N   << std::endl;
 
 
@@ -357,19 +343,20 @@ int main(int argv, char** argc)
         /*------------------------------------------------------/
          *  Benchmark of cached evaluation + cached integration
          *-----------------------------------------------------*/
-        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset);
+
+        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
         fcn(parameters);
-         
+
         auto start = std::chrono::high_resolution_clock::now();
         for(size_t k=0 ; k<N; ++k)  fcn(parameters);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> elapsed = end - start;
-        
+
         std::cout << "| Eval (Cached) - Time (ms)                      :"<< elapsed.count()/N   << std::endl << std::endl;
 
     } //end benchmark
 
-    
+
     /*------------------------------------------------------/
      *  Print and plot
      *-----------------------------------------------------*/
@@ -377,42 +364,45 @@ int main(int argv, char** argc)
         std::cout <<"Dataset: {"<< dataset_h[i]  << "}"<< std::endl;
 
 
-        
+#ifdef _ROOT_AVAILABLE_
+
     TApplication *m_app = new TApplication("myapp",0,0);
- 
-            
+
+
     TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin",100, 0, 20);
     TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
     TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin",100, -1, 1);
     TH1D chidist("chidist","Chi angle;angle (rad);Candidates / bin",50, 0, 2*PI);
-        
+
     for(auto x : dataset_h){
          timedist.Fill( (double)hydra::get<0>(x) );
          thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
          thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
          chidist.Fill( (double)hydra::get<3>(x) );
     }
-    
+
     TCanvas canvas("canvas","canvas",3200,800);
     canvas.Divide(4,1);
-    
+
     canvas.cd(1);
     timedist.Draw();
-    
+
     canvas.cd(2);
     thetahdist.Draw();
-        
+
     canvas.cd(3);
     thetaldist.Draw();
-        
+
     canvas.cd(4);
     chidist.Draw();
-    
+
     canvas.SaveAs("test_phis_JpsiKK.pdf");
-        
-    
+
+
     m_app->Run();
-        
+
+#endif //_ROOT_AVAILABLE_
+
     return 0;
 }
 
@@ -430,8 +420,8 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
     const double K_mass    = 0.493677;
     const double pi_mass   = 0.13957061;
     const double mu_mass   = 0.1056583745;
-    
-    
+
+
     auto CastToVariables  = hydra::wrap_lambda(
             [] __hydra_dual__ (Jpsi jpsi, Phi phi, MuonP mup, MuonM mum, KaonP kaonp, KaonM kaonm, size_t n )
     {
@@ -439,41 +429,41 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
         hydra_thrust::uniform_real_distribution<double> uniDist(0.0, 20.0);
         engine.discard(n);
         dtime_t decay_time = uniDist(engine);
-        
+
         theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(jpsi + phi, phi,  kaonp) );
         theta_h_t theta_h    = ::acos( medusa::cos_decay_angle(jpsi + phi, jpsi, mup) );
         chi_t     chiangle   = medusa::chi_plane_angle(kaonm, kaonp, mup, mum);
 
         return hydra::make_tuple(decay_time, theta_h, theta_l, chiangle) ;
-        
+
     });
 
 
 
     hydra::Vector4R B0(B0_mass, 0.0, 0.0, 0.0);
 
-    hydra::PhaseSpace<2> B0_phsp(B0_mass, {Jpsi_mass, Phi_mass}); 
+    hydra::PhaseSpace<2> B0_phsp(B0_mass, {Jpsi_mass, Phi_mass});
 
     hydra::PhaseSpace<2> Jpsi_phsp(Jpsi_mass, {mu_mass , mu_mass});
-    
-    hydra::PhaseSpace<2> Phi_phsp(Phi_mass, {K_mass , K_mass}); 
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::device::sys_t> dataset(bunch_size);
+    hydra::PhaseSpace<2> Phi_phsp(Phi_mass, {K_mass , K_mass});
+
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , Backend > dataset(bunch_size);
 
     hydra::SeedRNG S{};
-    
-    
+
+
     auto B0Decay   = hydra::Decays< hydra::tuple<Jpsi,Phi>,
                               hydra::device::sys_t >( B0_mass, {Jpsi_mass, Phi_mass }, bunch_size);
 
     auto JpsiDecay = hydra::Decays< hydra::tuple<MuonP,MuonM>,
                               hydra::device::sys_t >(Jpsi_mass, { mu_mass , mu_mass}, bunch_size);
-                              
+
     auto PhiDecay  = hydra::Decays< hydra::tuple<KaonP,KaonM>,
                               hydra::device::sys_t >(Phi_mass, { K_mass , K_mass}, bunch_size);
 
     size_t k = 0;
-    
+
     auto start = std::chrono::high_resolution_clock::now();
 
     do {
@@ -484,25 +474,25 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
         B0_phsp.Generate(B0, B0Decay);
         Jpsi_phsp.Generate(B0Decay.GetDaugtherRange(_0), JpsiDecay);
         Phi_phsp.Generate(B0Decay.GetDaugtherRange(_1), PhiDecay);
-        
+
         auto range  = B0Decay.Meld( JpsiDecay, PhiDecay, hydra::range(0, B0Decay.size()) ) | CastToVariables;
- 
+
         hydra::copy(range, dataset);
-        
+
         auto dataset_unwgt = hydra::unweight( dataset, model);
 
-        final_dataset.insert(final_dataset.size()==0?  final_dataset.begin() : final_dataset.end(), 
+        final_dataset.insert(final_dataset.size()==0?  final_dataset.begin() : final_dataset.end(),
                              dataset_unwgt.begin(), dataset_unwgt.end());
-                             
+
         ++k;
 
     } while(final_dataset.size()<nevents );
-    
+
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
 
     final_dataset.erase(final_dataset.begin()+nevents, final_dataset.end());
-    
+
     //output
     std::cout << std::endl;
     std::cout << std::endl;
