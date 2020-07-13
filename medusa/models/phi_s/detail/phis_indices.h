@@ -22,22 +22,12 @@
 /*
  * 
  *
- *  Created on: 18/05/2020
+ *  Created on: 11/05/2020
  *      Author: Davide Brundu
  */
 
-#ifndef PHIS_N_FUNCTIONS_H_
-#define PHIS_N_FUNCTIONS_H_
-
-#include <medusa/models/phi_s/detail/phis_indices.h>
-
-
-#define PHIS_N_FUNCTION(Tag, formula)\
-__hydra_dual__ \
-inline double phis_N_functions(double const& A_0, double const& A_perp,  double const& A_S, double const& A_par, Tag){\
-\
-	return formula;\
-}\
+#ifndef PHIS_INDICES_H_
+#define PHIS_INDICES_H_
 
 
 
@@ -45,26 +35,16 @@ namespace medusa {
 
 namespace detail {
 
-    
-    PHIS_N_FUNCTION(Index1, ::pow(A_0,2) )
-    
-    PHIS_N_FUNCTION(Index2, ::pow(A_par,2))
-    
-    PHIS_N_FUNCTION(Index3, ::pow(A_perp,2))
-    
-    PHIS_N_FUNCTION(Index4, A_perp*A_par)
-    
-    PHIS_N_FUNCTION(Index5, A_0*A_par)
-    
-    PHIS_N_FUNCTION(Index6, A_0*A_perp)
-    
-    PHIS_N_FUNCTION(Index7, ::pow(A_S,2))
-    
-    PHIS_N_FUNCTION(Index8, A_S*A_par)
-    
-    PHIS_N_FUNCTION(Index9, A_S*A_perp)
-    
-    PHIS_N_FUNCTION(Index10, A_S*A_0)
+    struct Index1{};
+    struct Index2{};
+    struct Index3{};
+    struct Index4{};
+    struct Index5{};
+    struct Index6{};
+    struct Index7{};
+    struct Index8{};
+    struct Index9{};
+    struct Index10{};
 
     
     
@@ -75,4 +55,4 @@ namespace detail {
 
 
 
-#endif /* PHIS_N_FUNCTIONS_H_ */
+#endif /* PHIS_INDICES_H_ */

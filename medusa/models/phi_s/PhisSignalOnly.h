@@ -50,9 +50,10 @@
 #include <hydra/functions/Math.h>
 
 
-#include <medusa/models/phi_s/detail/phis_angular_functions.h>
-#include <medusa/models/phi_s/detail/phis_time_functions.h>
-#include <medusa/models/phi_s/detail/phis_N_functions.h>
+#include<medusa/models/phi_s/detail/phis_angular_functions.h>
+#include<medusa/models/phi_s/detail/phis_N_functions.h>
+#include<medusa/models/phi_s/detail/phis_time_functions.h>
+
 
 
 
@@ -76,24 +77,28 @@ template<bool B0bar,
          typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi) >
 class PhisSignalOnly: public hydra::BaseFunctor< PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi>, Signature, 18>
 {
-    constexpr static int CPstate  =  (B0bar ? -1 : +1);
+
+    constexpr static int CP  =  (B0bar ? -1 : +1);
+    
     using ThisBaseFunctor = hydra::BaseFunctor< PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi>, Signature, 18 >;
     using ThisBaseFunctor::_par;
-    using Param = hydra::Parameter;
     
 public:
 
     PhisSignalOnly() = delete;
 
 
-    PhisSignalOnly(Param const& A_0,  Param const& A_perp,  Param const& A_S, 
-                   Param const& DeltaGamma_sd, Param const& DeltaGamma, Param const& DeltaM,
-                   Param const& phi_0,         Param const& phi_par,    Param const& phi_perp,    Param const& phi_S,
-                   Param const& lambda_0,      Param const& lambda_par, Param const& lambda_perp, Param const& lambda_S,
-                   Param const& delta_0,       Param const& delta_par,  Param const& delta_perp,  Param const& delta_S):
-     ThisBaseFunctor({A_0,      A_perp,     A_S,         DeltaGamma_sd,  DeltaGamma, DeltaM , 
-                      phi_0,    phi_par,    phi_perp,    phi_S,          lambda_0,   lambda_par, 
-                      lambda_perp, lambda_S, delta_0,    delta_par,      delta_perp, delta_S })
+    PhisSignalOnly(hydra::Parameter const& A_0,           hydra::Parameter const& A_perp,     hydra::Parameter const& A_S, 
+                   hydra::Parameter const& DeltaGamma_sd, hydra::Parameter const& DeltaGamma, hydra::Parameter const& DeltaM,
+                   hydra::Parameter const& phi_0,         hydra::Parameter const& phi_par,
+                   hydra::Parameter const& phi_perp,      hydra::Parameter const& phi_S,
+                   hydra::Parameter const& lambda_0,      hydra::Parameter const& lambda_par,
+                   hydra::Parameter const& lambda_perp,   hydra::Parameter const& lambda_S,
+                   hydra::Parameter const& delta_0,       hydra::Parameter const& delta_par,
+                   hydra::Parameter const& delta_perp,  hydra::Parameter const& delta_S):
+     ThisBaseFunctor({A_0,         A_perp,     A_S,         DeltaGamma_sd,  DeltaGamma, DeltaM , 
+                      phi_0,       phi_par,    phi_perp,    phi_S,          lambda_0,   lambda_par, 
+                      lambda_perp, lambda_S,   delta_0,     delta_par,      delta_perp, delta_S })
     {}
 
 
@@ -139,74 +144,64 @@ public:
                             ArgTypeThetal const& theta_l, 
                             ArgTypePhi    const& phi )  const  {
                            
-                                       
-        return prod<0>(t,theta_h, theta_l, phi) + \
-               prod<1>(t,theta_h, theta_l, phi) + \
-               prod<2>(t,theta_h, theta_l, phi) + \
-               prod<3>(t,theta_h, theta_l, phi) + \
-               prod<4>(t,theta_h, theta_l, phi) + \
-               prod<5>(t,theta_h, theta_l, phi) + \
-               prod<6>(t,theta_h, theta_l, phi) + \
-               prod<7>(t,theta_h, theta_l, phi) + \
-               prod<8>(t,theta_h, theta_l, phi) + \
-               prod<9>(t,theta_h, theta_l, phi);
+        const double time = t;
+        const double th_h = theta_h;
+        const double th_l = theta_l;
+        const double chi  = phi;
+        const int CPstate = CP;
         
-        
-    }
-    
-    
-private:
-    
-    
-    template<size_t N>
-    __hydra_dual__
-    inline double prod(ArgTypeTime   const& t , 
-                       ArgTypeThetah const& theta_h, 
-                       ArgTypeThetal const& theta_l, 
-                       ArgTypePhi    const& phi) const
-    {
-        return m_N<N>() * m_TimeDist<N>(t) * m_AngularDist<N>(theta_h, theta_l, phi);
-    }
-    
-    
-    template<size_t N>
-    __hydra_dual__
-    inline double m_N() const
-    {
-    
-        const double Apar = ::sqrt(1 - _par[0]*_par[0] - _par[1]*_par[1]);
-        
-        return detail::phis_N_functions<N>(_par[0], _par[1], _par[2], Apar);
-    }
-    
-    
-    
-    
-    template<size_t N>
-    __hydra_dual__
-    inline double m_TimeDist( ArgTypeTime const& x ) const
-    {
-        const double parameters[12] = {_par[6],  _par[7],  _par[8],  _par[9],  _par[10], 
-                                       _par[11], _par[12], _par[13], _par[14],
+        const double parameters[18] = {_par[0],  _par[1],  _par[2],  _par[3],  _par[4], 
+                                       _par[5],  _par[6],  _par[7],  _par[8],
+                                       _par[9],  _par[10], _par[11], 
+                                       _par[12], _par[13], _par[14],
                                        _par[15], _par[16], _par[17] };
+                                       
+        const double Apar = ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]);
+        
+        
+        const double a1 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index1{} ) *\
+                          detail::phis_time_formula(time, parameters, CPstate,       detail::Index1{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index1{} );
+        
+        const double a2 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index2{} ) *\
+                          detail::phis_time_formula(time, parameters, CPstate,       detail::Index2{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index2{} );
+        
+        const double a3 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index3{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index3{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index3{} );
 
-        return 3./(4*PI) * ::exp( -(_par[3] + 0.65789) * x) *\
-                          ( detail::phis_time_functions<N , detail::_type_A >(parameters) * ::cosh(0.5*x*_par[4])     +\
-                            detail::phis_time_functions<N , detail::_type_B >(parameters) * ::sinh(0.5*x*_par[4])     +\
-                            detail::phis_time_functions<N , detail::_type_C >(parameters) * ::cos(x*_par[5])*CPstate  +\
-                            detail::phis_time_functions<N , detail::_type_D >(parameters) * ::sin(x*_par[5])*CPstate  );
-    }
-    
-    
-    
-    
-    template<size_t N>
-    __hydra_dual__
-    inline double m_AngularDist( ArgTypeThetah const& theta_h, 
-                                 ArgTypeThetal const& theta_l, 
-                                 ArgTypePhi const& phi ) const
-    {
-        return detail::phis_angular_functions<N>( (double)theta_h, (double)theta_l, (double)phi );
+        const double a4 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index4{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index4{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index4{} );
+
+        const double a5 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index5{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index5{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index5{} );
+
+        const double a6 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index6{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index6{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index6{} );
+
+        const double a7 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index7{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index7{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index7{} );
+
+        const double a8 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index8{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index8{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index8{} );
+                          
+        const double a9 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index9{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index9{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index9{} );
+                          
+        const double a10 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar, detail::Index10{} ) *\
+                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index10{} ) *\
+                          detail::phis_angular_functions(th_h, th_l, chi,            detail::Index10{} );
+        
+        return  a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10;
+        
+        
     }
     
 
