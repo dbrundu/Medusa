@@ -29,11 +29,12 @@
 #ifndef PHIS_N_FUNCTIONS_H_
 #define PHIS_N_FUNCTIONS_H_
 
+#include <medusa/models/phi_s/detail/phis_indices.h>
 
-#define PHIS_N_FUNCTION(N, formula)\
-template<>\
+
+#define PHIS_N_FUNCTION(Tag, formula)\
 __hydra_dual__ \
-inline double phis_N_functions<N>(double const& A_0, double const& A_perp,  double const& A_S, double const& A_par){\
+inline double phis_N_functions(double const& A_0, double const& A_perp,  double const& A_S, double const& A_par, Tag){\
 \
 	return formula;\
 }\
@@ -44,30 +45,26 @@ namespace medusa {
 
 namespace detail {
 
-
-    template<size_t N>
-    inline double phis_N_functions(double const& A_0, double const& A_perp,  double const& A_S, double const& A_par);
     
+    PHIS_N_FUNCTION(Index1, ::pow(A_0,2) )
     
-    PHIS_N_FUNCTION(0, ::pow(A_0,2) )
+    PHIS_N_FUNCTION(Index2, ::pow(A_par,2))
     
-    PHIS_N_FUNCTION(1, ::pow(A_par,2))
+    PHIS_N_FUNCTION(Index3, ::pow(A_perp,2))
     
-    PHIS_N_FUNCTION(2, ::pow(A_perp,2))
+    PHIS_N_FUNCTION(Index4, A_perp*A_par)
     
-    PHIS_N_FUNCTION(3, A_perp*A_par)
+    PHIS_N_FUNCTION(Index5, A_0*A_par)
     
-    PHIS_N_FUNCTION(4, A_0*A_par)
+    PHIS_N_FUNCTION(Index6, A_0*A_perp)
     
-    PHIS_N_FUNCTION(5, A_0*A_perp)
+    PHIS_N_FUNCTION(Index7, ::pow(A_S,2))
     
-    PHIS_N_FUNCTION(6, ::pow(A_S,2))
+    PHIS_N_FUNCTION(Index8, A_S*A_par)
     
-    PHIS_N_FUNCTION(7, A_S*A_par)
+    PHIS_N_FUNCTION(Index9, A_S*A_perp)
     
-    PHIS_N_FUNCTION(8, A_S*A_perp)
-    
-    PHIS_N_FUNCTION(9, A_S*A_0)
+    PHIS_N_FUNCTION(Index10, A_S*A_0)
 
     
     

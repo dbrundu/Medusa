@@ -51,6 +51,7 @@ declarg(Errtime_type,  double)
 
 int main(int argv, char** argc)
 {
+/*  COMMENTED UNTIL NVCC COMPILE TIME DEBUGGING
 
     double pars15[15] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     double pars3[3]   = {0.0, 0.0, 0.0};
@@ -67,7 +68,7 @@ int main(int argv, char** argc)
     medusa::D2hhmumuAngularDist<theta_l_type, phi_type> test_angularD(pars8);
     
     std::cout << test_angular(0.3, 0.2, 0.4) << std::endl;
-    
+*/
     return 0;
 }
 

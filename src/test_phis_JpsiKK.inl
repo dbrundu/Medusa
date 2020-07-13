@@ -64,6 +64,8 @@
 #include <hydra/Random.h>
 #include <hydra/SeedRNG.h>
 #include <hydra/Plain.h>
+#include <hydra/VegasState.h>
+#include <hydra/Vegas.h>
 #include <hydra/Sobol.h>
 #include <hydra/LogLikelihoodFCN.h>
 
@@ -116,7 +118,6 @@ declarg(dtime_t,    double)
 
 template<typename Backend, typename Model, typename Container>
 size_t generate_dataset(Backend const& system, Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size);
-
 
 
 
@@ -236,25 +237,19 @@ int main(int argv, char** argc)
     auto MODEL  = medusa::PhisSignalOnly< B0bar, dtime_t, theta_h_t, theta_l_t, chi_t>(hydraparams);
 
 
-
-
     /*------------------------------------------------------/
      *  Unweighted dataset generation
      *-----------------------------------------------------*/
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::host::sys_t> dataset_h;
 
-    generate_dataset(hydra::device::sys, MODEL, dataset_h, nentries, 2*nentries);
+    generate_dataset(hydra::device::sys, MODEL, dataset_h, nentries, nentries);
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
-    hydra::copy(dataset_h , dataset_d);
+     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+     hydra::copy(dataset_h , dataset_d);
 
 
 
     if(do_benchmark){
-
-        /*------------------------------------------------------/
-         *  Benchmark of Integration
-         *-----------------------------------------------------*/
 
         const double min_t     = 0.0;
         const double max_t     = 20.0;
@@ -264,18 +259,18 @@ int main(int argv, char** argc)
         const double max_chi   = 2*PI;
         const size_t N         = 50;
 
-        hydra::Plain<4,  hydra::device::sys_t, hydra::sobol<4> > Integrator( {min_t , min_theta, min_theta, min_chi},
+        hydra::Plain<4,  hydra::device::sys_t> Integrator( {min_t , min_theta, min_theta, min_chi},
                                                            {max_t , max_theta, max_theta, max_chi}, 1000000);
 
 
 
 
+        /*------------------------------------------------------/
+         *  Benchmark of Integration
+         *-----------------------------------------------------*/
         double sumtime = 0.0;
-
-
         for(size_t k=0 ; k<N; ++k)
         {
-
             auto start = std::chrono::high_resolution_clock::now();
 
             auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
@@ -283,7 +278,6 @@ int main(int argv, char** argc)
             auto end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> elapsed = end - start;
             sumtime += elapsed.count();
-
 
         }
 
@@ -294,20 +288,20 @@ int main(int argv, char** argc)
         /*------------------------------------------------------/
          *  Benchmark of Evaluation + cached integration
          *-----------------------------------------------------*/
-        auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
+       auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
 
         sumtime = 0.0;
 
         for(size_t k=0 ; k<N; ++k)
         {
-            auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+             auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
 
-            auto start = std::chrono::high_resolution_clock::now();
+             auto start = std::chrono::high_resolution_clock::now();
 
-            fcn(parameters);
+             fcn(parameters);
 
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed = end - start;
+             auto end = std::chrono::high_resolution_clock::now();
+             std::chrono::duration<double, std::milli> elapsed = end - start;
             sumtime += elapsed.count();
 
         }
@@ -360,6 +354,7 @@ int main(int argv, char** argc)
     /*------------------------------------------------------/
      *  Print and plot
      *-----------------------------------------------------*/
+
     for( size_t i=0; i<10; i++ )
         std::cout <<"Dataset: {"<< dataset_h[i]  << "}"<< std::endl;
 
@@ -413,6 +408,7 @@ int main(int argv, char** argc)
 template<typename Backend, typename Model, typename Container>
 size_t generate_dataset(Backend const& system, Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
 {
+
 
     const double B0_mass   = 5.336688;
     const double Jpsi_mass = 3.0969;
@@ -468,11 +464,12 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
 
     do {
         B0_phsp.SetSeed( S() );
-        Jpsi_phsp.SetSeed( S() );
-        Phi_phsp.SetSeed( S() );
-
         B0_phsp.Generate(B0, B0Decay);
+
+        Jpsi_phsp.SetSeed( S() );
         Jpsi_phsp.Generate(B0Decay.GetDaugtherRange(_0), JpsiDecay);
+
+        Phi_phsp.SetSeed( S() );
         Phi_phsp.Generate(B0Decay.GetDaugtherRange(_1), PhiDecay);
 
         auto range  = B0Decay.Meld( JpsiDecay, PhiDecay, hydra::range(0, B0Decay.size()) ) | CastToVariables;
@@ -481,8 +478,7 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
 
         auto dataset_unwgt = hydra::unweight( dataset, model);
 
-        final_dataset.insert(final_dataset.size()==0?  final_dataset.begin() : final_dataset.end(),
-                             dataset_unwgt.begin(), dataset_unwgt.end());
+        final_dataset.insert(final_dataset.end(), dataset_unwgt.begin(), dataset_unwgt.end() );
 
         ++k;
 
