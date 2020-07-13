@@ -1,5 +1,5 @@
 ## Medusa
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0).
 
 If you want to run a first test you need to checkout the Hydra library v.3, recently released and available on the master branch. Please create a Hydra folder somewhere and clone the repository:
 ```bash
