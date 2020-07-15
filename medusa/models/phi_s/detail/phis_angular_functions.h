@@ -24,21 +24,18 @@
  *
  *  Created on: 11/05/2020
  *      Author: Davide Brundu
+ *
+ *  Modified on: 14/07/2020
+ *       Author: Antonio Augusto Alves Jr.
+ *          Log: Getting rid of the dozens of repeated
+ *          and resource wasteful calls to pow, sin, cos.
+ *
  */
 
 #ifndef PHIS_ANGULAR_FUNCTIONS_H_
 #define PHIS_ANGULAR_FUNCTIONS_H_
 
-#include <medusa/models/phi_s/detail/phis_indices.h>
-
-
-#define PHIS_ANGULAR_FUNCTION(Tag, formula)\
-__hydra_dual__ \
-inline double phis_angular_functions(double const& theta_h, double const& theta_l, double const& phi, Tag){\
-\
-	return formula;\
-}\
-
+#include <hydra/Placeholders.h>
 
 
 
@@ -46,30 +43,128 @@ namespace medusa {
 
 namespace detail {
 
-    using namespace hydra::math_constants;   
+struct __hydra_align__(16) AngularArgs {
+
+	AngularArgs(double theta_h, double theta_l, double phi ) :
+		cx(::cos(theta_h)),	sx(::sin(theta_h)),
+		cz(::cos(phi)),	sz(::sin(phi)),
+		cy(::cos(theta_l)),	sy(::sin(theta_l))
+	{}
+
+	double cx ;
+	double sx ;
+	double cz ;
+	double sz ;
+	double cy ;
+	double sy ;
+};
 
 
-    PHIS_ANGULAR_FUNCTION(Index1, ::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) )
-    
-    PHIS_ANGULAR_FUNCTION(Index2, 0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) ) )
-    
-    PHIS_ANGULAR_FUNCTION(Index3, 0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) ) )
-    
-    PHIS_ANGULAR_FUNCTION(Index4, ::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi) )
-    
-    PHIS_ANGULAR_FUNCTION(Index5, sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi) )
-    
-    PHIS_ANGULAR_FUNCTION(Index6, -sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi) )
-    
-    PHIS_ANGULAR_FUNCTION(Index7, 1./3. * ::pow( ::sin(theta_l) , 2 ) )
-    
-    PHIS_ANGULAR_FUNCTION(Index8, 2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi) )
-    
-    PHIS_ANGULAR_FUNCTION(Index9, -2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi) )
-    
-    PHIS_ANGULAR_FUNCTION(Index10, 2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 ) )
+  __hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<1>, AngularArgs const& aa){
 
-    
+	//::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2)
+
+   double cx = aa.cx*aa.cx;
+   double sy = aa.sy*aa.sy;
+
+	return cx*sy;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<2>, AngularArgs const& aa){
+
+	//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
+
+	double sx = aa.sx*aa.sx;
+	double sz = aa.sz*aa.sz;
+	double sy = aa.sy*aa.sy;
+
+	return 0.5 * sx * sy * sz;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<3>, AngularArgs const& aa){
+
+	//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
+
+	double sx = aa.sx*aa.sx;
+	double sy = aa.sy*aa.sy;
+	double cz = aa.cz*aa.cz;
+
+	return 0.5 * sx * sy * cz;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<4>, AngularArgs const& aa){
+
+	//::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi)
+	double sx = aa.sx*aa.sx;
+	double sy = aa.sy*aa.sy;
+
+   return  sx * sy * aa.cz * aa.sz ;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<5>, AngularArgs const& aa){
+
+	//sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
+
+	const static  double f = 1.414213562373095; //sqrt2
+
+	return f * aa.sx * aa.cx * aa.sy * aa.cy * aa.cz ;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<6>, AngularArgs const& aa){
+
+	//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
+
+	const static  double f = 1.414213562373095; //sqrt2
+
+	return -f * aa.sx * aa.sy * aa.cy * aa.sz ;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<7>, AngularArgs const& aa){
+
+	//1./3. * ::pow( ::sin(theta_l) , 2 )
+
+	const static  double f = 0.333333333333333; //1./3.
+
+	return  f * aa.sy*aa.sy;
+}
+
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<8>, AngularArgs const& aa){
+
+	//2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
+
+	const static  double f = 0.816496580927726; //2.0/sqrt6
+
+	return f * aa.sx * aa.sy * aa.cy * aa.cz;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<9>, AngularArgs const& aa){
+
+	//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
+
+	const static  double f = 0.816496580927726; //2.0/sqrt6
+
+	return -f * aa.sx * aa.sy * aa.cy * aa.sz;
+}
+
+__hydra_host__ __hydra_device__
+inline double phis_angular_functions(hydra::placeholders::placeholder<10>, AngularArgs const& aa){
+
+	//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
+
+	const static  double f = 3.464101615137755; //2./sqrt3
+
+	return f * aa.cx * aa.sy * aa.sy;
+}
     
 } // namespace medusa::detail
 
