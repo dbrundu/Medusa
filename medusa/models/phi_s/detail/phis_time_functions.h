@@ -79,6 +79,40 @@ namespace medusa {
 
 namespace detail {
 
+template<size_t I>
+struct TimeAngularFactor;
+
+struct TimeAngularFactor<1>
+{
+	TimeAngularFactor(double phi_0,    double phi_par,    double phi_perp,    double phi_S,
+                      double lambda_0, double lambda_par, double lambda_perp, double lambda_S,
+                      double delta_0,  double delta_par,  double delta_perp,  double delta_S ):
+                    	  fTAF1(0.5*(1.0 + lambda_0*lambda_0)),
+                    	  fTAF2(0.5*(1.0 + lambda_par*lambda_par)),
+                    	  fTAF3(0.5*(1.0 + lambda_perp*lambda_perp)),
+                    	  fTAF4(0.5*(::sin(delta_perp - delta_par) - lambda_par*lambda_perp*::sin(delta_perp - delta_par - phi_perp + phi_par) )),
+                    	  fTAF5(0.5*(::cos(delta_0 - delta_par) + lambda_0*lambda_par*::cos(delta_0 - delta_par - phi_0 + phi_par) )),
+                    	  fTAF6(),
+                    	  fTAF7(),
+                    	  fTAF8(),
+                    	  fTAF9(),
+                    	  fTAF10()
+                    	  {}
+    double fTAF1;
+	double fTAF2;
+	double fTAF3;
+	double fTAF4;
+	double fTAF5;
+	double fTAF6;
+	double fTAF7;
+	double fTAF8;
+	double fTAF9;
+	double fTAF10;
+
+
+}
+
+
     
     struct _type_A{};
     struct _type_B{};
