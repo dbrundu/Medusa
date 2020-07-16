@@ -29,44 +29,42 @@
 #ifndef PHIS_N_FUNCTIONS_H_
 #define PHIS_N_FUNCTIONS_H_
 
-#include <medusa/models/phi_s/detail/phis_indices.h>
-
-
-#define PHIS_N_FUNCTION(Tag, formula)\
-__hydra_dual__ \
-inline double phis_N_functions(double const& A_0, double const& A_perp,  double const& A_S, double const& A_par, Tag){\
-\
-	return formula;\
-}\
-
 
 
 namespace medusa {
 
 namespace detail {
 
-    
-    PHIS_N_FUNCTION(Index1, ::pow(A_0,2) )
-    
-    PHIS_N_FUNCTION(Index2, ::pow(A_par,2))
-    
-    PHIS_N_FUNCTION(Index3, ::pow(A_perp,2))
-    
-    PHIS_N_FUNCTION(Index4, A_perp*A_par)
-    
-    PHIS_N_FUNCTION(Index5, A_0*A_par)
-    
-    PHIS_N_FUNCTION(Index6, A_0*A_perp)
-    
-    PHIS_N_FUNCTION(Index7, ::pow(A_S,2))
-    
-    PHIS_N_FUNCTION(Index8, A_S*A_par)
-    
-    PHIS_N_FUNCTION(Index9, A_S*A_perp)
-    
-    PHIS_N_FUNCTION(Index10, A_S*A_0)
+struct NFactors
+{
+	__hydra_dual__
+	NFactors(double A_0, double A_perp,  double A_S, double A_par):
+		fC1(A_0*A_0),
+		fC2(A_par*A_par),
+		fC3(A_perp*A_perp),
+		fC4(A_perp*A_par),
+		fC5(A_0*A_par),
+		fC6(A_0*A_perp),
+		fC7(A_S*A_S),
+		fC8(A_S*A_par),
+		fC9(A_S*A_perp),
+		fC10(A_S*A_0)
+		{}
 
-    
+	double fC1;
+	double fC2;
+	double fC3;
+	double fC4;
+	double fC5;
+	double fC6;
+	double fC7;
+	double fC8;
+	double fC9;
+	double fC10;
+
+
+};
+
     
 } // namespace medusa::detail
 

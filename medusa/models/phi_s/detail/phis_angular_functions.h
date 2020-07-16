@@ -43,14 +43,62 @@ namespace medusa {
 
 namespace detail {
 
-struct __hydra_align__(16) AngularArgs {
+struct __hydra_align__(16) AngularFactors {
 
-	AngularArgs(double theta_h, double theta_l, double phi ) :
+	__hydra_dual__
+	AngularFactors(double theta_h, double theta_l, double phi ) :
 		cx(::cos(theta_h)),	sx(::sin(theta_h)),
 		cz(::cos(phi)),	sz(::sin(phi)),
 		cy(::cos(theta_l)),	sy(::sin(theta_l))
-	{}
+	{
+		const static  double Sqrt2     = 1.414213562373095; //\sqrt{2}
+		const static  double OneThird  = 0.333333333333333; //1./3.
+		const static  double N2DSqrt6  = 0.816496580927726; //2.0/sqrt6
+		const static  double N2DSqrt3  = 3.464101615137755; //2.0/sqrt3
 
+		//::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2)
+		fA1=cx*sy; fA1*= fA1;
+
+		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
+		fA2=sx * sy * sz; fA2*=0.5*fA2;
+
+		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
+		fA3=sx * sy * cz; fA3*=0.5*fA3;
+
+		//::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi)
+		fA4=sx * sy; fA4*=cz*sz*fA4;
+
+		//sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
+		fA5=  Sqrt2* sx * cx * sy * cy * cz ;
+
+		//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
+		fA6= -Sqrt2* sx * sy * cy * sz;
+
+		//1./3. * ::pow( ::sin(theta_l) , 2 )
+		fA7=OneThird*sy*sy;
+
+		//2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
+		fA8=N2DSqrt6 * sx * sy * cy * cz;
+
+		//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
+		fA9= N2DSqrt6* sx * sy * cy * sz;
+
+		//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
+		fA10= N2DSqrt3 * cx * sy * sy;
+	}
+
+	double fA1;
+	double fA2;
+	double fA3;
+	double fA4;
+	double fA5;
+	double fA6;
+	double fA7;
+	double fA8;
+	double fA9;
+	double fA10;
+
+private:
 	double cx ;
 	double sx ;
 	double cz ;
@@ -60,112 +108,6 @@ struct __hydra_align__(16) AngularArgs {
 };
 
 
-  __hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<1>, AngularArgs const& aa){
-
-	//::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2)
-
-   double cx = aa.cx*aa.cx;
-   double sy = aa.sy*aa.sy;
-
-	return cx*sy;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<2>, AngularArgs const& aa){
-
-	//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-
-	double sx = aa.sx*aa.sx;
-	double sz = aa.sz*aa.sz;
-	double sy = aa.sy*aa.sy;
-
-	return 0.5 * sx * sy * sz;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<3>, AngularArgs const& aa){
-
-	//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-
-	double sx = aa.sx*aa.sx;
-	double sy = aa.sy*aa.sy;
-	double cz = aa.cz*aa.cz;
-
-	return 0.5 * sx * sy * cz;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<4>, AngularArgs const& aa){
-
-	//::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi)
-	double sx = aa.sx*aa.sx;
-	double sy = aa.sy*aa.sy;
-
-   return  sx * sy * aa.cz * aa.sz ;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<5>, AngularArgs const& aa){
-
-	//sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-
-	const static  double f = 1.414213562373095; //sqrt2
-
-	return f * aa.sx * aa.cx * aa.sy * aa.cy * aa.cz ;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<6>, AngularArgs const& aa){
-
-	//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-
-	const static  double f = 1.414213562373095; //sqrt2
-
-	return -f * aa.sx * aa.sy * aa.cy * aa.sz ;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<7>, AngularArgs const& aa){
-
-	//1./3. * ::pow( ::sin(theta_l) , 2 )
-
-	const static  double f = 0.333333333333333; //1./3.
-
-	return  f * aa.sy*aa.sy;
-}
-
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<8>, AngularArgs const& aa){
-
-	//2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-
-	const static  double f = 0.816496580927726; //2.0/sqrt6
-
-	return f * aa.sx * aa.sy * aa.cy * aa.cz;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<9>, AngularArgs const& aa){
-
-	//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-
-	const static  double f = 0.816496580927726; //2.0/sqrt6
-
-	return -f * aa.sx * aa.sy * aa.cy * aa.sz;
-}
-
-__hydra_host__ __hydra_device__
-inline double phis_angular_functions(hydra::placeholders::placeholder<10>, AngularArgs const& aa){
-
-	//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
-
-	const static  double f = 3.464101615137755; //2./sqrt3
-
-	return f * aa.cx * aa.sy * aa.sy;
-}
-    
 } // namespace medusa::detail
 
 
