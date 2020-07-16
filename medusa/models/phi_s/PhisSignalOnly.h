@@ -140,66 +140,20 @@ public:
     __hydra_dual__ 
     inline double Evaluate( ArgTypeTime  t, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi)  const  {
 
-    	using namespace hydra::placeholders;
-
-        const double time = t;
-        const double th_h = theta_h;
-        const double th_l = theta_l;
-        const double chi  = phi;
-        const int CPstate = CP;
-        
-        const double parameters[18] = {_par[0],  _par[1],  _par[2],  _par[3],  _par[4], 
-                                       _par[5],  _par[6],  _par[7],  _par[8],
-                                       _par[9],  _par[10], _par[11], 
-                                       _par[12], _par[13], _par[14],
-                                       _par[15], _par[16], _par[17] };
                                        
-        const double Apar = ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]);
-        auto ang_args = detail::AngularArgs(theta_h, theta_l, phi);
+        auto NA = detail::AngularFactors(theta_h, theta_l, phi);
+        auto NF = detail::NFactors(_par[0], _par[1], _par[2], ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]));
         
+        double terms[10]={ NF.fC1*NA.fA1, NF.fC2*NA.fA2, NF.fC3*NA.fA3, NF.fC4*NA.fA4, NF.fC5*NA.fA5,
+        		           NF.fC6*NA.fA6, NF.fC7*NA.fA7, NF.fC8*NA.fA8, NF.fC9*NA.fA9, NF.fC10*NA.fA10};
+        double result = 0;
+        int i=9;
         
-        const double a1 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index1{} ) *\
-                          detail::phis_time_formula(time, parameters, CPstate,       detail::Index1{} ) *\
-                          detail::phis_angular_functions(_1, ang_args);
-        
-        const double a2 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index2{} ) *\
-                          detail::phis_time_formula(time, parameters, CPstate,       detail::Index2{} ) *\
-                          detail::phis_angular_functions(_2,  ang_args);
-        
-        const double a3 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index3{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index3{} ) *\
-                          detail::phis_angular_functions(_3, ang_args);
+        while(i>=0)
+        	result+=terms[i--];
 
-        const double a4 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index4{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index4{} ) *\
-                          detail::phis_angular_functions(_4, ang_args);
+        return  result;
 
-        const double a5 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index5{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index5{} ) *\
-                          detail::phis_angular_functions(_5,ang_args );
-
-        const double a6 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index6{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index6{} ) *\
-                          detail::phis_angular_functions(_6, ang_args);
-
-        const double a7 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index7{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index7{} ) *\
-                          detail::phis_angular_functions(_7, ang_args);
-
-        const double a8 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index8{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index8{} ) *\
-                          detail::phis_angular_functions(_8, ang_args);
-                          
-        const double a9 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar,  detail::Index9{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index9{} ) *\
-                          detail::phis_angular_functions(_9, ang_args);
-                          
-        const double a10 = detail::phis_N_functions(_par[0], _par[1], _par[2], Apar, detail::Index10{} ) *\
-                          detail::phis_time_formula(time,parameters, CPstate,        detail::Index10{} ) *\
-                          detail::phis_angular_functions(_10, ang_args);
-        
-        return  a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10;
-        
         
     }
     
