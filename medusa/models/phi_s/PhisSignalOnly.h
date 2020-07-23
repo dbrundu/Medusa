@@ -140,21 +140,24 @@ public:
     __hydra_dual__ 
     inline double Evaluate( ArgTypeTime  t, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi)  const  {
 
-                                       
-        auto NA = detail::AngularFactors(theta_h, theta_l, phi);
-        auto NF = detail::NFactors(_par[0], _par[1], _par[2], ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]));
+        double CPs = (double) CP;
+        auto volatile NA = detail::AngularFactors(theta_h, theta_l, phi);
+        auto volatile NF = detail::NFactors(_par[0], _par[1], _par[2], ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]));
+        auto volatile NT = detail::TimeFactors(_par[6],  _par[7],  _par[8],  _par[9],  _par[10],
+                                      _par[11], _par[12], _par[13], _par[14], _par[15], 
+                                      _par[16], _par[17], _par[3], _par[4], _par[5], t, CPs );
+                                      
         
-        double terms[10]={ NF.fC1*NA.fA1, NF.fC2*NA.fA2, NF.fC3*NA.fA3, NF.fC4*NA.fA4, NF.fC5*NA.fA5,
-        		           NF.fC6*NA.fA6, NF.fC7*NA.fA7, NF.fC8*NA.fA8, NF.fC9*NA.fA9, NF.fC10*NA.fA10};
+        double terms[10]={ NF.fC1*NA.fA1*NT.fB1, NF.fC2*NA.fA2*NT.fB2, NF.fC3*NA.fA3*NT.fB3, NF.fC4*NA.fA4*NT.fB4, NF.fC5*NA.fA5*NT.fB5,
+                           NF.fC6*NA.fA6*NT.fB6, NF.fC7*NA.fA7*NT.fB7, NF.fC8*NA.fA8*NT.fB8, NF.fC9*NA.fA9*NT.fB9, NF.fC10*NA.fA10*NT.fB10};
         double result = 0;
         int i=9;
         
         while(i>=0)
-        	result+=terms[i--];
+            result += terms[i--];
 
-        return  result;
+        return result;
 
-        
     }
     
 

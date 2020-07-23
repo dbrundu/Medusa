@@ -29,48 +29,6 @@
 #ifndef PHIS_TIME_FUNCTIONS_H_
 #define PHIS_TIME_FUNCTIONS_H_
 
-#include <medusa/models/phi_s/detail/phis_indices.h>
-
-
-
-#define PHIS_TIME_FUNCTION( Tag, type, formula )\
-__hydra_dual__ \
-inline double phis_time_functions( const double (&parameters)[12], Tag, type ){\
-\
-    const double phi_0        = parameters[0];\
-    const double phi_par      = parameters[1];\
-    const double phi_perp     = parameters[2];\
-    const double phi_S        = parameters[3];\
-    const double lambda_0     = parameters[4];\
-    const double lambda_par   = parameters[5];\
-    const double lambda_perp  = parameters[6];\
-    const double lambda_S     = parameters[7];\
-    const double delta_0      = parameters[8];\
-    const double delta_par    = parameters[9];\
-    const double delta_perp   = parameters[10];\
-    const double delta_S      = parameters[11];\
-    return formula;\
-}\
-
-
-
-
-
-#define PHIS_TIME_FORMULA(TAG)\
-__hydra_dual__ \
-inline double phis_time_formula( double const& x, const double (&Hs)[18], int const& CPstate, TAG){\
-\
-    const double parameters[12] = {Hs[6],  Hs[7],  Hs[8],  Hs[9],  Hs[10], \
-                                   Hs[11], Hs[12], Hs[13], Hs[14],\
-                                   Hs[15], Hs[16], Hs[17] };\
-\
-    return 3./(4*PI) * ::exp( -(Hs[3] + 0.65789) * x) *\
-                          ( phis_time_functions(parameters, TAG{}, _type_A{}) * ::cosh(0.5*x*Hs[4])     +\
-                            phis_time_functions(parameters, TAG{}, _type_B{}) * ::sinh(0.5*x*Hs[4])     +\
-                            phis_time_functions(parameters, TAG{}, _type_C{}) * ::cos(x*Hs[5])*CPstate  +\
-                            phis_time_functions(parameters, TAG{}, _type_D{}) * ::sin(x*Hs[5])*CPstate  );\
-}\
-
 
 
 
@@ -80,119 +38,256 @@ namespace medusa {
 namespace detail {
 
     
-    struct _type_A{};
-    struct _type_B{};
-    struct _type_C{};
-    struct _type_D{};
 
+struct __hydra_align__(16) TimeFactors {
+
+    __hydra_host__ __hydra_device__
+    TimeFactors(double p0, double p1, double p2, double p3,
+               double p4, double p5, double p6, double p7,
+               double p8, double p9, double p10, double p11,
+               double H3,  double H4, double H5,
+               double time, double CP) :
+        p_0(p0), p_par(p1), p_perp(p2), p_S(p3),
+        l_0(p4), l_par(p5), l_perp(p6), l_S(p7),
+        d_0(p8), d_par(p9), d_perp(p10), d_S(p11),
+        fH3(H3), fH4(H4), fH5(H5), ftime(time), fCP(CP)
+    {
+        const static double f  = 0.238732414637843003653;
+        const static double dG = 0.65789;
+        
+        f1A = 0.5*(1.0 + l_0 * l_0);
+        f2A = 0.5*(1.0 + l_par*l_par);
+        f3A = 0.5*(1.0 + l_perp*l_perp);
+        
+        f4A = ::sin(d_perp - d_par - p_perp + p_par);
+        f4A *= l_par * l_perp;
+        f4A = ::sin(d_perp - d_par) - f4A;
+        f4A *= 0.5;
+        
+        f5A = ::cos(d_0 - d_par - p_0 + p_par);
+        f5A *= l_0 * l_par;
+        f5A = ::cos(d_0 - d_par) + f5A;
+        f5A *= 0.5;
+        
+        f6A = ::sin(d_0 - d_perp - p_0 + p_perp);
+        f6A *= l_0 * l_perp;
+        f6A = ::sin(d_0 - d_perp) - f6A;
+        f6A *= -0.5;
+        
+        f7A = 0.5*(1.0 + l_S*l_S);
+        
+        f8A = ::cos(d_S - d_par - p_S + p_par);
+        f8A *= l_S * l_par;
+        f8A = ::cos(d_S - d_par) - f8A;
+        f8A *= 0.5;
+        
+        f9A = ::sin(d_S - d_perp - p_S + p_perp);
+        f9A *= l_S * l_perp;
+        f9A = ::sin(d_S - d_perp) + f9A ;
+        f9A *= -0.5;
+        
+        f10A = ::cos(d_S - d_0 - p_S + p_0);
+        f10A *= l_S * l_0;
+        f10A = ::cos(d_S - d_0) - f10A;
+        f10A *= 0.5;
+        
+        ///////////////////////////////////////////////////
+        ///////////////////////////////////////////////////
+        
+        
+        f1B = -l_0 * ::cos(p_0);
+        f2B = -l_par * ::cos(p_par);
+        f3B = l_perp * ::cos(p_perp);
+        
+        f4B = l_perp * ::sin( d_perp - d_par - p_perp);
+        f4B = l_par  * ::sin( d_par - d_perp - p_par) + f4B;
+        f4B *= 0.5;
+        
+        f5B = l_0 * ::cos(d_0 - d_par - p_0);
+        f5B = l_par * ::cos(d_par - d_0 - p_par) + f5B;
+        f5B *= -0.5;
+        
+        f6B =  l_0 * ::sin(d_0 - d_perp - p_0);
+        f6B = l_perp * ::sin(d_perp - d_0 - p_perp) + f6B;
+        f6B *= 0.5;
+        
+        f7B = l_S * ::cos(p_S);
+        
+        f8B = l_S * ::cos(d_S - d_par - p_S);
+        f8B = f8B - l_par * ::cos(d_par - d_S - p_par);
+        f8B *= 0.5;
+        
+        f9B = l_S * ::sin( d_S - d_perp - p_S);
+        f9B = f9B - l_perp * ::sin( d_perp - d_S - p_perp);
+        f9B *= -0.5;
+        
+        f10B = l_S * ::cos(d_S - d_0 - p_S);
+        f10B = f10B - l_0 * ::cos( d_0 - d_S - p_0);
+        f10B *= 0.5;
+        
+
+        
+        ///////////////////////////////////////////////////
+        ///////////////////////////////////////////////////
+       
+        f1C = 0.5*(1.0 - l_0 * l_0);
+        f2C = 0.5*(1.0 - l_par*l_par);
+        f3C = 0.5*(1.0 - l_perp*l_perp);
+        
+        f4C = ::sin(d_perp - d_par - p_perp + p_par);
+        f4C *= l_par * l_perp;
+        f4C = ::sin(d_perp - d_par) + f4C;
+        f4C *= 0.5;
+        
+        f5C = ::cos(d_0 - d_par - p_0 + p_par);
+        f5C *= l_0 * l_par;
+        f5C = ::cos(d_0 - d_par) - f5C;
+        f5C *= 0.5;
+        
+        f6C = ::sin(d_0 - d_perp - p_0 + p_perp);
+        f6C *= l_0 * l_perp;
+        f6C = ::sin(d_0 - d_perp) + f6C;
+        f6C *= -0.5;
+        
+        f7C = 0.5*(1.0 - l_S*l_S);
+        
+        f8C = ::cos(d_S - d_par - p_S + p_par);
+        f8C *= l_S * l_par;
+        f8C = ::cos(d_S - d_par) + f8C;
+        f8C *= 0.5;
+        
+        f9C = ::sin(d_S - d_perp - p_S + p_perp);
+        f9C *= l_S * l_perp;
+        f9C = ::sin(d_S - d_perp) - f9C ;
+        f9C *= -0.5;
+        
+        f10C = ::cos(d_S - d_0 - p_S + p_0);
+        f10C *= l_S * l_0;
+        f10C = ::cos(d_S - d_0) + f10C;
+        f10C *= 0.5;
+        
+        ///////////////////////////////////////////////////
+        ///////////////////////////////////////////////////
+        
+        f1D = l_0 * ::sin(p_0);
+        f2D = l_par * ::sin(p_par);
+        f3D = -l_perp * ::sin(p_perp);
+        
+        f4D = l_perp * ::cos( d_perp - d_par - p_perp);
+        f4D = l_par  * ::cos( d_par - d_perp - p_par) + f4D;
+        f4D *= -0.5;
+        
+        f5D = l_0 * ::sin(d_0 - d_par - p_0);
+        f5D = l_par * ::sin(d_par - d_0 - p_par) + f5D;
+        f5D *= -0.5;
+        
+        f6D =  l_0 * ::cos(d_0 - d_perp - p_0);
+        f6D = l_perp * ::cos(d_perp - d_0 - p_perp) + f6D;
+        f6D *= -0.5;
+        
+        f7D = -l_S * ::sin(p_S);
+        
+        f8D = l_S * ::sin(d_S - d_par - p_S);
+        f8D = f8D - l_par * ::sin(d_par - d_S - p_par);
+        f8D *= 0.5;
+        
+        f9D = -l_S * ::cos( d_S - d_perp - p_S);
+        f9D = f9D + l_perp * ::cos( d_perp - d_S - p_perp);
+        f9D *= -0.5;
+        
+        f10D = l_S * ::sin(d_S - d_0 - p_S);
+        f10D = f10D - l_0 * ::sin( d_0 - d_S - p_0);
+        f10D *= 0.5;
+        
+        ////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////
+        
+        _a = ::cosh(0.5 * ftime * fH4);
+        _b = ::sinh(0.5 * ftime * fH4);
+        _c = ::cos(ftime * fH5)*fCP;
+        _d = ::sin(ftime * fH5)*fCP;
+        cons = f * ::exp( -(fH3 + dG) * ftime);
+        
+        fB1 = f1A*_a + f1B*_b + f1C*_c + f1D*_d;
+        fB1 *= cons;
+        
+        fB2 = f2A*_a + f2B*_b + f2C*_c + f2D*_d;
+        fB2 *= cons;
+        
+        fB3 = f3A*_a + f3B*_b + f3C*_c + f3D*_d;
+        fB3 *= cons;
+        
+        fB4 = f4A*_a + f4B*_b + f4C*_c + f4D*_d;
+        fB4 *= cons;
+        
+        fB5 = f5A*_a + f5B*_b + f5C*_c + f5D*_d;
+        fB5 *= cons;
+        
+        fB6 = f6A*_a + f6B*_b + f6C*_c + f6D*_d;
+        fB6 *= cons;
+        
+        fB7 = f7A*_a + f7B*_b + f7C*_c + f7D*_d;
+        fB7 *= cons;
+        
+        fB8 = f8A*_a + f8B*_b + f8C*_c + f8D*_d;
+        fB8 *= cons;
+        
+        fB9 = f9A*_a + f9B*_b + f9C*_c + f9D*_d;
+        fB9 *= cons;
+        
+        fB10 = f10A*_a + f10B*_b + f10C*_c + f10D*_d;
+        fB10 *= cons;
+        
+        
+        
+        }
+        
+
+        double fB1;
+        double fB2;
+        double fB3;
+        double fB4;
+        double fB5;
+        double fB6;
+        double fB7;
+        double fB8;
+        double fB9;
+        double fB10;
+        
+private:
+
+     double p_0;
+     double p_par;
+     double p_perp;
+     double p_S;
+     double l_0;
+     double l_par;
+     double l_perp;
+     double l_S;
+     double d_0;
+     double d_par;
+     double d_perp;
+     double d_S; 
+     
+     double fH3, fH4, fH5;
+     double ftime;
+     double fCP;
+     
+     double f1A, f1B, f1C, f1D;
+     double f2A, f2B, f2C, f2D;
+     double f3A, f3B, f3C, f3D;
+     double f4A, f4B, f4C, f4D;
+     double f5A, f5B, f5C, f5D;
+     double f6A, f6B, f6C, f6D;
+     double f7A, f7B, f7C, f7D;
+     double f8A, f8B, f8C, f8D;
+     double f9A, f9B, f9C, f9D;
+     double f10A, f10B, f10C, f10D;
+     
+     double _a, _b, _c, _d, cons;
     
-    PHIS_TIME_FUNCTION( Index1 , _type_A , 0.5*(1 + pow(lambda_0,2)) )
+};
     
-    PHIS_TIME_FUNCTION( Index2 , _type_A , 0.5*(1 + pow(lambda_par,2)) )
-    
-    PHIS_TIME_FUNCTION( Index3 , _type_A , 0.5*(1 + pow(lambda_perp,2)) )
-    
-    PHIS_TIME_FUNCTION( Index4 , _type_A , 0.5*(::sin(delta_perp - delta_par) - lambda_par*lambda_perp*::sin(delta_perp - delta_par - phi_perp + phi_par) ) )
-    
-    PHIS_TIME_FUNCTION( Index5 , _type_A , 0.5*(::cos(delta_0 - delta_par) + lambda_0*lambda_par*::cos(delta_0 - delta_par - phi_0 + phi_par) ) )
-    
-    PHIS_TIME_FUNCTION( Index6 , _type_A , -0.5*(::sin(delta_0 - delta_perp) - lambda_0*lambda_perp*::sin(delta_0 - delta_perp - phi_0 + phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index7 , _type_A , 0.5*(1 + ::pow(lambda_S,2) ) )
-    
-    PHIS_TIME_FUNCTION( Index8 , _type_A ,  0.5*(::cos(delta_S - delta_par) - lambda_S*lambda_par*::cos(delta_S - delta_par - phi_S + phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index9 , _type_A , -0.5*(::sin(delta_S - delta_perp) + lambda_S*lambda_perp*::sin(delta_S - delta_perp - phi_S + phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index10 , _type_A , 0.5*(::cos(delta_S - delta_0) - lambda_S*lambda_0*::cos(delta_S - delta_0 - phi_S + phi_0)) )
-    
-    //---------------------------------------//
-    
-    PHIS_TIME_FUNCTION( Index1 , _type_B , -lambda_0*::cos(phi_0) )
-    
-    PHIS_TIME_FUNCTION( Index2 , _type_B , -lambda_par*::cos(phi_par) )
-    
-    PHIS_TIME_FUNCTION( Index3 , _type_B , lambda_perp*::cos(phi_perp) )
-    
-    PHIS_TIME_FUNCTION( Index4 , _type_B , 0.5*(lambda_perp*::sin(delta_perp - delta_par - phi_perp) + lambda_par*::sin(delta_par - delta_perp - phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index5 , _type_B , -0.5*(lambda_0*::cos(delta_0 - delta_par - phi_0) + lambda_par*::cos(delta_par - delta_0 - phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index6 , _type_B , 0.5*(lambda_0*::sin(delta_0 - delta_perp - phi_0) + lambda_perp*::sin(delta_perp - delta_0 - phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index7 , _type_B , lambda_S*::cos(phi_S) )
-    
-    PHIS_TIME_FUNCTION( Index8 , _type_B ,  0.5*(lambda_S*::cos(delta_S - delta_par - phi_S) - lambda_par*::cos(delta_par - delta_S - phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index9 , _type_B ,  -0.5*(lambda_S*::sin(delta_S - delta_perp - phi_S) - lambda_perp*::sin(delta_perp - delta_S - phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index10 , _type_B ,  0.5*(lambda_S*::cos(delta_S - delta_0 - phi_S) - lambda_0*::cos(delta_0 - delta_S - phi_0)) )
-    
-    //---------------------------------------//
-    
-    PHIS_TIME_FUNCTION( Index1 , _type_C , 0.5*(1 - pow(lambda_0,2)) )
-    
-    PHIS_TIME_FUNCTION( Index2 , _type_C , 0.5*(1 - pow(lambda_par,2)) )
-    
-    PHIS_TIME_FUNCTION( Index3 , _type_C , 0.5*(1 - pow(lambda_perp,2)) )
-    
-    PHIS_TIME_FUNCTION( Index4 , _type_C , 0.5*(::sin(delta_perp - delta_par) + lambda_par*lambda_perp*::sin(delta_perp - delta_par - phi_perp + phi_par) ) )
-    
-    PHIS_TIME_FUNCTION( Index5 , _type_C , 0.5*(::cos(delta_0 - delta_par) - lambda_0*lambda_par*::cos(delta_0 - delta_par - phi_0 + phi_par) ) )
-    
-    PHIS_TIME_FUNCTION( Index6 , _type_C , -0.5*(::sin(delta_0 - delta_perp) + lambda_0*lambda_perp*::sin(delta_0 - delta_perp - phi_0 + phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index7 , _type_C , 0.5*(1 - ::pow(lambda_S,2) ) )
-    
-    PHIS_TIME_FUNCTION( Index8 , _type_C ,  0.5*(::cos(delta_S - delta_par) + lambda_S*lambda_par*::cos(delta_S - delta_par - phi_S + phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index9 , _type_C , -0.5*(::sin(delta_S - delta_perp) - lambda_S*lambda_perp*::sin(delta_S - delta_perp - phi_S + phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index10 , _type_C , 0.5*(::cos(delta_S - delta_0) + lambda_S*lambda_0*::cos(delta_S - delta_0 - phi_S + phi_0)) )
-    
-    //---------------------------------------//
-    
-    PHIS_TIME_FUNCTION( Index1 , _type_D , lambda_0*::sin(phi_0) )
-    
-    PHIS_TIME_FUNCTION( Index2 , _type_D , lambda_par*::sin(phi_par) )
-    
-    PHIS_TIME_FUNCTION( Index3 , _type_D , -lambda_perp*::sin(phi_perp) )
-    
-    PHIS_TIME_FUNCTION( Index4 , _type_D , -0.5*(lambda_perp*::cos(delta_perp - delta_par - phi_perp) + lambda_par*::cos(delta_par - delta_perp - phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index5 , _type_D , -0.5*(lambda_0*::sin(delta_0 - delta_par - phi_0) + lambda_par*::sin(delta_par - delta_0 - phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index6 , _type_D , -0.5*(lambda_0*::cos(delta_0 - delta_perp - phi_0) + lambda_perp*::cos(delta_perp - delta_0 - phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index7 , _type_D , -lambda_S*::sin(phi_S) )
-    
-    PHIS_TIME_FUNCTION( Index8 , _type_D ,  0.5*(lambda_S*::sin(delta_S - delta_par - phi_S) - lambda_par*::sin(delta_par - delta_S - phi_par)) )
-    
-    PHIS_TIME_FUNCTION( Index9 , _type_D ,  -0.5*(-lambda_S*::cos(delta_S - delta_perp - phi_S) + lambda_perp*::cos(delta_perp - delta_S - phi_perp)) )
-    
-    PHIS_TIME_FUNCTION( Index10 , _type_D ,  0.5*(lambda_S*::sin(delta_S - delta_0 - phi_S) - lambda_0*::sin(delta_0 - delta_S - phi_0)) )
-    
-    //---------------------------------------//
-    
-    PHIS_TIME_FORMULA(Index1)
-    
-    PHIS_TIME_FORMULA(Index2)
-    
-    PHIS_TIME_FORMULA(Index3)
-    
-    PHIS_TIME_FORMULA(Index4)
-    
-    PHIS_TIME_FORMULA(Index5)
-    
-    PHIS_TIME_FORMULA(Index6)
-    
-    PHIS_TIME_FORMULA(Index7)
-    
-    PHIS_TIME_FORMULA(Index8)
-    
-    PHIS_TIME_FORMULA(Index9)
-    
-    PHIS_TIME_FORMULA(Index10)
     
     
     

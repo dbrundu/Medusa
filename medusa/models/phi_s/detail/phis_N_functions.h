@@ -20,7 +20,7 @@
  *
  *---------------------------------------------------------------------------*/
 /*
- * 
+ *
  *
  *  Created on: 18/05/2020
  *      Author: Davide Brundu
@@ -35,7 +35,7 @@ namespace medusa {
 
 namespace detail {
 
-struct NFactors
+struct __hydra_align__(16) NFactors
 {
 	__hydra_dual__
 	NFactors(double A_0, double A_perp,  double A_S, double A_par):
@@ -65,7 +65,7 @@ struct NFactors
 
 };
 
-    
+
 } // namespace medusa::detail
 
 
