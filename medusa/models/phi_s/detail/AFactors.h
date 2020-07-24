@@ -19,93 +19,76 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
+
 /*
- * 
+ * AFactors.h
  *
- *  Created on: 11/05/2020
- *      Author: Davide Brundu
- *
- *  Modified on: 14/07/2020
- *       Author: Antonio Augusto Alves Jr.
- *          Log: Getting rid of the dozens of repeated
- *          and resource wasteful calls to pow, sin, cos.
- *
+ *  Created on: 24/07/2020
+ *      Author: augalves
  */
 
-#ifndef PHIS_ANGULAR_FUNCTIONS_H_
-#define PHIS_ANGULAR_FUNCTIONS_H_
+#ifndef AFACTORS_H_
+#define AFACTORS_H_
 
-#include <hydra/Placeholders.h>
-
-
+#include <hydra/detail/Config.h>
 
 namespace medusa {
 
 namespace detail {
 
-struct __hydra_align__(16) AngularFactors {
+struct AFactors
+{
 
-	__hydra_dual__
-	AngularFactors(double theta_h, double theta_l, double phi ) :
-		cx(::cos(theta_h)),	sx(::sin(theta_h)),
-		cz(::cos(phi)),	sz(::sin(phi)),
-		cy(::cos(theta_l)),	sy(::sin(theta_l))
+	__hydra_host__ __hydra_device__
+	AFactors(double theta_h, double theta_l, double phi )
 	{
 		const static  double Sqrt2     = 1.414213562373095; //\sqrt{2}
 		const static  double OneThird  = 0.333333333333333; //1./3.
 		const static  double N2DSqrt6  = 0.816496580927726; //2.0/sqrt6
 		const static  double N2DSqrt3  = 3.464101615137755; //2.0/sqrt3
 
+		const double cx = ::cos(theta_h);
+		const double sx = ::sin(theta_h);
+		const double cz = ::cos(phi);
+		const double sz = ::sin(phi);
+		const double cy = ::cos(theta_l);
+		const double sy = ::sin(theta_l);
+
 		//::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2)
-		fA1=cx*sy; fA1*= fA1;
+		fA[0] = cx*sy; fA[0]*= fA[0];
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-		fA2=sx * sy * sz; fA2*=0.5*fA2;
+		fA[1] = sx * sy * sz; fA[1]*=0.5*fA[1];
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-		fA3=sx * sy * cz; fA3*=0.5*fA3;
+		fA[2] = sx * sy * cz; fA[2]*=0.5*fA[2];
 
 		//::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi)
-		fA4=sx * sy; fA4*=cz*sz*fA4;
+		fA[3] = sx * sy; fA[3]*=cz*sz*fA[3];
 
 		//sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-		fA5=  Sqrt2* sx * cx * sy * cy * cz ;
+		fA[4] = Sqrt2* sx * cx * sy * cy * cz ;
 
 		//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-		fA6= -Sqrt2* sx * sy * cy * sz;
+		fA[5] = -Sqrt2* sx * sy * cy * sz;
 
 		//1./3. * ::pow( ::sin(theta_l) , 2 )
-		fA7=OneThird*sy*sy;
+		fA[6] = OneThird*sy*sy;
 
 		//2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-		fA8=N2DSqrt6 * sx * sy * cy * cz;
+		fA[7] = N2DSqrt6 * sx * sy * cy * cz;
 
 		//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-		fA9= N2DSqrt6* sx * sy * cy * sz;
+		fA[8] = N2DSqrt6* sx * sy * cy * sz;
 
 		//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
-		fA10= N2DSqrt3 * cx * sy * sy;
+		fA[9] = N2DSqrt3 * cx * sy * sy;
 	}
 
-	double fA1;
-	double fA2;
-	double fA3;
-	double fA4;
-	double fA5;
-	double fA6;
-	double fA7;
-	double fA8;
-	double fA9;
-	double fA10;
+	double fA[10];
 
-private:
-	double cx ;
-	double sx ;
-	double cz ;
-	double sz ;
-	double cy ;
-	double sy ;
 };
+
 
 
 } // namespace medusa::detail
@@ -115,4 +98,5 @@ private:
 
 
 
-#endif /* PHIS_ANGULAR_FUNCTIONS_H_ */
+
+#endif /* AFACTORS_H_ */

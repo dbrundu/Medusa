@@ -50,10 +50,9 @@
 #include <hydra/functions/Math.h>
 
 
-#include<medusa/models/phi_s/detail/phis_angular_functions.h>
-#include<medusa/models/phi_s/detail/phis_N_functions.h>
-#include<medusa/models/phi_s/detail/phis_time_functions.h>
-
+#include<medusa/models/phi_s/detail/NFactors.h>
+#include<medusa/models/phi_s/detail/AFactors.h>
+#include<medusa/models/phi_s/detail/ATCoeficients.h>
 
 
 
@@ -80,7 +79,8 @@ class PhisSignalOnly: public hydra::BaseFunctor< PhisSignalOnly<B0bar, ArgTypeTi
     constexpr static int CP  =  (B0bar ? -1 : +1);
     
     using ThisBaseFunctor = hydra::BaseFunctor< PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi>, Signature, 18 >;
-    using ThisBaseFunctor::_par;
+
+    using hydra::BaseFunctor< PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi>, Signature, 18 >::_par;
     
 public:
 
@@ -122,7 +122,20 @@ public:
     __hydra_dual__
     PhisSignalOnly( PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi> const& other):
     ThisBaseFunctor(other)
-    {}
+    {
+
+    	#pragma unroll 10
+    	for(size_t i=0; i<10;i++)
+    	{
+    		fA.fC[i] = 	other.GetA().fC[i];
+    		fB.fC[i] = 	other.GetB().fC[i];
+    		fC.fC[i] = 	other.GetC().fC[i];
+    		fD.fC[i] = 	other.GetD().fC[i];
+    		fN.fC[i] =  other.GetN().fC[i];
+
+    	}
+
+    }
 
 
 
@@ -131,39 +144,134 @@ public:
     operator=( PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi> const& other){
         if(this == &other) return *this;
         ThisBaseFunctor::operator=(other);
+
+		#pragma unroll 10
+        for(size_t i=0; i<10;i++)
+        {
+        	fA.fC[i] = 	other.GetA().fC[i];
+        	fB.fC[i] = 	other.GetB().fC[i];
+        	fC.fC[i] = 	other.GetC().fC[i];
+        	fD.fC[i] = 	other.GetD().fC[i];
+        	fN.fC[i] =  other.GetN().fC[i];
+
+        }
+
         return *this;
     }
 
+    void Update(void) override {
 
+    	Update_ATCoeficients();
+    	Update_NFactors();
+
+    }
 
 
     __hydra_dual__ 
-    inline double Evaluate( ArgTypeTime  t, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi)  const  {
-
+    inline double Evaluate( ArgTypeTime  t, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi)  const
+    {
                                        
-        auto NA = detail::AngularFactors(theta_h, theta_l, phi);
-        auto NF = detail::NFactors(_par[0], _par[1], _par[2], ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]));
-        
-        double terms[10]={ NF.fC1*NA.fA1, NF.fC2*NA.fA2, NF.fC3*NA.fA3, NF.fC4*NA.fA4, NF.fC5*NA.fA5,
-        		           NF.fC6*NA.fA6, NF.fC7*NA.fA7, NF.fC8*NA.fA8, NF.fC9*NA.fA9, NF.fC10*NA.fA10};
+        auto aF = detail::AFactors(theta_h, theta_l, phi);
+
         double result = 0;
-        int i=9;
-        
-        while(i>=0)
-        	result+=terms[i--];
+
+        #pragma unroll 10
+        for(size_t i=0; i<10; ++i)
+        	result += aF.fA[i]*fN.fC[i]*Time_Factor(i, t);
+
 
         return  result;
 
         
     }
-    
+
+    __hydra_dual__
+	const detail::AngularTimeCoeficients& GetA() const {
+		return fA;
+	}
+
+    __hydra_dual__
+	const detail::AngularTimeCoeficients& GetB() const {
+		return fB;
+	}
+
+    __hydra_dual__
+	const detail::AngularTimeCoeficients& GetC() const {
+		return fC;
+	}
+
+    __hydra_dual__
+	const detail::AngularTimeCoeficients& GetD() const {
+		return fD;
+	}
+
+    __hydra_dual__
+	const detail::NFactors& GetN() const {
+		return fN;
+	}
+
+private:
 
 
+    void Update_ATCoeficients();
 
+    void Update_NFactors()
+    {
+    	/*
+    	0: A_0,
+        1: A_perp,
+    	2: A_S,
+    	3: DeltaGamma_sd,
+    	4: DeltaGamma,
+    	5: DeltaM ,
+    	*/
+    	double A_par = ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]);
+
+    	fN.fC[0] = _par[0]*_par[0];//A_0*A_0 ;
+    	fN.fC[1] =   A_par*A_par;
+    	fN.fC[2] = _par[1]*_par[1]; //A_perp*A_perp;
+    	fN.fC[3] = _par[1]*A_par;   //A_perp*A_par;
+    	fN.fC[4] = _par[0]*A_par;   //A_0*A_par;
+    	fN.fC[5] = _par[0]*_par[1]; //A_0*A_perp;
+    	fN.fC[6] = _par[2]* _par[2];//A_S*A_S;
+    	fN.fC[7] = _par[2]*A_par;   //A_S*A_par;
+    	fN.fC[8] = _par[2]*_par[1]; //A_S*A_perp;
+    	fN.fC[9] = _par[2]*_par[0]; //A_S*A_0;
+    }
+
+    __hydra_host__ __hydra_device__
+    inline double Time_Factor(int i, double x) const
+    {
+
+		/*
+		0: A_0,
+		1: A_perp,
+		2: A_S,
+		3: DeltaGamma_sd,
+		4: DeltaGamma,
+		5: DeltaM ,
+		*/
+
+    	double X1=0.5*x*_par[4];
+    	double X2=x*_par[5];
+    	static const double f = 0.238732414638; //3./(4*PI);
+
+        return f * ::exp( -(_par[3] + 0.65789) * x) *
+                                ( fA.fC[i]*::cosh(X1)+ fB.fC[i]*::sinh(X1)+
+                                  ( fC.fC[i]*::cos(X2) + fD.fC[i]*::sin(X2) )*CP );
+    }
+
+
+    detail::NFactors fN;
+    detail::AngularTimeCoeficients fA;
+    detail::AngularTimeCoeficients fB;
+    detail::AngularTimeCoeficients fC;
+    detail::AngularTimeCoeficients fD;
 
 };
 
 }  // namespace medusa
 
+#include <medusa/models/phi_s/detail/PhisSignalOnly.inl>
 
 #endif /* PHISSIGNALONLY_H_ */

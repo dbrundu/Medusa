@@ -19,15 +19,16 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
+
 /*
- * 
+ * NFactors.h
  *
- *  Created on: 18/05/2020
- *      Author: Davide Brundu
+ *  Created on: 24/07/2020
+ *      Author: augalves
  */
 
-#ifndef PHIS_N_FUNCTIONS_H_
-#define PHIS_N_FUNCTIONS_H_
+#ifndef NFACTORS_H_
+#define NFACTORS_H_
 
 
 
@@ -37,40 +38,13 @@ namespace detail {
 
 struct NFactors
 {
-	__hydra_dual__
-	NFactors(double A_0, double A_perp,  double A_S, double A_par):
-		fC1(A_0*A_0),
-		fC2(A_par*A_par),
-		fC3(A_perp*A_perp),
-		fC4(A_perp*A_par),
-		fC5(A_0*A_par),
-		fC6(A_0*A_perp),
-		fC7(A_S*A_S),
-		fC8(A_S*A_par),
-		fC9(A_S*A_perp),
-		fC10(A_S*A_0)
-		{}
-
-	double fC1;
-	double fC2;
-	double fC3;
-	double fC4;
-	double fC5;
-	double fC6;
-	double fC7;
-	double fC8;
-	double fC9;
-	double fC10;
-
-
+	double fC[10];
 };
 
-    
 } // namespace medusa::detail
 
 
 }  // namespace medusa
 
 
-
-#endif /* PHIS_N_FUNCTIONS_H_ */
+#endif /* NFACTORS_H_ */
