@@ -24,6 +24,10 @@
  *
  *  Created on: 18/05/2020
  *      Author: Davide Brundu
+ *
+ *  WARNING: This is a temporary
+ *  and not optimized version, based on the augalves new design.
+ *  Checkout augalves branch for the final refactory.
  */
 
 #ifndef PHIS_TIME_FUNCTIONS_H_
@@ -37,8 +41,18 @@ namespace medusa {
 
 namespace detail {
 
-    
 
+
+
+struct TimeCoeficients
+{
+    double fC[10];
+};
+
+
+
+
+/*
 struct __hydra_align__(16) TimeFactors {
 
     __hydra_host__ __hydra_device__
@@ -55,41 +69,41 @@ struct __hydra_align__(16) TimeFactors {
         const static double f  = 0.238732414637843003653;
         const static double dG = 0.65789;
         
-        f1A = 0.5*(1.0 + l_0 * l_0);
-        f2A = 0.5*(1.0 + l_par*l_par);
-        f3A = 0.5*(1.0 + l_perp*l_perp);
+        fA[0] = 0.5*(1.0 + l_0 * l_0);
+        fA[1] = 0.5*(1.0 + l_par*l_par);
+        fA[2] = 0.5*(1.0 + l_perp*l_perp);
         
-        f4A = ::sin(d_perp - d_par - p_perp + p_par);
-        f4A *= l_par * l_perp;
-        f4A = ::sin(d_perp - d_par) - f4A;
-        f4A *= 0.5;
+        fA[3] = ::sin(d_perp - d_par - p_perp + p_par);
+        fA[3] *= l_par * l_perp;
+        fA[3] = ::sin(d_perp - d_par) - fA[3];
+        fA[3] *= 0.5;
         
-        f5A = ::cos(d_0 - d_par - p_0 + p_par);
-        f5A *= l_0 * l_par;
-        f5A = ::cos(d_0 - d_par) + f5A;
-        f5A *= 0.5;
+        fA[4] = ::cos(d_0 - d_par - p_0 + p_par);
+        fA[4] *= l_0 * l_par;
+        fA[4] = ::cos(d_0 - d_par) + fA[4];
+        fA[4] *= 0.5;
         
-        f6A = ::sin(d_0 - d_perp - p_0 + p_perp);
-        f6A *= l_0 * l_perp;
-        f6A = ::sin(d_0 - d_perp) - f6A;
-        f6A *= -0.5;
+        fA[5] = ::sin(d_0 - d_perp - p_0 + p_perp);
+        fA[5] *= l_0 * l_perp;
+        fA[5] = ::sin(d_0 - d_perp) - fA[5];
+        fA[5] *= -0.5;
         
-        f7A = 0.5*(1.0 + l_S*l_S);
+        fA[6] = 0.5*(1.0 + l_S*l_S);
         
-        f8A = ::cos(d_S - d_par - p_S + p_par);
-        f8A *= l_S * l_par;
-        f8A = ::cos(d_S - d_par) - f8A;
-        f8A *= 0.5;
+        fA[7] = ::cos(d_S - d_par - p_S + p_par);
+        fA[7] *= l_S * l_par;
+        fA[7] = ::cos(d_S - d_par) - fA[7];
+        fA[7] *= 0.5;
         
-        f9A = ::sin(d_S - d_perp - p_S + p_perp);
-        f9A *= l_S * l_perp;
-        f9A = ::sin(d_S - d_perp) + f9A ;
-        f9A *= -0.5;
+        fA[8] = ::sin(d_S - d_perp - p_S + p_perp);
+        fA[8] *= l_S * l_perp;
+        fA[8] = ::sin(d_S - d_perp) + fA[8] ;
+        fA[8] *= -0.5;
         
-        f10A = ::cos(d_S - d_0 - p_S + p_0);
-        f10A *= l_S * l_0;
-        f10A = ::cos(d_S - d_0) - f10A;
-        f10A *= 0.5;
+        fA[9] = ::cos(d_S - d_0 - p_S + p_0);
+        fA[9] *= l_S * l_0;
+        fA[9] = ::cos(d_S - d_0) - fA[9];
+        fA[9] *= 0.5;
         
         ///////////////////////////////////////////////////
         ///////////////////////////////////////////////////
@@ -206,6 +220,7 @@ struct __hydra_align__(16) TimeFactors {
         _b = ::sinh(0.5 * ftime * fH4);
         _c = ::cos(ftime * fH5)*fCP;
         _d = ::sin(ftime * fH5)*fCP;
+        
         cons = f * ::exp( -(fH3 + dG) * ftime);
         
         fB1 = f1A*_a + f1B*_b + f1C*_c + f1D*_d;
@@ -273,6 +288,11 @@ private:
      double ftime;
      double fCP;
      
+     double fA[10];
+     double fB[10];
+     double fC[10];
+     double fD[10];
+     
      double f1A, f1B, f1C, f1D;
      double f2A, f2B, f2C, f2D;
      double f3A, f3B, f3C, f3D;
@@ -287,7 +307,7 @@ private:
      double _a, _b, _c, _d, cons;
     
 };
-    
+*/
     
     
     

@@ -48,8 +48,8 @@ struct __hydra_align__(16) AngularFactors {
 	__hydra_dual__
 	AngularFactors(double theta_h, double theta_l, double phi ) :
 		ch(::cos(theta_h)),   sh(::sin(theta_h)),
-		cp(::cos(phi)),   sp(::sin(phi)),
-		cl(::cos(theta_l)),	sl(::sin(theta_l))
+		cp(::cos(phi)),       sp(::sin(phi)),
+		cl(::cos(theta_l)),	  sl(::sin(theta_l))
 	{
 		const static  double Sqrt2     = 1.414213562373095; //sqrt{2}
 		const static  double OneThird  = 0.333333333333333; //1./3.
@@ -57,46 +57,37 @@ struct __hydra_align__(16) AngularFactors {
 		const static  double N2DSqrt3  = 1.1547005383792515290; //2.0/sqrt3
 
 		//::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2)
-		fA1 = ch*sl; fA1 *= fA1;
+		fA[0] = ch*sl; fA[0] *= fA[0];
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-		fA2 = 1.0 - cp*cp * sl*sl; fA2 *= 0.5*sh*sh;
+		fA[1] = 1.0 - cp*cp * sl*sl; fA[1] *= 0.5*sh*sh;
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-		fA3 = 1.0 - sp*sp * sl*sl; fA3 *= 0.5*sh*sh;
+		fA[2] = 1.0 - sp*sp * sl*sl; fA[2] *= 0.5*sh*sh;
 
 		//::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi)
-		fA4 = sh * sl; fA4 *= cp*sp*fA4;
+		fA[3] = sh * sl; fA[3] *= cp*sp*fA[3];
 
 		//sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-		fA5 =  Sqrt2* sh * ch * sl * cl * cp ;
+		fA[4] =  Sqrt2* sh * ch * sl * cl * cp ;
 
 		//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-		fA6 = -Sqrt2 * sh * ch * sl * cl * sp;
+		fA[5] = -Sqrt2 * sh * ch * sl * cl * sp;
 
 		//1./3. * ::pow( ::sin(theta_l) , 2 )
-		fA7 = OneThird * sl * sl;
+		fA[6] = OneThird * sl * sl;
 
 		//2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-		fA8 = N2DSqrt6 * sh * sl * cl * cp;
+		fA[7] = N2DSqrt6 * sh * sl * cl * cp;
 
 		//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-		fA9= -N2DSqrt6* sh * sl * cl * sp;
+		fA[8]= -N2DSqrt6* sh * sl * cl * sp;
 
 		//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
-		fA10= N2DSqrt3 * ch * sl * sl;
+		fA[9]= N2DSqrt3 * ch * sl * sl;
 	}
 
-	double fA1;
-	double fA2;
-	double fA3;
-	double fA4;
-	double fA5;
-	double fA6;
-	double fA7;
-	double fA8;
-	double fA9;
-	double fA10;
+	double fA[10];
 
 private:
 	double ch ;

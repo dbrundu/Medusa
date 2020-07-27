@@ -24,6 +24,10 @@
  *
  *  Created on: 18/05/2020
  *      Author: Davide Brundu
+ *
+ *  WARNING: This is a temporary
+ *  and not optimized version, based on the augalves new design.
+ *  Checkout augalves branch for the final refactory.
  */
 
 #ifndef PHIS_N_FUNCTIONS_H_
@@ -35,6 +39,13 @@ namespace medusa {
 
 namespace detail {
 
+struct NFactors
+{
+	double fC[10];
+};
+
+
+/*
 struct __hydra_align__(16) NFactors
 {
 	__hydra_dual__
@@ -61,9 +72,10 @@ struct __hydra_align__(16) NFactors
 	double fC8;
 	double fC9;
 	double fC10;
-
-
 };
+*/
+
+
 
 
 } // namespace medusa::detail
