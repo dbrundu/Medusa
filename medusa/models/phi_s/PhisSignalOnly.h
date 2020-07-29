@@ -98,7 +98,9 @@ public:
      ThisBaseFunctor({A_0, A_perp, A_S, DeltaGamma_sd, DeltaGamma, DeltaM ,
                       phi_0,       phi_par,    phi_perp,    phi_S,          lambda_0,   lambda_par, 
                       lambda_perp, lambda_S,   delta_0,     delta_par,      delta_perp, delta_S })
-    {}
+    {
+       Update();
+    }
 
 
 
@@ -107,7 +109,9 @@ public:
     explicit PhisSignalOnly( const hydra::Parameter (&Hs)[18] ):
     ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                      Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
-    {}
+    {
+       Update();
+    }
     
     
     // ctor with array of double
@@ -115,7 +119,9 @@ public:
     explicit PhisSignalOnly( const double (&Hs)[18] ):
     ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                      Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
-    {}
+    {
+       Update();
+    }
     
     
 
