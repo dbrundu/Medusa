@@ -128,14 +128,14 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	//MAYBE THEY WILL BE NECESSARY...
 	//======================================================
 	//::sin(delta_perp - delta_par)
-	double sdelta_xmy = sdeltax*cdeltay - cdeltax*sdeltay;
+	double sdelta_xmy = sdeltax*cdeltay - cdeltax*sdeltay;//ok
 	//::cos(delta_perp - delta_par)
 	double cdelta_xmy = cdeltax*cdeltay + sdeltax*sdeltay;
 
 	//::cos(delta_0 - delta_par)
 	double cdelta_zmy = cdeltaz*cdeltay + sdeltaz*sdeltay;
 	//::sin(delta_0 - delta_par)
-	double sdelta_zmy = cdeltaz*sdeltay - sdeltaz*cdeltay;
+	double sdelta_zmy = sdeltaz*cdeltay - cdeltaz*sdeltay;//ok
 
 	//::sin(delta_0 - delta_perp)
 	double sdelta_zmx = sdeltaz*cdeltax - cdeltaz*sdeltax;
@@ -143,18 +143,18 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	double cdelta_zmx = cdeltaz*cdeltax + sdeltaz*sdeltax;
 
 	//::sin(delta_S - delta_perp)
-	double sdelta_wmx = cdeltaw*sdeltax - sdeltaw*cdeltax;
+	double sdelta_wmx = sdeltaw*cdeltax - cdeltaw*sdeltax;//ok
 	//::cos(delta_S - delta_perp)
 	double cdelta_wmx = cdeltaz*cdeltax + sdeltaw*sdeltax;
 
 
 	//::sin(delta_S - delta_par)
-	double sdelta_wmy = cdeltaw*sdeltay - sdeltaw*cdeltay;
+	double sdelta_wmy = sdeltaw*cdeltay - cdeltaw*sdeltay;//ok
 	//::cos(delta_S - delta_par)
 	double cdelta_wmy = cdeltaz*cdeltay + sdeltaw*sdeltay;
 
 	//::sin(delta_S - delta_0)
-	double sdelta_wmz = cdeltaw*sdeltaz - sdeltaw*cdeltaz;
+	double sdelta_wmz = sdeltaw*cdeltaz - cdeltaw*sdeltaz;//ok
 	//::cos(delta_S - delta_0)
 	double cdelta_wmz = cdeltaw*cdeltaz + sdeltaw*sdeltaz;
 
@@ -215,13 +215,13 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	double cdelta_zmy_m_phi_zpy = cdelta_zmy*cphi_zpy + sdelta_xmy*sphi_zpy;
 
 	//::sin(delta_0 - delta_perp - phi_0 + phi_perp)
-	double sdelta_zmy_m_phi_zpy = cdelta_zmy*sphi_zpy - sdelta_xmy*cphi_zpy;
+	double sdelta_zmy_m_phi_zpy = sdelta_xmy*cphi_zpy - cdelta_zmy*sphi_zpy;//ok
 
 	//::cos(delta_S - delta_par - phi_S + phi_par)
 	double cdelta_wmy_m_phi_wpy = cdelta_wmy*cphi_wpy + sdelta_wmy*sphi_wpy;
 
 	//::sin(delta_S - delta_perp - phi_S + phi_perp)
-	double sdelta_wmx_m_phi_wpx = cdelta_wmx*cphi_wpy - sdelta_wmy*sphi_wpy;
+	double sdelta_wmx_m_phi_wpx = sdelta_wmy*sphi_wpy - cdelta_wmx*cphi_wpy;//ok
 
 	//::cos(delta_S - delta_0 - phi_S + phi_0)
 	double cdelta_wmz_m_phi_wpz = cdelta_wmz*cphi_wpz + sdelta_wmz*sphi_wpy;
@@ -257,9 +257,9 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	double cdelta_xmz_m_phix = cdelta_zmx*cphix - sdelta_zmx*sphix;
 
 	//::cos(delta_S - delta_par - phi_S)
-	double cdelta_wmy_m_phiw = cdelta_wmy*cphiw - sdelta_wmy*sphiw;
+	double cdelta_wmy_m_phiw = cdelta_wmy*cphiw + sdelta_wmy*sphiw;//ok
 	//::sin(delta_S - delta_par - phi_S)
-	double sdelta_wmy_m_phiw = sdelta_wmy*cphiw + cdelta_wmy*sphiw;
+	double sdelta_wmy_m_phiw = sdelta_wmy*cphiw - cdelta_wmy*sphiw;//ok
 
 	//::cos(delta_par - delta_S - phi_par) = ::cos(delta_S - delta_par + phi_par )
 	double cdelta_ymw_m_phiy = cdelta_wmy*cphiy -  sdelta_wmy*sphiy;
