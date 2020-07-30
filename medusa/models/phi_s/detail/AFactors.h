@@ -45,7 +45,7 @@ struct AFactors
 		const static  double Sqrt2     = 1.414213562373095; //\sqrt{2}
 		const static  double OneThird  = 0.333333333333333; //1./3.
 		const static  double N2DSqrt6  = 0.816496580927726; //2.0/sqrt6
-		const static  double N2DSqrt3  = 3.464101615137755; //2.0/sqrt3
+		const static  double N2DSqrt3  = 1.154700538379252; //2.0/sqrt3
 
 		const double cx = ::cos(theta_h);
 		const double sx = ::sin(theta_h);
@@ -58,10 +58,10 @@ struct AFactors
 		fA[0] = cx*sy; fA[0]*= fA[0];
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-		fA[1] = sx * sy * sz; fA[1]*=0.5*fA[1];
+		fA[1] = 1.0 - cz*cz * sy*sy; fA[1] *= 0.5*sx*sx;
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-		fA[2] = sx * sy * cz; fA[2]*=0.5*fA[2];
+		fA[2] = 1.0 - sz*sz * sy*sy; fA[2] *= 0.5*sx*sx;
 
 		//::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi)
 		fA[3] = sx * sy; fA[3]*=cz*sz*fA[3];
