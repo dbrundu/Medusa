@@ -227,9 +227,9 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	double cdelta_wmz_m_phi_wpz = cdelta_wmz*cphi_wpz + sdelta_wmz*sphi_wpy;
 
 	//::sin(delta_perp - delta_par - phi_perp)
-	double sdelda_xmy_m_phix = sdelta_xmy*cphix - cdelta_xmy*sphix;
+	double sdelta_xmy_m_phix = sdelta_xmy*cphix - cdelta_xmy*sphix;
 	//::cos(delta_perp - delta_par - phi_perp)
-	double cdelda_xmy_m_phix = cdelta_xmy*cphix + sdelta_xmy*sphix;
+	double cdelta_xmy_m_phix = cdelta_xmy*cphix + sdelta_xmy*sphix;
 
 	//::sin(delta_par - delta_perp - phi_par)= -::sin( phi_par + (delta_perp - delta_par) )
 	double sdelta_ymx_m_phiy = -( sphiy*cdelta_xmy + cphiy*sdelta_xmy);
