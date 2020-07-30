@@ -45,7 +45,7 @@ struct AFactors
 		const static  double Sqrt2     = 1.414213562373095; //\sqrt{2}
 		const static  double OneThird  = 0.333333333333333; //1./3.
 		const static  double N2DSqrt6  = 0.816496580927726; //2.0/sqrt6
-		const static  double N2DSqrt3  = 3.464101615137755; //2.0/sqrt3
+		const static  double N2DSqrt3  = 1.154700538379252; //2.0/sqrt3
 
 		const double cx = ::cos(theta_h);
 		const double sx = ::sin(theta_h);
