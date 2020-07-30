@@ -396,7 +396,7 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	fD.fC[1] = lambda_par*sphiy;
 
 	//-lambda_perp*::sin(phi_perp)
-	fD.fC[2] = -lambda_perp*sphiy;
+	fD.fC[2] = -lambda_perp*sphix;
 
 	// -0.5*(lambda_perp*::cos(delta_perp - delta_par - phi_perp) + lambda_par*::cos(delta_par - delta_perp - phi_par))
 	fD.fC[3] = -0.5*(lambda_perp*cdelda_xmy_m_phix + lambda_par*cdelta_ymx_m_phiy);
