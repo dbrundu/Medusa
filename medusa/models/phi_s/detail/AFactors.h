@@ -58,7 +58,7 @@ struct AFactors
 		fA[0] = cx*sy; fA[0]*= fA[0];
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-		fA[1] = sx * sy * sz; fA[1]*=0.5*fA[1];
+		fA[1] = 1.0 - cz*cz * sy*sy; fA[1] *= 0.5*sx*sx;
 
 		//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
 		fA[2] = 1.0 - sz*sz * sy*sy; fA[2] *= 0.5*sx*sx;
