@@ -70,7 +70,7 @@ struct AFactors
 		fA[4] = Sqrt2* sx * cx * sy * cy * cz ;
 
 		//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-		fA[5] = -Sqrt2* sx * sy * cy * sz;
+		fA[5] = -Sqrt2* sx *  cx * sy * cy * sz;
 
 		//1./3. * ::pow( ::sin(theta_l) , 2 )
 		fA[6] = OneThird*sy*sy;
@@ -79,7 +79,7 @@ struct AFactors
 		fA[7] = N2DSqrt6 * sx * sy * cy * cz;
 
 		//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-		fA[8] = N2DSqrt6* sx * sy * cy * sz;
+		fA[8] = -N2DSqrt6* sx * sy * cy * sz;
 
 		//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
 		fA[9] = N2DSqrt3 * cx * sy * sy;

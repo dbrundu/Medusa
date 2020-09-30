@@ -181,7 +181,7 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	//::cos(phi_perp - phi_par)
 	//double cphi_xmy = cphix*cphiy + sphix*sphiy;
 	//::sin(phi_0 - phi_perp)
-	double sphi_zmx = sphiz*cphix - cphiz*sphiz;
+	double sphi_zmx = sphiz*cphix - cphiz*sphix;
 	//::cos(phi_0 - phi_perp)
 	double cphi_zmx = cphiz*cphix + sphiz*sphix;
 
@@ -224,7 +224,7 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 
 	//::cos(delta_0 - delta_par - phi_0 + phi_par) = ::cos( [delta_0 - delta_par] - [phi_0 - phi_par] )
 	//
-	double cdelta_zmy_m_phi_zmy = cdelta_zmy*cphi_zmy + sdelta_xmy*sphi_zmy;
+	double cdelta_zmy_m_phi_zmy = cdelta_zmy*cphi_zmy + sdelta_zmy*sphi_zmy;
 
 	//::sin(delta_0 - delta_perp - phi_0 + phi_perp) = ::sin([delta_0 - delta_perp] - [phi_0 - phi_perp])
 	double sdelta_zmx_m_phi_zmx = sdelta_zmx*cphi_zmx - cdelta_zmx*sphi_zmx;//ok
