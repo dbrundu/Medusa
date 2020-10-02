@@ -220,7 +220,7 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	double cphi_wmz = cphiw*cphiz + sphiw*sphiz;
 
 	//::sin[(delta_perp - delta_par) - (phi_perp + phi_par) ]
-	double sdelta_xmy_m_phi_xpy = sdelta_xmy*cphi_xpy - cdelta_xmy*sphi_xmy;
+	double sdelta_xmy_m_phi_xmy = sdelta_xmy*cphi_xmy - cdelta_xmy*sphi_xmy;
 
 	//::cos(delta_0 - delta_par - phi_0 + phi_par) = ::cos( [delta_0 - delta_par] - [phi_0 - phi_par] )
 	//
