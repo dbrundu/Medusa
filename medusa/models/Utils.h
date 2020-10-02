@@ -51,7 +51,6 @@
 #include <hydra/functions/Math.h>
 
 
-#include <medusa/models/phi_s/detail/phis_N_functions.h>
 
 
 namespace medusa {

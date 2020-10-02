@@ -177,9 +177,9 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	//::cos(phi_perp + phi_par)
 	double cphi_xpy = cphix*cphiy - sphix*sphiy;
 	//::sin(phi_perp - phi_par)
-	//double sphi_xmy = sphix*cphiy - cphix*sphiy;
+	double sphi_xmy = sphix*cphiy - cphix*sphiy;
 	//::cos(phi_perp - phi_par)
-	//double cphi_xmy = cphix*cphiy + sphix*sphiy;
+	double cphi_xmy = cphix*cphiy + sphix*sphiy;
 	//::sin(phi_0 - phi_perp)
 	double sphi_zmx = sphiz*cphix - cphiz*sphix;
 	//::cos(phi_0 - phi_perp)
@@ -309,7 +309,7 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	fA.fC[2] = 0.5*(1.0 + lambda_perp*lambda_perp);
 
 	//0.5*(::sin(delta_perp - delta_par) - lambda_par*lambda_perp*::sin(delta_perp - delta_par - phi_perp + phi_par) )
-	fA.fC[3] = 0.5*(sdelta_xmy - lambda_par*lambda_perp*sdelta_xmy_m_phi_xpy);
+	fA.fC[3] = 0.5*(sdelta_xmy - lambda_par*lambda_perp*sdelta_xmy_m_phi_xmy);
 
 	//0.5*(::cos(delta_0 - delta_par) + lambda_0*lambda_par*::cos(delta_0 - delta_par - phi_0 + phi_par) )
 	fA.fC[4] = 0.5*(cdelta_zmy + lambda_0*lambda_par*cdelta_zmy_m_phi_zmy );
@@ -368,10 +368,10 @@ void PhisSignalOnly<B0bar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi
 	//--------------------------------------------------------------------
 
 	//0.5*(1 - pow(lambda_0,2))
-	fC.fC[0] = 0.5*(1 - lambda_par*lambda_par);
+	fC.fC[0] = 0.5*(1 - lambda_0*lambda_0);
 
 	//0.5*(1 - pow(lambda_par,2))
-	fC.fC[1] = 0.5*(1 - lambda_par*lambda_0);
+	fC.fC[1] = 0.5*(1 - lambda_par*lambda_par);
 
 	//0.5*(1 - pow(lambda_perp,2))
 	fC.fC[2] = 0.5*(1 - lambda_perp*lambda_perp);
