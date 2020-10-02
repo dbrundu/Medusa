@@ -8,18 +8,15 @@ Medusa is a C++14 compliant application, highly based on [HYDRA v.3](https://git
 Medusa depends on [HYDRA >= v.3.2.1](https://github.com/MultithreadCorner/Hydra), [GCC >= v.8](https://gcc.gnu.org/), [ROOT >= v.6.14](https://github.com/root-project/root), [libconfig >= v1.5](https://hyperrealm.github.io/libconfig/), [TCLAP >= v1.2.1](http://tclap.sourceforge.net/). Optionally  [CUDA >= 10.0](https://developer.nvidia.com/cuda-toolkit) is needed to use nVidia GPUs. 
 
 ## Installation, Build and Run the first tests
-The first step is checkout [HYDRA v.3](https://github.com/MultithreadCorner/Hydra). Please create a Hydra folder somewhere and clone the repository:
+The first step is checkout [HYDRA v.3](https://github.com/MultithreadCorner/Hydra): 
 ```bash
-mkdir Hydra
-cd Hydra
-git clone https://github.com/MultithreadCorner/Hydra.git
+mkdir <MedusaDevDir>
+cd <MedusaDevDir>
+git clone https://github.com/MultithreadCorner/Hydra.git Hydra
 ```
 Then you can clone the Medusa repository:
 ```bash
-cd ..
-mkdir Medusa
-cd Medusa
-git clone https://github.com/dbrundu/Medusa.git
+git clone https://github.com/dbrundu/Medusa.git Medusa
 ```
 
 Then you can setup the corresponding enveironment variables:
@@ -32,6 +29,7 @@ export HYDRA_INCLUDE_DIR=<path-to-hydra>
 
 Starting from the Medusa folder, please create a `build` directory for convenience and run the cmake command:
 ```bash
+cd Medusa
 mkdir build
 cd build
 cmake -DHYDRA_INCLUDE_DIR=$HYDRA_INCLUDE_DIR ../
