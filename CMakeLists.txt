@@ -173,6 +173,6 @@ MESSAGE(STATUS "Project build dir: ${PROJECT_BINARY_DIR}" )
 #+++++++++++++++++++++++++++
 include(${MEDUSA_CMAKE_DIR}/AddTarget.cmake)
 
-ADD_TARGET(test)
+ADD_TARGET(test_ctors)
 ADD_TARGET(test_phis_JpsiKK)
 

@@ -49,7 +49,7 @@
 #include <hydra/functions/Utils.h>
 #include <hydra/functions/Math.h>
 
-#include <medusa/models/B2Kstarmumu/detail/kstarmumu_angular_functions.h>
+#include <medusa/models/B2Kstarmumu/detail/ACoefficients_B2Kstarmumu.h>
 
 
 namespace medusa {
@@ -128,6 +128,22 @@ public:
     __hydra_dual__ inline
     double Evaluate(ArgType1 const& theta_h, ArgType2 const& theta_l, ArgType3 const& phi)  const  {
 
+        detail::ACoefficients_B2Kstarmumu a(theta_h, theta_l, phi);
+        
+        double b = 9./(32.0*PI);
+        
+        double r = (3./4.) * (1-_par[0]) * a.fC[0];
+        
+        r +=  _par[0]*a.fC[1] + (1./4.)*(1-_par[0])*a.fC[2] - _par[0]*a.fC[3] +\
+              _par[1]*a.fC[4] + _par[2]*a.fC[5] + _par[3]*a.fC[6] +\
+              4./3.*_par[4]*a.fC[7] + _par[5]*a.fC[8] + _par[6]*a.fC[9] + _par[7]*a.fC[10];
+              
+        r *= b;
+        
+        return r;
+
+        /*
+                   
         auto r = (3./4.)*(1-_par[0]) * detail::kstmumu_angular_fun<0>(theta_h, theta_l, phi)   +\
                              _par[0] * detail::kstmumu_angular_fun<1>(theta_h, theta_l, phi)   +\
                  (1./4.)*(1-_par[0]) * detail::kstmumu_angular_fun<2>(theta_h, theta_l, phi)   +\
@@ -141,6 +157,8 @@ public:
                              _par[7] * detail::kstmumu_angular_fun<10>(theta_h, theta_l, phi);
                              
         return r * 9./(32*PI) ;
+        
+        */
 
     }
     
@@ -215,7 +233,28 @@ public:
 
     __hydra_dual__ inline
     double Evaluate(ArgType1 const& theta_h, ArgType2 const& theta_l, ArgType3 const& phi)  const  {
+    
+        detail::ACoefficients_B2Kstarmumu a(theta_h, theta_l, phi);
+        
+        double b = 9./(32.0*PI);
+        
+        double r = (3./4.) * (1-_par[0]) * a.fC[0];
+        
+        r +=  _par[0]*a.fC[1] + (1./4.)*(1-_par[0])*a.fC[2] - _par[0]*a.fC[3] +\
+              _par[1]*a.fC[4] + _par[2]*a.fC[5] + _par[3]*a.fC[6] +\
+              4./3.*_par[4]*a.fC[7] + _par[5]*a.fC[8] + _par[6]*a.fC[9] + _par[7]*a.fC[10];
+              
+        r *= b;
 
+        auto res = (1-_par[8])*r +\
+                   (3./(16.0*PI))*_par[8]*a.fC[11] +\
+                   b * (_par[9] + _par[10]*a.c2l) * a.fC[12] +\
+                   b * (_par[11]*a.s2l + _par[12]*a.sl ) * a.fC[13] +\
+                   b * (_par[13]*a.sl + _par[14]*a.s2l) * a.fC[14];
+                   
+        return res;
+
+        /*
         auto r = (3./4.)*(1-_par[0]) * detail::kstmumu_angular_fun<0>(theta_h, theta_l, phi)   +\
                              _par[0] * detail::kstmumu_angular_fun<1>(theta_h, theta_l, phi)   +\
                  (1./4.)*(1-_par[0]) * detail::kstmumu_angular_fun<2>(theta_h, theta_l, phi)   +\
@@ -227,14 +266,19 @@ public:
                              _par[5] * detail::kstmumu_angular_fun<8>(theta_h, theta_l, phi)   +\
                              _par[6] * detail::kstmumu_angular_fun<9>(theta_h, theta_l, phi)   +\
                              _par[7] * detail::kstmumu_angular_fun<10>(theta_h, theta_l, phi);
+                   
         r *=  9./(32*PI);
                              
         auto res = (1 - _par[8])*r + (3./(16.0*PI)) * _par[8] * detail::kstmumu_angular_fun<11>(theta_h, theta_l, phi) +\
                    (9./(32.0*PI)) * (_par[9] + _par[10]*::cos(2*theta_l)) * detail::kstmumu_angular_fun<12>(theta_h, theta_l, phi) +\
                    (9./(32.0*PI)) * (_par[11]*::sin(2*theta_l) + _par[12]*::sin(theta_l)) * detail::kstmumu_angular_fun<13>(theta_h, theta_l, phi) +\
                    (9./(32.0*PI)) * (_par[13]*::sin(theta_l) + _par[14]*::sin(2*theta_l)) * detail::kstmumu_angular_fun<14>(theta_h, theta_l, phi);
-                   
+        
         return res;
+        
+        */
+        
+        
 
 
     }

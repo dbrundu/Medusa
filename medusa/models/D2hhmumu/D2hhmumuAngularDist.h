@@ -48,6 +48,8 @@
 #include <hydra/functions/Utils.h>
 #include <hydra/functions/Math.h>
 
+#include <medusa/models/D2hhmumu/detail/ACoefficients_D2hhmumu.h>
+
 
 
 
@@ -110,62 +112,21 @@ public:
     __hydra_dual__ 
     inline double Evaluate(ArgType1 const& theta_l, ArgType2 const& phi)  const
     {
-        const double  integral = 1.0;
-        const double  I1fixed  = 0.5*integral + _par[0]/3.0;
-
-
-        return 1.0/(2*PI) * ( C_1(theta_l, phi)*I1fixed + C_2(theta_l, phi)*_par[0] + C_3(theta_l, phi)*_par[1] + \
-               C_4(theta_l, phi)*_par[2] + C_5(theta_l, phi)*_par[3] + C_6(theta_l, phi)*_par[4] + \
-               C_7(theta_l, phi)*_par[5] + C_8(theta_l, phi)*_par[6] + C_9(theta_l, phi)*_par[7] );
+        // const double  integral = 1.0;
+        const double  I1fixed  = 0.5 + _par[0]/3.0;
+        
+        detail::ACoefficients_D2hhmumu a(theta_l, phi);
+        
+        double b = 1.0/(2*PI);
+        double r = a.fC[0]*I1fixed;
+        
+        #pragma unroll 8
+        for(size_t i=0; i<8; ++i)
+        	r += a.fC[i+1]*_par[i];
+        
+        return b*r;
     }
 
-
-private:
-
-    __hydra_dual__ inline
-    double C_1(const double& theta_l, const double& chi) const {
-                return 1.;
-    }
-
-    __hydra_dual__ inline
-    double C_2(const double& theta_l, const double& chi) const {
-                return ::cos(2*theta_l);
-    }
-
-    __hydra_dual__ inline
-    double C_3(const double& theta_l, const double& chi) const {
-                return ::pow(::sin(theta_l),2) * ::cos(2*chi);
-    }
-
-    __hydra_dual__ inline
-    double C_4(const double& theta_l, const double& chi) const {
-                return ::sin(2*theta_l)*::cos(chi);
-    }
-
-    __hydra_dual__ inline
-    double C_5(const double& theta_l, const double& chi) const {
-                return ::sin(theta_l)*::cos(chi);
-    }
-
-    __hydra_dual__ inline
-    double C_6(const double& theta_l, const double& chi) const {
-                return ::cos(theta_l);
-    }
-
-    __hydra_dual__ inline
-    double C_7(const double& theta_l, const double& chi) const {
-                return ::sin(theta_l)*::sin(chi);
-    }
-
-    __hydra_dual__ inline
-    double C_8(const double& theta_l, const double& chi) const {
-                return ::sin(2*theta_l)*::sin(chi);
-    }
-
-    __hydra_dual__ inline
-    double C_9(const double& theta_l, const double& chi) const {
-                return ::pow(::sin(theta_l),2)*::sin(2*chi);
-    }
 };
 
 
@@ -174,21 +135,25 @@ private:
 } // namespace medusa
 
 
-// namespace hydra {
-// 
-//     template<>
-//     struct IntegrationFormula< medusa::D2hhmumuAngularDist, 2>
-//     {
-// 
-//     	inline std::pair<hydra::GReal_t, hydra::GReal_t>
-//     	EvalFormula( medusa::D2hhmumuAngularDist const& , const double* , const double*  ) const
-//     	{
-//     		const double r =  1.0;
-//     		return std::make_pair( r , 0.0);
-//     	}
-// 
-//     };
+/*
+namespace hydra {
+ 
+     template<typename ArgType1, typename ArgType2>
+     struct IntegrationFormula< medusa::D2hhmumuAngularDist<ArgType1,ArgType2>, 2>
+     {
+ 
+     	inline std::pair<hydra::GReal_t, hydra::GReal_t>
+     	EvalFormula( medusa::D2hhmumuAngularDist const& , const double* , const double*  ) const
+     	{
+     		const double r =  1.0;
+     		return std::make_pair( r , 0.0);
+     	}
+ 
+     };
 
-// } // namespace hydra
+
+ } // namespace hydra
+ 
+*/
 
 #endif /* D2HHMUMUANGULARDIST_H_ */

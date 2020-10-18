@@ -20,7 +20,7 @@
  *
  *---------------------------------------------------------------------------*/
 /*
- *  test.inl
+ *  test_ctors.inl
  *
  *  Created on: 07/05/2020
  *      Author: Davide Brundu
@@ -28,14 +28,11 @@
 
 
 
-#ifndef TEST_INL_
-#define TEST_INL_
+#ifndef TEST_CTORS_INL_
+#define TEST_CTORS_INL_
 
 #include <iostream>
-#include <medusa/models/phi_s/PhisTimeRes.h>
-#include <medusa/models/phi_s/PhisAngularDist.h>
-#include <medusa/models/phi_s/PhisTimeDist.h>
-#include <medusa/models/phi_s/PhisN.h>
+#include <medusa/models/phi_s/PhisSignalOnly.h>
 #include <medusa/models/D2hhmumu/D2hhmumuAngularDist.h>
 #include <medusa/models/B2Kstarmumu/KstmumuAngularDist.h>
 
@@ -51,24 +48,24 @@ declarg(Errtime_type,  double)
 
 int main(int argv, char** argc)
 {
-/*  COMMENTED UNTIL NVCC COMPILE TIME DEBUGGING
 
-    double pars15[15] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    double pars3[3]   = {0.0, 0.0, 0.0};
-    double pars4[4]   = {0.0, 0.0, 0.0, 0.0};
-    double pars8[8]   = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    double pars18[18] = {0};
+    double pars15[15] = {0};
+    double pars3[3]   = {0};
+    double pars4[4]   = {0};
+    double pars8[8]   = {0};
 
-    // test compilation
-    medusa::PhisTimeRes<time_type, Errtime_type>   test_timeres(pars4);
-    medusa::PhisAngularDist<1, theta_h_type, theta_l_type, phi_type>   test_angular;
-    medusa::PhisTimeDist<1, false, time_type> test_time(pars15);
-    medusa::PhisN<1> test_N(pars3);
+    // test compilation of ctors
+
+    medusa::PhisSignalOnly< 1, time_type, theta_h_type, theta_l_type, phi_type> test_phis(pars18);
+    
     medusa::KstmumuAngularDist<medusa::PWave , theta_h_type, theta_l_type, phi_type> test_angularB1(pars8);
+
     medusa::KstmumuAngularDist<medusa::PSWave, theta_h_type, theta_l_type, phi_type> test_angularB2(pars15);
+
     medusa::D2hhmumuAngularDist<theta_l_type, phi_type> test_angularD(pars8);
     
-    std::cout << test_angular(0.3, 0.2, 0.4) << std::endl;
-*/
+
     return 0;
 }
 
