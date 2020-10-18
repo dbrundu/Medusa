@@ -175,4 +175,5 @@ include(${MEDUSA_CMAKE_DIR}/AddTarget.cmake)
 
 ADD_TARGET(test_ctors)
 ADD_TARGET(test_phis_JpsiKK)
+ADD_TARGET(test_D2hhmumu)
 

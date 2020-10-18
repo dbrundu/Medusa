@@ -40,7 +40,7 @@ struct ACoefficients_B2Kstarmumu
 {
 
 	__hydra_host__ __hydra_device__
-	ACoefficients_B2Kstarmumu(double const& theta_h, double const& theta_l, double const& phi )
+	ACoefficients_B2Kstarmumu(double theta_h, double theta_l, double phi )
 	{
 		const double ch = ::cos(theta_h);
 		const double sh = ::sin(theta_h);

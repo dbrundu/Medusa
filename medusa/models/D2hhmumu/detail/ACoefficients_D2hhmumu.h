@@ -40,7 +40,7 @@ struct ACoefficients_D2hhmumu
 {
 
 	__hydra_host__ __hydra_device__
-	ACoefficients_D2hhmumu(double const& theta_l, double const& phi )
+	ACoefficients_D2hhmumu(double theta_l, double phi )
 	{
 		const double cp = ::cos(phi);
 		const double sp = ::sin(phi);
@@ -48,7 +48,7 @@ struct ACoefficients_D2hhmumu
 		const double sl = ::sin(theta_l);
 		
 
-		//::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2)
+		// 1.0
 		fC[0] = 1.0;
 
 		//::cos(2*theta_l);
