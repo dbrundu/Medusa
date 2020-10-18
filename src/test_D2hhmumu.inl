@@ -155,8 +155,19 @@ int main(int argv, char** argc)
                                                                 << std::endl;
     }
 
+    const double D0_mass    = 1864.83;
+    const double pi_mass    = 139.57061;
+    const double mu_mass    = 105.6583745 ;
+    
+#ifdef _ROOT_AVAILABLE_
 
-
+    TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
+    TH1D chidist("chidist","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
+    
+    TH1D thetaldist_w("thetaldist","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
+    TH1D chidist_w("chidist","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
+    
+#endif
 
     /*----------------------------/
     * Angular Model
@@ -192,11 +203,62 @@ int main(int argv, char** argc)
      *-----------------------------------------------------*/
     hydra::multivector< hydra::tuple< theta_l_t, chi_t> , hydra::host::sys_t > dataset_h;
 
-    generate_dataset(hydra::device::sys, MODEL, dataset_h, nentries, 5*nentries);
+    generate_dataset(hydra::device::sys, MODEL, dataset_h, nentries, nentries);
 
     hydra::multivector<hydra::tuple<theta_l_t, chi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
    
     hydra::copy(dataset_h , dataset_d);
+    
+    
+    // Doing the reweight
+    {
+        hydra::Vector4R Parent(D0_mass, 0.0, 0.0, 0.0);
+
+        double masses[4]{pi_mass, pi_mass, mu_mass, mu_mass };
+        
+        hydra::PhaseSpace<4> phsp{D0_mass, masses};
+        
+        auto model_for_rew = hydra::wrap_lambda(	[ MODEL ] __hydra_dual__ ( PionP pip, PionM pim, MuonP mup, MuonM mum){
+                theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup) );
+                chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
+                return MODEL( theta_l, chiangle);
+        } );
+        
+        auto CastToTheta_l  = hydra::wrap_lambda( [] __hydra_dual__ (PionP pip, PionM pim, MuonP mup, MuonM mum){
+                theta_l_t costheta_l    = medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup);
+                return costheta_l;
+            });
+            
+        auto CastToPhi  = hydra::wrap_lambda( [] __hydra_dual__ (PionP pip, PionM pim, MuonP mup, MuonM mum){
+                chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
+                return chiangle;
+            });
+            
+        hydra::Decays< hydra::tuple<PionP,PionM,MuonP,MuonM>, hydra::device::sys_t > Events(D0_mass, masses, nentries);
+        
+        phsp.Generate(Parent, Events);
+        
+		auto theta_variables = Events | CastToTheta_l ;
+
+		auto chi_variables   = Events | CastToPhi ;
+
+		auto weights   = Events | Events.GetEventWeightFunctor(model_for_rew);
+		
+	
+		auto Hist_theta = make_dense_histogram( hydra::device::sys, 150, -1.0, +1.0,	theta_variables,	weights);
+		auto Hist_chi  = make_dense_histogram( hydra::device::sys, 150, 0.0, 2*PI,	chi_variables,	weights);
+		
+		
+        for(size_t i=0; i< 150; i++) { 
+            thetaldist_w.SetBinContent(i+1, Hist_theta.GetBinContent(i) );
+            chidist_w.SetBinContent(i+1, Hist_chi.GetBinContent(i) );
+        }
+        
+    
+    }
+
+
+
 
 
 
@@ -311,9 +373,6 @@ int main(int argv, char** argc)
     TApplication *m_app = new TApplication("myapp",0,0);
 
 
-    TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin", 250, -1.0, 1.0);
-    TH1D chidist("chidist","Chi angle;angle (rad);Candidates / bin", 250, 0.0, 2*PI);
-
     for(auto x : dataset_h){
          thetaldist.Fill( ::cos((double)hydra::get<0>(x)) );
          chidist.Fill( (double)hydra::get<1>(x) );
@@ -321,14 +380,19 @@ int main(int argv, char** argc)
 
     TCanvas canvas("canvas","canvas",1600,800);
     canvas.Divide(2,1);
-
     canvas.cd(1);
     thetaldist.Draw();
-
     canvas.cd(2);
     chidist.Draw();
-
     canvas.SaveAs("test_D2hhmumu.pdf");
+    
+    TCanvas canvas_w("canvas_w","canvas_w",1600,800);
+    canvas_w.Divide(2,1);
+    canvas_w.cd(1);
+    thetaldist_w.Draw();
+    canvas_w.cd(2);
+    chidist_w.Draw();
+    canvas_w.SaveAs("test_D2hhmumu_w.pdf");
 
     m_app->Run();
 
@@ -370,9 +434,7 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
 
     auto start = std::chrono::high_resolution_clock::now();
 
-     //--> Backend scope
-    // Perform the generation in the Backend specified
-    // Allocate memory to hold the final states particles
+
     auto _data = hydra::Decays< hydra::tuple<PionP,PionM, MuonP, MuonM>, hydra::device::sys_t >( D0_mass, {pi_mass, pi_mass, mu_mass, mu_mass }, bunch_size);
 
     do {
@@ -384,6 +446,10 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
         hydra::copy(range, dataset);
 
         auto dataset_unwgt = hydra::unweight( dataset, model );
+        
+        //auto dataset_2 = _data.Unweight() | CastToVariables ;
+        //hydra::multivector< hydra::tuple< theta_l_t, chi_t> , Backend > dataset_unwgt(bunch_size);
+        //hydra::copy(dataset_2, dataset_unwgt);
             
         final.insert(final.size()==0? final.begin():final.end(), dataset_unwgt.begin(), dataset_unwgt.end() );
         
