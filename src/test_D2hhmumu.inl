@@ -164,10 +164,14 @@ int main(int argv, char** argc)
     TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
     TH1D chidist("chidist","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
     
-    TH1D thetaldist_w("thetaldist","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
-    TH1D chidist_w("chidist","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
+    TH1D thetaldist_w("thetaldist_w","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
+    TH1D chidist_w("chidist_w","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
+    
+    TH1D thetaldist_s("thetaldist_s","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
+    TH1D chidist_s("chidist_s","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
     
 #endif
+
 
     /*----------------------------/
     * Angular Model
@@ -210,7 +214,7 @@ int main(int argv, char** argc)
     hydra::copy(dataset_h , dataset_d);
     
     
-    // Doing the reweight
+    // Test: doing the reweight
     {
         hydra::Vector4R Parent(D0_mass, 0.0, 0.0, 0.0);
 
@@ -245,8 +249,8 @@ int main(int argv, char** argc)
 		auto weights   = Events | Events.GetEventWeightFunctor(model_for_rew);
 		
 	
-		auto Hist_theta = make_dense_histogram( hydra::device::sys, 150, -1.0, +1.0,	theta_variables,	weights);
-		auto Hist_chi  = make_dense_histogram( hydra::device::sys, 150, 0.0, 2*PI,	chi_variables,	weights);
+		auto Hist_theta = hydra::make_dense_histogram( hydra::device::sys, 150, -1.0, +1.0,	theta_variables,	weights);
+		auto Hist_chi  = hydra::make_dense_histogram( hydra::device::sys, 150, 0.0, 2*PI,	chi_variables,	weights);
 		
 		
         for(size_t i=0; i< 150; i++) { 
@@ -254,6 +258,34 @@ int main(int argv, char** argc)
             chidist_w.SetBinContent(i+1, Hist_chi.GetBinContent(i) );
         }
         
+    
+    }
+    
+    
+    // Test: doing the sample
+    {
+    
+        hydra::multivector< hydra::tuple< theta_l_t, chi_t> , hydra::host::sys_t > buffer(nentries);
+
+        std::array<double, 3> _max{-1.0, 0.0};
+        std::array<double, 3> _min{+1.0, 2*PI};
+        
+        auto range = hydra::sample( buffer.begin(),  buffer.end(), _min, _max, MODEL);
+        
+        hydra::device::vector< theta_l_t > theta_var(nentries);
+        hydra::device::vector< chi_t > chi_var(nentries);
+        
+        hydra::copy(buffer.begin(_0), buffer.end(_0), theta_var.begin() );
+        hydra::copy(buffer.begin(_1), buffer.end(_1), chi_var.begin() );
+        
+		auto Hist_theta = hydra::make_dense_histogram( hydra::device::sys, 150, -1.0, +1.0, theta_var );
+		auto Hist_chi   = hydra::make_dense_histogram( hydra::device::sys, 150, 0.0, 2*PI, chi_var );
+        
+        for(size_t i=0; i< 150; i++) { 
+            thetaldist_s.SetBinContent(i+1, Hist_theta.GetBinContent(i) );
+            chidist_s.SetBinContent(i+1, Hist_chi.GetBinContent(i) );
+        }
+
     
     }
 
@@ -393,6 +425,14 @@ int main(int argv, char** argc)
     canvas_w.cd(2);
     chidist_w.Draw();
     canvas_w.SaveAs("test_D2hhmumu_w.pdf");
+    
+    TCanvas canvas_s("canvas_s","canvas_s",1600,800);
+    canvas_s.Divide(2,1);
+    canvas_s.cd(1);
+    thetaldist_s.Draw();
+    canvas_s.cd(2);
+    chidist_s.Draw();
+    canvas_s.SaveAs("test_D2hhmumu_s.pdf");
 
     m_app->Run();
 
@@ -423,6 +463,11 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
         return hydra::make_tuple( theta_l, chiangle) ;
     });
     
+        auto model_for_rew = hydra::wrap_lambda(	[ model ] __hydra_dual__ ( PionP pip, PionM pim, MuonP mup, MuonM mum){
+                theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup) );
+                chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
+                return model( theta_l, chiangle);
+        } );
     
     hydra::Vector4R D0p(D0_mass, 0.0, 0.0, 0.0);
     const double ph_masses[4]{pi_mass, pi_mass, mu_mass, mu_mass };
@@ -447,10 +492,10 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
 
         auto dataset_unwgt = hydra::unweight( dataset, model );
         
-        //auto dataset_2 = _data.Unweight() | CastToVariables ;
+        //auto dataset_unwgt2 = hydra::unweight(hydra::device::sys, _data, _data.GetEventWeightFunctor(model_for_rew)) | CastToVariables ;
         //hydra::multivector< hydra::tuple< theta_l_t, chi_t> , Backend > dataset_unwgt(bunch_size);
-        //hydra::copy(dataset_2, dataset_unwgt);
-            
+        //hydra::copy(dataset_unwgt2, dataset_unwgt);
+
         final.insert(final.size()==0? final.begin():final.end(), dataset_unwgt.begin(), dataset_unwgt.end() );
         
      } while(final.size()<=nevents );
