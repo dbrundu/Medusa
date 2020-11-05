@@ -358,8 +358,9 @@ TEST_CASE( "Phis Benchmarks")
     
     BENCHMARK_ADVANCED( "Simple Functor call on 1 event" )(Catch::Benchmark::Chronometer meter)
     {
-        size_t i = rng(index++);
-        meter.measure([=] { return MODEL( dataset_h[i] ); });
+        const size_t i = rng(index++);
+        auto x = dataset_h[i];
+        meter.measure( [=] { return MODEL( x ); });
     };
 
 
