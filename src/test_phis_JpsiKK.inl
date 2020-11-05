@@ -31,6 +31,12 @@
 #ifndef TEST_PHIS_JPSIKK_INL_
 #define TEST_PHIS_JPSIKK_INL_
 
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+
+
+#define CATCH_CONFIG_MAIN
+#include <catch/catch.hpp>
+
 
 #define DEBUG(message)\
     std::cout<< "\033[1;33mDEBUG: \033[0m" << message << "\n";\
@@ -48,6 +54,7 @@
  *---------------------------------
  */
 #include <tclap/CmdLine.h>
+
 
 /*---------------------------------
  * Include hydra classes and
@@ -69,6 +76,7 @@
 #include <hydra/Sobol.h>
 #include <hydra/LogLikelihoodFCN.h>
 
+
 /*-------------------------------------
  * Include classes from ROOT to fill
  * and draw histograms and plots.
@@ -89,6 +97,8 @@
 
 #endif //_ROOT_AVAILABLE_
 
+
+// This library
 #include <medusa/models/Utils.h>
 #include <medusa/models/phi_s/PhisSignalOnly.h>
 
@@ -121,43 +131,12 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
 
 
 
-int main(int argv, char** argc)
+TEST_CASE( "Phis Benchmarks")
 {
 
     hydra::Print::SetLevel(hydra::WARNING);
 
-    size_t  nentries   = 0; // number of events to generate, to be get from command line
-    bool do_benchmark  = true;
-
-
-    try {
-
-        TCLAP::CmdLine cmd("Command line arguments for PHSP B0s -> J/psi Phi", '=');
-
-        TCLAP::ValueArg<size_t> NArg("n", "nevents",
-                "Number of events to generate. Default is [ 10e6 ].",
-                true, 10e6, "unsigned long");
-        cmd.add(NArg);
-
-        TCLAP::ValueArg<bool> DoBenchmark("b", "benchmark",
-                "Choose wether to do the benchmark or not. Default is true.",
-                true, true, "bool");
-        cmd.add(DoBenchmark);
-
-        // Parse the argv array.
-        cmd.parse(argv, argc);
-
-        // Get the value parsed by each arg.
-        nentries       = NArg.getValue();
-        do_benchmark   = DoBenchmark.getValue();
-
-    }
-    catch (TCLAP::ArgException &e)  {
-        std::cerr << "error: " << e.error() << " for arg " << e.argId()
-                                                                << std::endl;
-    }
-
-
+    size_t  nentries   = 500000; 
 
     /*----------------------------/
     *  Constants
@@ -237,6 +216,7 @@ int main(int argv, char** argc)
     auto MODEL  = medusa::PhisSignalOnly< B0bar, dtime_t, theta_h_t, theta_l_t, chi_t>(hydraparams);
 
 
+
     /*------------------------------------------------------/
      *  Unweighted dataset generation
      *-----------------------------------------------------*/
@@ -244,113 +224,30 @@ int main(int argv, char** argc)
 
     generate_dataset(hydra::device::sys, MODEL, dataset_h, nentries, nentries);
 
-     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
-     hydra::copy(dataset_h , dataset_d);
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, chi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+    hydra::copy(dataset_h , dataset_d);
+    
+    
+    
+    const double min_t     = 0.0;
+    const double max_t     = 20.0;
+    const double min_theta = 0.0;
+    const double max_theta = PI;
+    const double min_chi   = 0.0;
+    const double max_chi   = 2*PI;
+    const size_t N         = 50;
 
-
-
-    if(do_benchmark){
-
-        const double min_t     = 0.0;
-        const double max_t     = 20.0;
-        const double min_theta = 0.0;
-        const double max_theta = PI;
-        const double min_chi   = 0.0;
-        const double max_chi   = 2*PI;
-        const size_t N         = 50;
-
-        hydra::Plain<4,  hydra::device::sys_t> Integrator( {min_t , min_theta, min_theta, min_chi},
+    hydra::Plain<4,  hydra::device::sys_t> Integrator( {min_t , min_theta, min_theta, min_chi},
                                                            {max_t , max_theta, max_theta, max_chi}, 1000000);
-
-
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of Integration
-         *-----------------------------------------------------*/
-        double sumtime = 0.0;
-        for(size_t k=0 ; k<N; ++k)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-
-            auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
-
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed = end - start;
-            sumtime += elapsed.count();
-
-        }
-
-        std::cout << "| Integration - Time (ms)                        :"<< sumtime/N   << std::endl;
-
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of Evaluation + cached integration
-         *-----------------------------------------------------*/
-       auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
-
-        sumtime = 0.0;
-
-        for(size_t k=0 ; k<N; ++k)
-        {
-             auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-
-             auto start = std::chrono::high_resolution_clock::now();
-
-             fcn(parameters);
-
-             auto end = std::chrono::high_resolution_clock::now();
-             std::chrono::duration<double, std::milli> elapsed = end - start;
-            sumtime += elapsed.count();
-
-        }
-
-        std::cout << "| Eval + Integration (cached) - Time (ms)        :"<< sumtime/N   << std::endl;
-
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of Evaluation + Integration (not cached)
-         *-----------------------------------------------------*/
-        sumtime = 0.0;
-
-        for(size_t k=0 ; k<N; ++k)
-        {
-            auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-            parameters[0] *= 1.01;
-
-            auto start = std::chrono::high_resolution_clock::now();
-
-            fcn(parameters);
-
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed = end - start;
-            sumtime += elapsed.count();
-
-        }
-
-        std::cout << "| Eval + Integration - Time (ms)                 :"<< sumtime/N   << std::endl;
-
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of cached evaluation + cached integration
-         *-----------------------------------------------------*/
-
-        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-        fcn(parameters);
-
-        auto start = std::chrono::high_resolution_clock::now();
-        for(size_t k=0 ; k<N; ++k)  fcn(parameters);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = end - start;
-
-        std::cout << "| Eval (Cached) - Time (ms)                      :"<< elapsed.count()/N   << std::endl << std::endl;
-
-    } //end benchmark
-
-
+    
+    auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
+    
+    auto fcn0 = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+    fcn0(parameters);
+    
+    
+    
+    
     /*------------------------------------------------------/
      *  Print and plot
      *-----------------------------------------------------*/
@@ -359,10 +256,7 @@ int main(int argv, char** argc)
         std::cout <<"Dataset: {"<< dataset_h[i]  << "}"<< std::endl;
 
 
-#ifdef _ROOT_AVAILABLE_
-
-    TApplication *m_app = new TApplication("myapp",0,0);
-
+    #ifdef _ROOT_AVAILABLE_
 
     TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin",100, 0, 20);
     TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
@@ -393,12 +287,58 @@ int main(int argv, char** argc)
 
     canvas.SaveAs("test_phis_JpsiKK.pdf");
 
+    #endif //_ROOT_AVAILABLE_
 
-    m_app->Run();
 
-#endif //_ROOT_AVAILABLE_
 
-    return 0;
+
+    /*------------------------------------------------------/
+     *  BENCHMARKS
+     *-----------------------------------------------------*/
+     
+    BENCHMARK( "Integration" )
+    {
+        return hydra::make_pdf( MODEL, Integrator);
+    };
+    
+    
+    
+    
+    BENCHMARK_ADVANCED( "Evaluation + cached Integration" )(Catch::Benchmark::Chronometer meter)
+    {
+        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+    
+        meter.measure([=] { return fcn(parameters); });
+    };
+    
+    
+    
+    
+    BENCHMARK_ADVANCED( "Evaluation + non-cached Integration" )(Catch::Benchmark::Chronometer meter)
+    {
+        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+        parameters[0] *= 1.01;
+    
+        meter.measure([=] { return fcn(parameters); });
+    };
+    
+    
+    
+    
+    BENCHMARK( "Cached Evaluation + cached Integration" )
+    {    
+        return fcn0(parameters); 
+    };
+    
+    
+    
+    
+    BENCHMARK( "Simple Functor call" )
+    {
+        return MODEL( dataset_h[0] );
+    };
+
+
 }
 
 
@@ -492,7 +432,7 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
     //output
     std::cout << std::endl;
     std::cout << std::endl;
-    std::cout << "----------------- Device ----------------"  << std::endl;
+    std::cout << "-----------Generation on Device ---------"  << std::endl;
     std::cout << "| B0 -> J/psi Phi                        "  << std::endl;
     std::cout << "| Number of events :"<< nevents             << std::endl;
     std::cout << "| Number of events gen:"<< k*bunch_size     << std::endl;
