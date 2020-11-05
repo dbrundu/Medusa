@@ -333,11 +333,9 @@ TEST_CASE( "Phis Benchmarks")
     
     
     
-    BENCHMARK_ADVANCED( "Functor call" )(Catch::Benchmark::Chronometer meter)
+    BENCHMARK( "Simple Functor call" )
     {
-        auto x = dataset_h[0];
-    
-        meter.measure([=] { return MODEL(x); });
+        return MODEL( dataset_h[0] );
     };
 
 
