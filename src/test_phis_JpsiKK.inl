@@ -356,10 +356,10 @@ TEST_CASE( "Phis Benchmarks")
     auto rng = hydra::detail::RndUniform<size_t , hydra::default_random_engine >(S(), 0, dataset_h.size()-1);
     size_t index=0;
     
-    BENCHMARK( "Simple Functor call on 1 event" )
+    BENCHMARK_ADVANCED( "Simple Functor call on 1 event" )
     {
         size_t i = rng(index++);
-        return MODEL( dataset_h[i] );
+        meter.measure([=] { return MODEL( dataset_h[i] ); });
     };
 
 
