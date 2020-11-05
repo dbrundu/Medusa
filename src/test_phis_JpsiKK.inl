@@ -298,7 +298,7 @@ TEST_CASE( "Phis Benchmarks")
      
     BENCHMARK( "Integration" )
     {
-        return hydra::make_pdf( MODEL, Integrator);
+        return Integrator(MODEL) ; 
     };
     
     
@@ -332,10 +332,11 @@ TEST_CASE( "Phis Benchmarks")
     
     
     
+    size_t index = 0;
     
-    BENCHMARK( "Simple Functor call" )
+    BENCHMARK( "Simple Functor call on 1 event" )
     {
-        return MODEL( dataset_h[0] );
+        return MODEL( dataset_h[index++] );
     };
 
 
