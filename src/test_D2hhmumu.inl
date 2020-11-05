@@ -31,6 +31,11 @@
 #ifndef TEST_D2HHMUMU_INL_
 #define TEST_D2HHMUMU_INL_
 
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+
+#define CATCH_CONFIG_MAIN
+#include <catch/catch.hpp>
+
 
 #define DEBUG(message)\
     std::cout<< "\033[1;33mDEBUG: \033[0m" << message << "\n";\
@@ -119,48 +124,23 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
 
 
 
-int main(int argv, char** argc)
+TEST_CASE( "D0->hhmumu Benchmarks")
 {
 
     hydra::Print::SetLevel(hydra::WARNING);
 
-    size_t  nentries   = 0; // number of events to generate, to be get from command line
+    size_t  nentries   = 1000000; 
     bool do_benchmark  = true;
-
-
-    try {
-
-        TCLAP::CmdLine cmd("Command line arguments for PHSP B0s -> J/psi Phi", '=');
-
-        TCLAP::ValueArg<size_t> NArg("n", "nevents",
-                "Number of events to generate. Default is [ 10e6 ].",
-                true, 10e6, "unsigned long");
-        cmd.add(NArg);
-
-        TCLAP::ValueArg<bool> DoBenchmark("b", "benchmark",
-                "Choose wether to do the benchmark or not. Default is true.",
-                true, true, "bool");
-        cmd.add(DoBenchmark);
-
-        // Parse the argv array.
-        cmd.parse(argv, argc);
-
-        // Get the value parsed by each arg.
-        nentries       = NArg.getValue();
-        do_benchmark   = DoBenchmark.getValue();
-
-    }
-    catch (TCLAP::ArgException &e)  {
-        std::cerr << "error: " << e.error() << " for arg " << e.argId()
-                                                                << std::endl;
-    }
+    
+    /*----------------------------/
+    *  Constants and Histograms
+    *--------------------------- */
 
     const double D0_mass    = 1864.83;
     const double pi_mass    = 139.57061;
     const double mu_mass    = 105.6583745 ;
     
-#ifdef _ROOT_AVAILABLE_
-
+    #ifdef _ROOT_AVAILABLE_
     TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
     TH1D chidist("chidist","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
     
@@ -169,15 +149,14 @@ int main(int argv, char** argc)
     
     TH1D thetaldist_s("thetaldist_s","Theta_l Angle; angle (rad); Candidates / bin", 150, -1.0, 1.0);
     TH1D chidist_s("chidist_s","Chi angle;angle (rad);Candidates / bin", 150, 0.0, 2*PI);
-    
-#endif
+    #endif
 
 
     /*----------------------------/
     * Angular Model
     *--------------------------- */
-    const double H2 = 0.03; // 0.03;
-    const double H3 = -0.05; //-0.05 ;
+    const double H2 = 0.03; 
+    const double H3 = -0.05; 
     const double H4 = 0.0 ;
     const double H5 = 0.0 ; 
     const double H6 = 0.0 ; 
@@ -214,202 +193,22 @@ int main(int argv, char** argc)
     hydra::copy(dataset_h , dataset_d);
     
     
-    // Test: doing the reweight
-    {
-        hydra::Vector4R Parent(D0_mass, 0.0, 0.0, 0.0);
-
-        double masses[4]{pi_mass, pi_mass, mu_mass, mu_mass };
-        
-        hydra::PhaseSpace<4> phsp{D0_mass, masses};
-        
-        auto model_for_rew = hydra::wrap_lambda(	[ MODEL ] __hydra_dual__ ( PionP pip, PionM pim, MuonP mup, MuonM mum){
-                theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup) );
-                chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
-                return MODEL( theta_l, chiangle);
-        } );
-        
-        auto CastToTheta_l  = hydra::wrap_lambda( [] __hydra_dual__ (PionP pip, PionM pim, MuonP mup, MuonM mum){
-                theta_l_t costheta_l    = medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup);
-                return costheta_l;
-            });
-            
-        auto CastToPhi  = hydra::wrap_lambda( [] __hydra_dual__ (PionP pip, PionM pim, MuonP mup, MuonM mum){
-                chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
-                return chiangle;
-            });
-            
-        hydra::Decays< hydra::tuple<PionP,PionM,MuonP,MuonM>, hydra::device::sys_t > Events(D0_mass, masses, nentries);
-        
-        phsp.Generate(Parent, Events);
-        
-		auto theta_variables = Events | CastToTheta_l ;
-
-		auto chi_variables   = Events | CastToPhi ;
-
-		auto weights   = Events | Events.GetEventWeightFunctor(model_for_rew);
-		
-	
-		auto Hist_theta = hydra::make_dense_histogram( hydra::device::sys, 150, -1.0, +1.0,	theta_variables,	weights);
-		auto Hist_chi  = hydra::make_dense_histogram( hydra::device::sys, 150, 0.0, 2*PI,	chi_variables,	weights);
-		
-		
-        for(size_t i=0; i< 150; i++) { 
-            thetaldist_w.SetBinContent(i+1, Hist_theta.GetBinContent(i) );
-            chidist_w.SetBinContent(i+1, Hist_chi.GetBinContent(i) );
-        }
-        
     
-    }
-    
-    
-    // Test: doing the sample
-    {
-    
-        hydra::multivector< hydra::tuple< theta_l_t, chi_t> , hydra::host::sys_t > buffer(nentries);
-
-        std::array<double, 3> _max{-1.0, 0.0};
-        std::array<double, 3> _min{+1.0, 2*PI};
-        
-        auto range = hydra::sample( buffer.begin(),  buffer.end(), _min, _max, MODEL);
-        
-        hydra::device::vector< theta_l_t > theta_var(nentries);
-        hydra::device::vector< chi_t > chi_var(nentries);
-        
-        hydra::copy(buffer.begin(_0), buffer.end(_0), theta_var.begin() );
-        hydra::copy(buffer.begin(_1), buffer.end(_1), chi_var.begin() );
-        
-		auto Hist_theta = hydra::make_dense_histogram( hydra::device::sys, 150, -1.0, +1.0, theta_var );
-		auto Hist_chi   = hydra::make_dense_histogram( hydra::device::sys, 150, 0.0, 2*PI, chi_var );
-        
-        for(size_t i=0; i< 150; i++) { 
-            thetaldist_s.SetBinContent(i+1, Hist_theta.GetBinContent(i) );
-            chidist_s.SetBinContent(i+1, Hist_chi.GetBinContent(i) );
-        }
-
-    
-    }
-
-
-
-
-
-
-    if(do_benchmark){
-
-        const double min_theta = 0.0;
-        const double max_theta = PI;
-        const double min_chi   = 0.0;
-        const double max_chi   = 2*PI;
-        const size_t N         = 50;
-
-        hydra::Plain<2,  hydra::device::sys_t> Integrator( {min_theta, min_chi},
-                                                           {max_theta, max_chi}, 1000000);
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of Integration
-         *-----------------------------------------------------*/
-        double sumtime = 0.0;
-        for(size_t k=0 ; k<N; ++k)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-
-            auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
-
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed = end - start;
-            sumtime += elapsed.count();
-
-        }
-
-        std::cout << "| Integration - Time (ms)                        :"<< sumtime/N   << std::endl;
-
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of Evaluation + cached integration
-         *-----------------------------------------------------*/
-       auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
-
-        sumtime = 0.0;
-
-        for(size_t k=0 ; k<N; ++k)
-        {
-             auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-
-             auto start = std::chrono::high_resolution_clock::now();
-
-             fcn(parameters);
-
-             auto end = std::chrono::high_resolution_clock::now();
-             std::chrono::duration<double, std::milli> elapsed = end - start;
-            sumtime += elapsed.count();
-
-        }
-
-        std::cout << "| Eval + Integration (cached) - Time (ms)        :"<< sumtime/N   << std::endl;
-
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of Evaluation + Integration (not cached)
-         *-----------------------------------------------------*/
-        sumtime = 0.0;
-
-        for(size_t k=0 ; k<N; ++k)
-        {
-            auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-            parameters[0] *= 1.01;
-
-            auto start = std::chrono::high_resolution_clock::now();
-
-            fcn(parameters);
-
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed = end - start;
-            sumtime += elapsed.count();
-
-        }
-
-        std::cout << "| Eval + Integration - Time (ms)                 :"<< sumtime/N   << std::endl;
-
-
-
-        /*------------------------------------------------------/
-         *  Benchmark of cached evaluation + cached integration
-         *-----------------------------------------------------*/
-
-        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-        fcn(parameters);
-
-        auto start = std::chrono::high_resolution_clock::now();
-        for(size_t k=0 ; k<N; ++k)  fcn(parameters);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = end - start;
-
-        std::cout << "| Eval (Cached) - Time (ms)                      :"<< elapsed.count()/N   << std::endl << std::endl;
-
-    } //end benchmark
-
-
     /*------------------------------------------------------/
      *  Print and plot
      *-----------------------------------------------------*/
-
     for( size_t i=0; i<10; i++ )
         std::cout <<"Dataset: {"<< dataset_h[i]  << "}"<< std::endl;
 
-
-#ifdef _ROOT_AVAILABLE_
-
-    TApplication *m_app = new TApplication("myapp",0,0);
-
+    #ifdef _ROOT_AVAILABLE_
 
     for(auto x : dataset_h){
-         thetaldist.Fill( ::cos((double)hydra::get<0>(x)) );
-         chidist.Fill( (double)hydra::get<1>(x) );
+         double ch = hydra::get<1>(x);
+         double th = hydra::get<0>(x);
+         thetaldist.Fill( ::cos(th) );
+         chidist.Fill( ch );
     }
-
+    
     TCanvas canvas("canvas","canvas",1600,800);
     canvas.Divide(2,1);
     canvas.cd(1);
@@ -417,29 +216,105 @@ int main(int argv, char** argc)
     canvas.cd(2);
     chidist.Draw();
     canvas.SaveAs("test_D2hhmumu.pdf");
+
+    #endif //_ROOT_AVAILABLE_
+
+
+
+    /*------------------------------------------------------/
+     *  Preparing the benchmark
+     *-----------------------------------------------------*/
+    const double min_theta = 0.0;
+    const double max_theta = PI;
+    const double min_chi   = 0.0;
+    const double max_chi   = 2*PI;
+    const size_t N         = 50;
+        
+    hydra::Plain<2,  hydra::device::sys_t> Integrator( {min_theta, min_chi}, {max_theta, max_chi}, 1000000);
     
-    TCanvas canvas_w("canvas_w","canvas_w",1600,800);
-    canvas_w.Divide(2,1);
-    canvas_w.cd(1);
-    thetaldist_w.Draw();
-    canvas_w.cd(2);
-    chidist_w.Draw();
-    canvas_w.SaveAs("test_D2hhmumu_w.pdf");
+    auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
     
-    TCanvas canvas_s("canvas_s","canvas_s",1600,800);
-    canvas_s.Divide(2,1);
-    canvas_s.cd(1);
-    thetaldist_s.Draw();
-    canvas_s.cd(2);
-    chidist_s.Draw();
-    canvas_s.SaveAs("test_D2hhmumu_s.pdf");
+    auto fcn0 = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+    fcn0(parameters);
 
-    m_app->Run();
 
-#endif //_ROOT_AVAILABLE_
 
-    return 0;
+
+    /*------------------------------------------------------/
+     * Benchmark for functor normalization
+     *-----------------------------------------------------*/
+    BENCHMARK( "Integration" )
+    {
+        return Integrator(MODEL) ; 
+    };
+    
+    
+     
+
+    /*------------------------------------------------------/
+     * Benchmark for fcn evaluation with cached integration
+     *   This can be done because the PDF object is already
+     *   constructed, so it has its cached normalization, while the
+     *   FCN object is recreated each time, 
+     *   thus with non-cached fcn value.
+     *-----------------------------------------------------*/
+    BENCHMARK_ADVANCED( "Evaluation + cached Integration" )(Catch::Benchmark::Chronometer meter)
+    {
+        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+    
+        meter.measure([=] { return fcn(parameters); });
+    };
+    
+    
+    
+    /*------------------------------------------------------/
+     * Benchmark for fcn evaluation with non-cached integration
+     *   This can be done because the 
+     *   FCN object is recreated each time and the parameters
+     *   are modified, in order to trigger the normalization
+     *   in the PDF object.
+     *-----------------------------------------------------*/
+    BENCHMARK_ADVANCED( "Evaluation + non-cached Integration" )(Catch::Benchmark::Chronometer meter)
+    {
+        auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+        for(auto& p : parameters ) p *= 1.01;
+    
+        meter.measure([=] { return fcn(parameters); });
+    };
+    
+    
+    
+    /*------------------------------------------------------/
+     * Benchmark for fcn evaluation with all values cached
+     *   This can be done because the 
+     *   FCN object is already created and evaluated outside,
+     *   thus all the values are cached
+     *-----------------------------------------------------*/
+    BENCHMARK( "Cached Evaluation + cached Integration" )
+    {    
+        return fcn0(parameters); 
+    };
+    
+    
+  
+    /*------------------------------------------------------/
+     * Benchmark for direct functor call on 1 event
+     *-----------------------------------------------------*/
+    hydra::SeedRNG S{};
+    auto rng = hydra::detail::RndUniform<size_t , hydra::default_random_engine >(S(), 0, dataset_h.size()-1);
+    size_t index=0;
+    
+    BENCHMARK( "Simple Functor call on 1 event" )
+    {
+        size_t i = rng(index++);
+        return MODEL( dataset_h[i] );
+    };
+
+
+
 }
+
+
 
 
 
@@ -455,19 +330,20 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
     
     hydra::SeedRNG S{};
     
-    auto CastToVariables  = hydra::wrap_lambda(
-            [] __hydra_dual__ (PionP pip, PionM pim, MuonP mup, MuonM mum)
+    auto CastToVariables  = hydra::wrap_lambda( [] __hydra_dual__ (PionP pip, PionM pim, MuonP mup, MuonM mum)
     {
         theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup) );
         chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
         return hydra::make_tuple( theta_l, chiangle) ;
     });
     
-        auto model_for_rew = hydra::wrap_lambda(	[ model ] __hydra_dual__ ( PionP pip, PionM pim, MuonP mup, MuonM mum){
-                theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup) );
-                chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
-                return model( theta_l, chiangle);
-        } );
+    
+    auto model_for_rew = hydra::wrap_lambda(	[ model ] __hydra_dual__ ( PionP pip, PionM pim, MuonP mup, MuonM mum){
+        theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(pip+pim+mup+mum, mup+mum,  mup) );
+        chi_t     chiangle   = medusa::chi_plane_angle(pim, pip, mup, mum);
+        return model( theta_l, chiangle);
+    } );
+    
     
     hydra::Vector4R D0p(D0_mass, 0.0, 0.0, 0.0);
     const double ph_masses[4]{pi_mass, pi_mass, mu_mass, mu_mass };
@@ -486,16 +362,11 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
         phsp.SetSeed( S() );
         phsp.Generate(D0p, _data );
         
-        auto range  = _data | CastToVariables;
-
-        hydra::copy(range, dataset);
-
-        auto dataset_unwgt = hydra::unweight( dataset, model );
+        auto vars_unwgt = hydra::unweight(hydra::device::sys, _data, _data.GetEventWeightFunctor(model_for_rew), -1.0 , S() ) | CastToVariables ;
         
-        //auto dataset_unwgt2 = hydra::unweight(hydra::device::sys, _data, _data.GetEventWeightFunctor(model_for_rew)) | CastToVariables ;
-        //hydra::multivector< hydra::tuple< theta_l_t, chi_t> , Backend > dataset_unwgt(bunch_size);
-        //hydra::copy(dataset_unwgt2, dataset_unwgt);
-
+        hydra::multivector< hydra::tuple< theta_l_t, chi_t> , Backend > dataset_unwgt( vars_unwgt.size() );
+        hydra::copy(vars_unwgt, dataset_unwgt);
+        
         final.insert(final.size()==0? final.begin():final.end(), dataset_unwgt.begin(), dataset_unwgt.end() );
         
      } while(final.size()<=nevents );
@@ -508,11 +379,11 @@ size_t generate_dataset(Backend const& system, Model const& model, Container& fi
     //output
     std::cout << std::endl;
     std::cout << std::endl;
-    std::cout << "----------------- Device ----------------"  << std::endl;
+    std::cout << "-------------Generation on Device ---------"  << std::endl;
     std::cout << "| D0 -> pi pi mu mu                        "  << std::endl;
     std::cout << "| Number of events :"<< nevents             << std::endl;
     std::cout << "| Time (ms)        :"<< elapsed.count()     << std::endl;
-    std::cout << "-----------------------------------------"  << std::endl;
+    std::cout << "-------------------------------------------"  << std::endl;
 
     return final.size();
 

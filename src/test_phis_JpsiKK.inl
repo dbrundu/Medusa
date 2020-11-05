@@ -136,7 +136,7 @@ TEST_CASE( "Phis Benchmarks")
 
     hydra::Print::SetLevel(hydra::WARNING);
 
-    size_t  nentries   = 500000; 
+    size_t  nentries   = 1000000; 
 
     /*----------------------------/
     *  Constants
@@ -293,9 +293,8 @@ TEST_CASE( "Phis Benchmarks")
 
 
     /*------------------------------------------------------/
-     *  BENCHMARKS
+     * Benchmark for functor normalization
      *-----------------------------------------------------*/
-     
     BENCHMARK( "Integration" )
     {
         return Integrator(MODEL) ; 
@@ -303,7 +302,14 @@ TEST_CASE( "Phis Benchmarks")
     
     
     
-    
+
+    /*------------------------------------------------------/
+     * Benchmark for fcn evaluation with cached integration
+     *   This can be done because the PDF object is already
+     *   constructed, so it has its cached normalization, while the
+     *   FCN object is recreated each time, 
+     *   thus with non-cached fcn value.
+     *-----------------------------------------------------*/
     BENCHMARK_ADVANCED( "Evaluation + cached Integration" )(Catch::Benchmark::Chronometer meter)
     {
         auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
@@ -313,30 +319,47 @@ TEST_CASE( "Phis Benchmarks")
     
     
     
-    
+    /*------------------------------------------------------/
+     * Benchmark for fcn evaluation with non-cached integration
+     *   This can be done because the 
+     *   FCN object is recreated each time and the parameters
+     *   are modified, in order to trigger the normalization
+     *   in the PDF object.
+     *-----------------------------------------------------*/
     BENCHMARK_ADVANCED( "Evaluation + non-cached Integration" )(Catch::Benchmark::Chronometer meter)
     {
         auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-        parameters[0] *= 1.01;
+        for(auto& p : parameters ) p *= 1.01;
     
         meter.measure([=] { return fcn(parameters); });
     };
     
     
     
-    
+    /*------------------------------------------------------/
+     * Benchmark for fcn evaluation with all values cached
+     *   This can be done because the 
+     *   FCN object is already created and evaluated outside,
+     *   thus all the values are cached
+     *-----------------------------------------------------*/
     BENCHMARK( "Cached Evaluation + cached Integration" )
     {    
         return fcn0(parameters); 
     };
     
     
-    
-    size_t index = 0;
+  
+    /*------------------------------------------------------/
+     * Benchmark for direct functor call on 1 event
+     *-----------------------------------------------------*/
+    hydra::SeedRNG S{};
+    auto rng = hydra::detail::RndUniform<size_t , hydra::default_random_engine >(S(), 0, dataset_h.size()-1);
+    size_t index=0;
     
     BENCHMARK( "Simple Functor call on 1 event" )
     {
-        return MODEL( dataset_h[index++] );
+        size_t i = rng(index++);
+        return MODEL( dataset_h[i] );
     };
 
 
