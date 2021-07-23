@@ -5,7 +5,7 @@ Medusa is a C++14 compliant application, highly based on [HYDRA v.3](https://git
 
 
 ## Dependencies
-Medusa depends on [HYDRA >= v.3.2.1](https://github.com/MultithreadCorner/Hydra), [GCC >= v.8](https://gcc.gnu.org/), [ROOT >= v.6.14](https://github.com/root-project/root), [libconfig >= v1.5](https://hyperrealm.github.io/libconfig/), [TCLAP >= v1.2.1](http://tclap.sourceforge.net/). Optionally  [CUDA >= v.9.2](https://developer.nvidia.com/cuda-toolkit) is needed to use nVidia GPUs. 
+Medusa depends on [HYDRA >= v.3.2.1](https://github.com/MultithreadCorner/Hydra), [GCC >= v.8](https://gcc.gnu.org/), [ROOT >= v.6.22.08](https://github.com/root-project/root), [libconfig >= v1.5](https://hyperrealm.github.io/libconfig/), [TCLAP >= v1.2.4](http://tclap.sourceforge.net/). Optionally  [CUDA >= v.9.2](https://developer.nvidia.com/cuda-toolkit) is needed to use nVidia GPUs. 
 Medusa also uses [Catch2](https://github.com/catchorg/Catch2/tree/v2.x) to perform test and micro-benchmarks; this library is already included as unique header.
 
 ## Installation, Build and Run the first tests
