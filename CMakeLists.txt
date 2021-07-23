@@ -10,6 +10,7 @@ if(NOT UNIX)
 endif()
 
 # cmake path dir
+set(CMAKE_PREFIX_PATH "/home/aricci/MedusaDevDir/Hydra" "/home/aricci/MedusaDevDir/tclap-1.2.4/include")    # paths on INFN server
 set(MEDUSA_CMAKE_DIR "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH "${MEDUSA_CMAKE_DIR}" ${CMAKE_MODULE_PATH})
 set(CMAKE_VERBOSE_MAKEFILE  ON)
