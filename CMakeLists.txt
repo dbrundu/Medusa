@@ -176,7 +176,9 @@ MESSAGE(STATUS "Project build dir: ${PROJECT_BINARY_DIR}" )
 #+++++++++++++++++++++++++++
 #   targets    +
 #+++++++++++++++++++++++++++
-include(${MEDUSA_CMAKE_DIR}/AddTarget.cmake)
+include(${MEDUSA_CMAKE_DIR}/AddTarget_Fit.cmake)
+include(${MEDUSA_CMAKE_DIR}/AddTarget_Benchmarks.cmake)
 
-ADD_TARGET(fit_B0s_Jpsi_phi)
-ADD_TARGET(benchmarks_B0s_Jpsi_phi)
+ADD_TARGET_FIT(fit_B0s_Jpsi_phi)
+ADD_TARGET_BENCHMARKS(benchmarks_B0s_Jpsi_phi)
+ADD_TARGET_BENCHMARKS(benchmarks2_B0s_Jpsi_phi)

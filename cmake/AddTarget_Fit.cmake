@@ -1,5 +1,5 @@
-# define the function ADD_TARGET(target_name)
-function(ADD_TARGET target_name)
+# define the function ADD_TARGET_FIT(target_name)
+function(ADD_TARGET_FIT target_name)
         
         message(STATUS "-----------")
 
@@ -70,4 +70,4 @@ function(ADD_TARGET target_name)
 
          endif(BUILD_OMP_TARGETS)
          
-endfunction(ADD_TARGET)  
+endfunction(ADD_TARGET_FIT)  

@@ -21,11 +21,11 @@
  *
  *---------------------------------------------------------------------------*/
 /*----------------------------------------
- *  Created: 04/07/2021
+ *  Created: 18/08/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  benchmarks_B0s_Jpsi_phi.cpp
+ *  Other benchmarks_B0s_Jpsi_phi.cu
  *----------------------------------------*/
 
-#include <src/benchmarks_B0s_Jpsi_phi.inl>
+#include <src/benchmarks/benchmarks2_B0s_Jpsi_phi.inl>
