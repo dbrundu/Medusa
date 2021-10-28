@@ -94,6 +94,7 @@ int main(int argv, char** argc)
     size_t calls = 0;
 	size_t iterations = 0;
 	double max_error = 0;
+    double edm = 0;
 
 	try {
 
@@ -111,6 +112,9 @@ int main(int argv, char** argc)
 		TCLAP::ValueArg<size_t> IterationsArg("i", "max-iterations", "Maximum number of iterations",false, 150, "size_t");
 		cmd.add(IterationsArg);
 
+        TCLAP::ValueArg<double> EdmArg("d", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
+		cmd.add(EdmArg);
+
 		// Parse the argv array.
 		cmd.parse(argv, argc);
 
@@ -119,6 +123,7 @@ int main(int argv, char** argc)
         calls = NCallsArg.getValue();
 		iterations = IterationsArg.getValue();
 		max_error  = MaxErrorArg.getValue();
+        edm = EdmArg.getValue();
 
 	}
 	catch (TCLAP::ArgException &e)  {
@@ -258,6 +263,75 @@ int main(int argv, char** argc)
     #endif //_ROOT_AVAILABLE_
 
 
+    //---------------------------------------------
+    //   Set the starting values for the fit
+    //---------------------------------------------
+
+    // distortion factor
+    double factor = 1.01;
+
+    // model parameters
+    const double fA0         = ::sqrt(0.542)*factor;
+    const double fAperp      = ::sqrt(0.206)*factor;
+    const double fAS         = ::sqrt(0.0037)*factor;
+
+    const double fphi0       = -0.082*factor;
+    const double fphipar     = -0.125*factor;            // -0.043 + phi0
+    const double fphiperp    = -0.156*factor;            // -0.074 + phi0
+    const double fphiS       = -0.061*factor;            //  0.021 + phi0
+
+    const double flambda0    = 0.955*factor; 
+    const double flambdapar  = 0.93399*factor;           // 0.978*lambda0
+    const double flambdaperp = 1.17465*factor;           // 1.23*lambda0
+    const double flambdaS    = 1.2224*factor;            // 1.28*lambda0
+
+    const double fdelta0     = 0.0;
+    const double fdeltapar   = 3.030*factor;            // + delta0
+    const double fdeltaperp  = 2.60*factor;             // + delta0
+    const double fdeltaS     = -0.30*factor;            // + delta0
+
+    const double fdeltagammasd = -0.0044*factor;
+    const double fdeltagammas  = 0.0782*factor;
+    const double fdeltams      = 17.713*factor;
+
+    std::vector<double> fparameters = {fA0, fAperp, fAS, 
+                                      fdeltagammasd, fdeltagammas, fdeltams,
+                                      fphi0,    fphipar,    fphiperp,    fphiS,
+                                      flambda0, flambdapar, flambdaperp, flambdaS,
+                                      fdelta0,  fdeltapar,  fdeltaperp,  fdeltaS};
+
+    auto fA0_p             = hydra::Parameter::Create("fA0" ).Value(fA0).Error(0.0001).Limits(fA0-0.6, fA0+0.6);
+    auto fAperp_p          = hydra::Parameter::Create("fAperp").Value(fAperp).Error(0.0001).Limits(fAperp-0.6, fAperp+0.6);
+    auto fAS_p             = hydra::Parameter::Create("fAS" ).Value(fAS).Error(0.0001).Limits(fAS-0.3, fAS+0.3);
+
+    auto fDeltaGamma_sd_p  = hydra::Parameter::Create("fDeltaGamma_sd" ).Value(fdeltagammasd).Error(0.0001).Limits(fdeltagammasd-0.3, fdeltagammasd+0.3);
+    auto fDeltaGamma_p     = hydra::Parameter::Create("fDeltaGamma").Value(fdeltagammas).Error(0.0001).Limits(fdeltagammas-0.3, fdeltagammas+0.3);
+    auto fDeltaM_p         = hydra::Parameter::Create("fDeltaM" ).Value(fdeltams).Error(0.0001).Limits(fdeltams-3, fdeltams+3);
+
+    auto fphi_0_p          = hydra::Parameter::Create("fphi_0").Value(fphi0).Error(0.0001).Limits(fphi0-0.3, fphi0+0.3);
+    auto fphi_par_p        = hydra::Parameter::Create("fphi_par" ).Value(fphipar).Error(0.0001).Limits(fphipar-0.3, fphipar+0.3);
+    auto fphi_perp_p       = hydra::Parameter::Create("fphi_perp").Value(fphiperp).Error(0.0001).Limits(fphiperp-0.3, fphiperp+0.3);
+    auto fphi_S_p          = hydra::Parameter::Create("fphi_S" ).Value(fphiS).Error(0.0001).Limits(fphiS-0.3, fphiS+0.3);
+
+    auto flambda_0_p       = hydra::Parameter::Create("flambda_0").Value(flambda0).Error(0.0001).Limits(flambda0-0.5, flambda0+0.5);
+    auto flambda_par_p     = hydra::Parameter::Create("flambda_par" ).Value(flambdapar).Error(0.0001).Limits(flambdapar-0.5,flambdapar+0.5);
+    auto flambda_perp_p    = hydra::Parameter::Create("flambda_perp").Value(flambdaperp).Error(0.0001).Limits(flambdaperp-0.5, flambdaperp+0.5);
+    auto flambda_S_p       = hydra::Parameter::Create("flambda_S" ).Value(flambdaS).Error(0.0001).Limits(flambdaS-0.5, flambdaS+0.5);
+
+    auto fdelta_0_p        = hydra::Parameter::Create("fdelta_0").Value(fdelta0).Error(0.0001).Limits(fdelta0-0.5, fdelta0+0.5);
+    auto fdelta_par_p      = hydra::Parameter::Create("fdelta_par").Value(fdeltapar).Error(0.0001).Limits(fdeltapar-2, fdeltapar+2);
+    auto fdelta_perp_p     = hydra::Parameter::Create("fdelta_perp" ).Value(fdeltaperp).Error(0.0001).Limits(fdeltaperp-2, fdeltaperp+2);
+    auto fdelta_S_p        = hydra::Parameter::Create("fdelta_S").Value(fdeltaS).Error(0.0001).Limits(fdeltaS-2, fdeltaS+2);
+
+    hydra::Parameter hydrafparams[18] = {fA0_p,            fAperp_p,      fAS_p,
+                                         fDeltaGamma_sd_p, fDeltaGamma_p, fDeltaM_p,
+                                         fphi_0_p,         fphi_par_p,    fphi_perp_p,    fphi_S_p,
+                                         flambda_0_p,      flambda_par_p, flambda_perp_p, flambda_S_p,
+                                         fdelta_0_p,       fdelta_par_p,  fdelta_perp_p,  fdelta_S_p};
+
+    auto model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydrafparams);
+
+
     //---------------------------------
     //          PDF generation
     //---------------------------------
@@ -289,7 +363,7 @@ int main(int argv, char** argc)
     hydra::Vegas<N, hydra::device::sys_t> Vegas_d(State_d);
 
     // make PDF
-    auto model_PDF = hydra::make_pdf(Model, Vegas_d);
+    auto model_PDF = hydra::make_pdf(model, Vegas_d);
 
     // print the normalization factor
     std::cout << " "                                                            << std::endl;
@@ -314,18 +388,18 @@ int main(int argv, char** argc)
     auto x = dataset_d[0];
 
     auto start_functor = std::chrono::high_resolution_clock::now();
-    Model(x);
+    model(x);
     auto stop_functor = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed_functor = stop_functor - start_functor;
 
-    std::cout << "Functor = " << Model(x) << std::endl;
+    std::cout << "Functor = " << model(x) << std::endl;
     std::cout << "Time (ms) = " << elapsed_functor.count() << std::endl;
 
 
     // print Vegas integration
     auto start_vegas = std::chrono::high_resolution_clock::now();
-    Vegas_d.Integrate(Model);
+    Vegas_d.Integrate(model);
     auto stop_vegas = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed_vegas = stop_vegas - start_vegas;
