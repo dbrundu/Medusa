@@ -22,16 +22,16 @@
  *---------------------------------------------------------------------------*/
 
 /*----------------------------------------
- *  Generate_dataset.h
+ *  GenerateDataset_PhisFull.h
  *
- *  Created: 07/07/2021
+ *  Created: 29/10/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
  *----------------------------------------*/
 
-#ifndef GENERATE_DATASET_H_
-#define GENERATE_DATASET_H_
+#ifndef GENERATE_DATASET_PHIS_FULL_H_
+#define GENERATE_DATASET_PHIS_FULL_H_
 
 
 // std
@@ -51,7 +51,7 @@
 #include <hydra/Tuple.h>
 
 // Medusa
-#include <medusa/phi_s/details/Parameters.h>
+#include <medusa/phi_s/Parameters.h>
 #include <medusa/Angles.h>
 
 
@@ -59,7 +59,9 @@
 namespace medusa {
 
 
-    /* Function that provides the Monte Carlo dataset (time and helicity angles) for the decay
+    /* Function that provides the Monte Carlo dataset in the full model (time, helicity angles, tagging,
+     * time resolution and acceptances) of the decay
+     *
      *                          B0s -> J/psi (Phi -> K+ K-)
      *                                  |-> mu+ mu-
      * Parameters:
@@ -70,7 +72,7 @@ namespace medusa {
      */
 
     template<typename Model, typename Container>
-    size_t generate_dataset(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
+    size_t GenerateDataset_PhisFull(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
     {
 
         // default namespaces
@@ -85,7 +87,7 @@ namespace medusa {
         const double mu_mass   = 0.1056583745;
 
 
-        // function that takes the four-vectors and returns the decay times and angles in the helicity basis
+        // function that takes the four-vectors and returns the decay times, helicity angles and tagging
         auto CastToVariables  = hydra::wrap_lambda(
                 [] __hydra_dual__ (Jpsi jpsi, Phi phi, MuonP mup, MuonM mum, KaonP kaonp, KaonM kaonm, size_t n )
         {
@@ -94,11 +96,23 @@ namespace medusa {
             engine.discard(n);
             dtime_t decay_time = uniDist(engine);
 
+            hydra_thrust::uniform_int_distribution<int> uniDist2(-1, 1);
+            engine.discard(1);
+            qOS_t qOS = uniDist2(engine);
+            engine.discard(1);
+            qSS_t qSS = uniDist2(engine);
+
+            hydra_thrust::uniform_real_distribution<double> uniDist3(0.0, 1.0);
+            engine.discard(1);
+            etaOS_t etaOS = uniDist3(engine);
+            engine.discard(1);
+            etaSS_t etaSS = uniDist3(engine);
+
             theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(jpsi + phi, phi,  kaonp) );
             theta_h_t theta_h    = ::acos( medusa::cos_decay_angle(jpsi + phi, jpsi, mup) );
             phi_t     phiangle   = medusa::phi_plane_angle(kaonm, kaonp, mup, mum);
 
-            return hydra::make_tuple(decay_time, theta_h, theta_l, phiangle) ;
+            return hydra::make_tuple(decay_time, theta_h, theta_l, phiangle, qOS, qSS, etaOS, etaSS) ;
 
         });
 
@@ -135,7 +149,8 @@ namespace medusa {
 
 
         // container to hold the times and helicity angles of the decay
-        hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::device::sys_t> dataset(bunch_size);
+        hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+                                        qOS_t, qSS_t, etaOS_t, etaSS_t> , hydra::device::sys_t> dataset(bunch_size);
 
 
         // random seed generator inizialized to the default
@@ -209,4 +224,4 @@ namespace medusa {
 
 } // namespace medusa
 
-#endif // GENERATE_DATASET_H_
+#endif // GENERATE_DATASET_PHIS_FULL_H_

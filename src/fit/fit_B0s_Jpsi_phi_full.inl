@@ -20,17 +20,20 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*----------------------------------------
- *  Created: 26/05/2021
+/*---------------------------------------------------------------------------
+ *  Created: 29/10/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
  *  B0s -> J/psi  (Phi -> K+ K-)
  *          |-> mu+ mu-
- *----------------------------------------*/
+ * 
+ *  Fit with full model, i.e. signal plus experimental artifacts (tagging,
+ *  time resolution and acceptances)
+ *---------------------------------------------------------------------------*/
 
-#ifndef FIT_B0S_JPSI_PHI_INL_
-#define FIT_B0S_JPSI_PHI_INL_
+#ifndef FIT_B0S_JPSI_PHI_FULL_INL_
+#define FIT_B0S_JPSI_PHI_FULL_INL_
 
 
 //---------------------------------
@@ -79,8 +82,8 @@
 #include "Minuit2/MnMinimize.h"
 
 // Medusa
-#include <medusa/phi_s/PhisSignal.h>
-#include <medusa/phi_s/GenerateDataset.h>
+#include <medusa/phi_s/phis_full/PhisFull.h>
+#include <medusa/phi_s/phis_full/GenerateDataset.h>
 
 
 //default namespaces
@@ -104,6 +107,7 @@ int main(int argv, char** argc)
     size_t calls = 0;
 	size_t iterations = 0;
 	double max_error = 0;
+    double distortion = 0;
     double edm = 0;
 
 	try {
@@ -113,16 +117,19 @@ int main(int argv, char** argc)
         TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events", false, 5e5, "size_t");
         cmd.add(EArg);
 
-		TCLAP::ValueArg<size_t> NCallsArg("c", "number-of-calls", "Number of call", false, 1e4, "size_t");
+		TCLAP::ValueArg<size_t> NCallsArg("c", "number-of-calls-vegas", "Number of calls in Vegas", false, 1e4, "size_t");
 		cmd.add(NCallsArg);
 
-		TCLAP::ValueArg<double> MaxErrorArg("e", "max-error", "Maximum error", false, 1.0e-5, "double");
+		TCLAP::ValueArg<double> MaxErrorArg("r", "max-error-vegas", "Maximum error in Vegas", false, 1.0e-5, "double");
 		cmd.add(MaxErrorArg);
 
-		TCLAP::ValueArg<size_t> IterationsArg("i", "max-iterations", "Maximum number of iterations",false, 150, "size_t");
+		TCLAP::ValueArg<size_t> IterationsArg("i", "max-iterations", "Maximum number of iterations in Vegas",false, 150, "size_t");
 		cmd.add(IterationsArg);
 
-        TCLAP::ValueArg<double> EdmArg("d", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
+        TCLAP::ValueArg<double> DistortionArg("d", "distortion-factor", "Distortion factor with respect to the dataset", false, 1.0, "double");
+        cmd.add(DistortionArg);
+
+        TCLAP::ValueArg<double> EdmArg("e", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
 		cmd.add(EdmArg);
 
 		// Parse the argv array.
@@ -133,6 +140,7 @@ int main(int argv, char** argc)
         calls = NCallsArg.getValue();
 		iterations = IterationsArg.getValue();
 		max_error  = MaxErrorArg.getValue();
+        distortion = DistortionArg.getValue();
         edm = EdmArg.getValue();
 
 	}
@@ -155,8 +163,6 @@ int main(int argv, char** argc)
     //---------------------------------
 
     // model parameters
-    const bool   B0sbar     = false;    // boolean to specify wether B0s is B0sbar or not
-
     const double A0         = ::sqrt(0.542);
     const double Aperp      = ::sqrt(0.206);
     const double AS         = ::sqrt(0.0037);
@@ -215,18 +221,20 @@ int main(int argv, char** argc)
                                         lambda_0_p, lambda_par_p, lambda_perp_p, lambda_S_p,
                                         delta_0_p,  delta_par_p,  delta_perp_p,   delta_S_p};
 
-    auto Model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydraparams);
+    auto Model = medusa::PhisFull<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t>(hydraparams);
 
 
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::host::sys_t> dataset_h;
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t> , hydra::host::sys_t> dataset_h;
 
-    generate_dataset(Model, dataset_h, nentries, nentries);
+    GenerateDataset_PhisFull(Model, dataset_h, nentries, nentries);
     
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);
 
 
@@ -276,33 +284,30 @@ int main(int argv, char** argc)
     //---------------------------------------------
     //   Set the starting values for the fit
     //---------------------------------------------
-
-    // distortion factor
-    double factor = 1.01;
-
+/*
     // model parameters
-    const double fA0         = ::sqrt(0.542)*factor;
-    const double fAperp      = ::sqrt(0.206)*factor;
-    const double fAS         = ::sqrt(0.0037)*factor;
+    const double fA0         = ::sqrt(0.542)*distortion;
+    const double fAperp      = ::sqrt(0.206)*distortion;
+    const double fAS         = ::sqrt(0.0037)*distortion;
 
-    const double fphi0       = -0.082*factor;
-    const double fphipar     = -0.125*factor;            // -0.043 + phi0
-    const double fphiperp    = -0.156*factor;            // -0.074 + phi0
-    const double fphiS       = -0.061*factor;            //  0.021 + phi0
+    const double fphi0       = -0.082*distortion;
+    const double fphipar     = -0.125*distortion;            // -0.043 + phi0
+    const double fphiperp    = -0.156*distortion;            // -0.074 + phi0
+    const double fphiS       = -0.061*distortion;            //  0.021 + phi0
 
-    const double flambda0    = 0.955*factor; 
-    const double flambdapar  = 0.93399*factor;           // 0.978*lambda0
-    const double flambdaperp = 1.17465*factor;           // 1.23*lambda0
-    const double flambdaS    = 1.2224*factor;            // 1.28*lambda0
+    const double flambda0    = 0.955*distortion; 
+    const double flambdapar  = 0.93399*distortion;           // 0.978*lambda0
+    const double flambdaperp = 1.17465*distortion;           // 1.23*lambda0
+    const double flambdaS    = 1.2224*distortion;            // 1.28*lambda0
 
     const double fdelta0     = 0.0;
-    const double fdeltapar   = 3.030*factor;            // + delta0
-    const double fdeltaperp  = 2.60*factor;             // + delta0
-    const double fdeltaS     = -0.30*factor;            // + delta0
+    const double fdeltapar   = 3.030*distortion;            // + delta0
+    const double fdeltaperp  = 2.60*distortion;             // + delta0
+    const double fdeltaS     = -0.30*distortion;            // + delta0
 
-    const double fdeltagammasd = -0.0044*factor;
-    const double fdeltagammas  = 0.0782*factor;
-    const double fdeltams      = 17.713*factor;
+    const double fdeltagammasd = -0.0044*distortion;
+    const double fdeltagammas  = 0.0782*distortion;
+    const double fdeltams      = 17.713*distortion;
 
     std::vector<double> fparameters = {fA0, fAperp, fAS, 
                                       fdeltagammasd, fdeltagammas, fdeltams,
@@ -339,7 +344,7 @@ int main(int argv, char** argc)
                                          flambda_0_p,      flambda_par_p, flambda_perp_p, flambda_S_p,
                                          fdelta_0_p,       fdelta_par_p,  fdelta_perp_p,  fdelta_S_p};
 
-    auto model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydrafparams);
+    auto model = medusa::PhisSignal<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t>(hydrafparams);
 
 
     //---------------------------------
@@ -354,11 +359,20 @@ int main(int argv, char** argc)
     const theta_l_t max_theta_l = PI;
     const phi_t min_phi         = 0.0;
     const phi_t max_phi         = 2*PI;
-    const size_t N              = 4;
+    const size_t N              = 8;
+    
+    const qOS_t min_qOS = 0;
+    const qOS_t max_qOS = 1;
+    const qSS_t min_qSS = 0;
+    const qSS_t max_qSS = 1;
+    const etaOS_t min_etaOS = 0;
+    const etaOS_t max_etaOS = 1;
+    const etaSS_t min_etaSS = 0;
+    const etaSS_t max_etaSS = 1;
 
     // Vegas State_d holds the resources for performing the integration
-    hydra::VegasState<N, hydra::device::sys_t> State_d({min_t, min_theta_h, min_theta_l, min_phi},
-                                                            {max_t, max_theta_h, max_theta_l, max_phi});
+    hydra::VegasState<N, hydra::device::sys_t> State_d({min_t, min_theta_h, min_theta_l, min_phi, min_qOS, min_qSS, min_etaOS, min_etaSS},
+                                                            {max_t, max_theta_h, max_theta_l, max_phi, max_qOS, max_qSS, max_etaOS, max_etaSS});
 
     State_d.SetVerbose(-2);
     State_d.SetAlpha(1.5);
@@ -422,9 +436,9 @@ int main(int argv, char** argc)
 	std::cout << "-----------------------------------------"<< std::endl;
 	std::cout << "| Time (ms) ="<< elapsed.count()          << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
-
+*/
     return 0;
 
 } // main
 
-#endif // FIT_B0S_JPSI_PHI_INL_
+#endif // FIT_B0S_JPSI_PHI_FULL_INL_

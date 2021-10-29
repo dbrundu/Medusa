@@ -10,7 +10,7 @@ if(NOT UNIX)
 endif()
 
 # cmake path dir
-set(CMAKE_PREFIX_PATH "/home/aricci/MedusaDevDir/Hydra" "/home/aricci/MedusaDevDir/tclap-1.2.4/include")    # paths on INFN server
+set(CMAKE_PREFIX_PATH "/home/aricci/Hydra")    # paths on cms server
 set(MEDUSA_CMAKE_DIR "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH "${MEDUSA_CMAKE_DIR}" ${CMAKE_MODULE_PATH})
 set(CMAKE_VERBOSE_MAKEFILE  ON)
@@ -179,6 +179,7 @@ MESSAGE(STATUS "Project build dir: ${PROJECT_BINARY_DIR}" )
 include(${MEDUSA_CMAKE_DIR}/AddTarget_Fit.cmake)
 include(${MEDUSA_CMAKE_DIR}/AddTarget_Benchmarks.cmake)
 
-ADD_TARGET_FIT(fit_B0s_Jpsi_phi)
-ADD_TARGET_BENCHMARKS(benchmarks_B0s_Jpsi_phi)
-ADD_TARGET_BENCHMARKS(benchmarks2_B0s_Jpsi_phi)
+ADD_TARGET_FIT(fit_B0s_Jpsi_phi_signal)
+ADD_TARGET_FIT(fit_B0s_Jpsi_phi_full)
+ADD_TARGET_BENCHMARKS(benchmarks_B0s_Jpsi_phi_signal)
+ADD_TARGET_BENCHMARKS(benchmarks2_B0s_Jpsi_phi_signal)

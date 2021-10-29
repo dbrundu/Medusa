@@ -20,12 +20,12 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*----------------------------------------
- *  Created: 26/05/2021
+/*---------------------------------------------------------------------------
+ *  Created: 04/07/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  fit_B0s_Jpsi_phi.cu
- *----------------------------------------*/
+ *  benchmarks_B0s_Jpsi_phi_signal.cu
+ *---------------------------------------------------------------------------*/
 
-#include <src/fit_B0s_Jpsi_phi.inl>
+#include <src/benchmarks/benchmarks_B0s_Jpsi_phi_signal.inl>

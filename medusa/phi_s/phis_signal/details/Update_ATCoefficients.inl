@@ -32,8 +32,8 @@
  *  by using the formulas in Table 3 on arXiv:1906.08356v4.
  */
 
-#ifndef PHISSIGNAL_INL_
-#define PHISSIGNAL_INL_
+#ifndef PHIS_SIGNAL_INL_
+#define PHIS_SIGNAL_INL_
 
 namespace medusa {
 
@@ -440,4 +440,4 @@ void PhisSignal<B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi, S
 }  // namespace medusa
 
 
-#endif /* PHISSIGNAL_INL_ */
+#endif /* PHIS_SIGNAL_INL_ */

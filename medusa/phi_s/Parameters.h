@@ -26,12 +26,12 @@
  *  Created on: 04/06/2021
  *      Author: Alessandro Maria Ricci
  * 
- * 	This library contains all parameters used by PhisSignal.h.
+ * 	This library contains all parameters used by PhisSignal.h amd PhisComplete.h.
  */
 
 
-#ifndef MEDUSA_PARAMETERS_H_
-#define MEDUSA_PARAMETERS_H_
+#ifndef PHIS_PARAMETERS_H_
+#define PHIS_PARAMETERS_H_
 
 // Hydra
 #include <hydra/detail/Config.h>
@@ -61,6 +61,12 @@ declarg(theta_l_t,  double)
 declarg(phi_t,      double)
 declarg(dtime_t,    double)
 
+// new types for tagging variables
+declarg(qOS_t, 	 int)
+declarg(qSS_t, 	 int)
+declarg(etaOS_t, double)
+declarg(etaSS_t, double)
+
 
 
 namespace medusa {
@@ -82,7 +88,7 @@ namespace medusa {
 
 		struct AngularFunctions
 		{
-			// ctor of the angular functions fk(omega)
+			// ctor of the angular functions f_k(theta_h, theta_l, phi)
 			__hydra_dual__
 			AngularFunctions(double theta_h, double theta_l, double phi)
 			{
@@ -138,4 +144,4 @@ namespace medusa {
 
 }  // namespace medusa
 
-#endif /* MEDUSA_PARAMETERS_H_ */
+#endif /* PHIS_PARAMETERS_H_ */
