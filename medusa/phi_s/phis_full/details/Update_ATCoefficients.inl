@@ -26,14 +26,14 @@
  *
  *  Created on: 29/10/2020
  *      Author: Antonio Augusto Alves Junior
- * 		Updated by Alessandro Maria Ricci in 04/06/2021
+ * 		Updated by Alessandro Maria Ricci in 04/11/2021
  * 
  * 	This function updates the values of the angular coefficients a_k, b_k, c_k, d_k
- *  by using the formulas in Table 3 on arXiv:1906.08356v4.
+ *  by using the formulas in Table 3 in arXiv:1906.08356v4.
  */
 
-#ifndef PHISSIGNAL_INL_
-#define PHISSIGNAL_INL_
+#ifndef FULL_ANALYTIC_PHIS_INL_
+#define FULL_ANALYTIC_PHIS_INL_
 
 namespace medusa {
 
@@ -45,9 +45,10 @@ template<typename ArgTypeTime,
          typename ArgTypeQSS,
          typename ArgTypeEtaOS,
          typename ArgTypeEtaSS,
+		 typename ArgTypeDelta,
 		 typename Signature >
-void PhisFull<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-					ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, Signature>::Update_ATCoefficients()
+void FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+						ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta, Signature>::Update_ATCoefficients()
 {
 	/*
 	{
@@ -444,4 +445,4 @@ void PhisFull<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
 }  // namespace medusa
 
 
-#endif /* PHISSIGNAL_INL_ */
+#endif /* FULL_ANALYTIC_PHIS_INL_ */

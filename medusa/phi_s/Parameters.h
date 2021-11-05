@@ -66,6 +66,7 @@ declarg(qOS_t, 	 int)
 declarg(qSS_t, 	 int)
 declarg(etaOS_t, double)
 declarg(etaSS_t, double)
+declarg(delta_t, double)
 
 
 

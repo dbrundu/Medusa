@@ -30,8 +30,8 @@
  * 
  *----------------------------------------*/
 
-#ifndef GENERATE_DATASET_PHIS_FULL_H_
-#define GENERATE_DATASET_PHIS_FULL_H_
+#ifndef GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_
+#define GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_
 
 
 // std
@@ -59,8 +59,8 @@
 namespace medusa {
 
 
-    /* Function that provides the Monte Carlo dataset in the full model (time, helicity angles, tagging,
-     * time resolution and acceptances) of the decay
+    /* Function that provides the Monte Carlo dataset in the full analytic model (time, helicity angles,
+     * tagging, time resolution and acceptances) of the decay
      *
      *                          B0s -> J/psi (Phi -> K+ K-)
      *                                  |-> mu+ mu-
@@ -72,7 +72,7 @@ namespace medusa {
      */
 
     template<typename Model, typename Container>
-    size_t GenerateDataset_PhisFull(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
+    size_t GenerateDataset_FullAnalyticPhis(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
     {
 
         // default namespaces
@@ -108,11 +108,15 @@ namespace medusa {
             engine.discard(1);
             etaSS_t etaSS = uniDist3(engine);
 
+            hydra_thrust::uniform_real_distribution<double> uniDist4(0.0, 0.1);
+            engine.discard(1);
+            delta_t delta_time = uniDist4(engine);
+
             theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(jpsi + phi, phi,  kaonp) );
             theta_h_t theta_h    = ::acos( medusa::cos_decay_angle(jpsi + phi, jpsi, mup) );
             phi_t     phiangle   = medusa::phi_plane_angle(kaonm, kaonp, mup, mum);
 
-            return hydra::make_tuple(decay_time, theta_h, theta_l, phiangle, qOS, qSS, etaOS, etaSS) ;
+            return hydra::make_tuple(decay_time, theta_h, theta_l, phiangle, qOS, qSS, etaOS, etaSS, delta_time) ;
 
         });
 
@@ -150,7 +154,7 @@ namespace medusa {
 
         // container to hold the times and helicity angles of the decay
         hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
-                                        qOS_t, qSS_t, etaOS_t, etaSS_t> , hydra::device::sys_t> dataset(bunch_size);
+                                        qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset(bunch_size);
 
 
         // random seed generator inizialized to the default
@@ -224,4 +228,4 @@ namespace medusa {
 
 } // namespace medusa
 
-#endif // GENERATE_DATASET_PHIS_FULL_H_
+#endif // GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_

@@ -11,7 +11,7 @@ function(ADD_TARGET_FIT target_name)
                  
                  cuda_add_executable("${target_name}_cuda"
                         #EXCLUDE_FROM_ALL 
-                        "${CMAKE_CURRENT_SOURCE_DIR}/src/fit/${target_name}.cu"    
+                        "${CMAKE_CURRENT_SOURCE_DIR}/src/phi_s/fit/${target_name}.cu"    
                         OPTIONS -Xcompiler -DHYDRA_DEVICE_SYSTEM=CUDA -DHYDRA_HOST_SYSTEM=CPP)
                     
                  target_link_libraries("${target_name}_cuda" ${ROOT_LIBRARIES} ${LIBCONFIG_CPP_LIBRARIES} ${GSL_LIBRARIES})
@@ -26,7 +26,7 @@ function(ADD_TARGET_FIT target_name)
                  
                  add_executable("${target_name}_tbb"
                         # EXCLUDE_FROM_ALL
-                        "${CMAKE_CURRENT_SOURCE_DIR}/src/fit/${target_name}.cpp")
+                        "${CMAKE_CURRENT_SOURCE_DIR}/src/phi_s/fit/${target_name}.cpp")
                     
                  set_target_properties("${target_name}_tbb" 
                         PROPERTIES COMPILE_FLAGS "-DHYDRA_HOST_SYSTEM=CPP -DHYDRA_DEVICE_SYSTEM=TBB")
@@ -43,7 +43,7 @@ function(ADD_TARGET_FIT target_name)
                  
                  add_executable("${target_name}_cpp"
                         # EXCLUDE_FROM_ALL 
-                        "${CMAKE_CURRENT_SOURCE_DIR}/src/fit/${target_name}.cpp")
+                        "${CMAKE_CURRENT_SOURCE_DIR}/src/phi_s/fit/${target_name}.cpp")
                     
                  set_target_properties( "${target_name}_cpp" 
                         PROPERTIES COMPILE_FLAGS "-DHYDRA_HOST_SYSTEM=CPP -DHYDRA_DEVICE_SYSTEM=CPP")
@@ -61,7 +61,7 @@ function(ADD_TARGET_FIT target_name)
                  
                  add_executable("${target_name}_omp" 
                         #EXCLUDE_FROM_ALL
-                        "${CMAKE_CURRENT_SOURCE_DIR}/src/fit/${target_name}.cpp" )
+                        "${CMAKE_CURRENT_SOURCE_DIR}/src/phi_s/fit/${target_name}.cpp" )
                     
                  set_target_properties( "${target_name}_omp" 
                         PROPERTIES COMPILE_FLAGS "-DHYDRA_HOST_SYSTEM=CPP -DHYDRA_DEVICE_SYSTEM=OMP ${OpenMP_CXX_FLAGS}")

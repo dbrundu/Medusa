@@ -63,7 +63,7 @@ namespace medusa {
     /*
     *  @class PhisSignal
     *  Functor that provides the time dependent formula used in phi_s analysis in the only-signal model
-    *  (see Eq. (9) on arXiv:1906.08356v4)
+    *  (see Eq. (9) in arXiv:1906.08356v4)
     * 
     *  The implementation of the method Update_ATCoefficients() is inside the detail/ folder
     *
@@ -139,8 +139,8 @@ namespace medusa {
     	    #pragma unroll 10
     	    for(size_t i=0; i<10; i++)
     	    {   
-                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) on arXiv:1906.08356v4
-                // polarization factor N_k in Eq. (9) on arXiv:1906.08356v4
+                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) in arXiv:1906.08356v4
+                // polarization factor N_k in Eq. (9) in arXiv:1906.08356v4
     		    A.k[i] = 	other.GetA().k[i];
     		    B.k[i] = 	other.GetB().k[i];
     		    C.k[i] = 	other.GetC().k[i];
@@ -165,8 +165,8 @@ namespace medusa {
 		    #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
-                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) on arXiv:1906.08356v4
-                // polarization factor N_k in Eq. (9) on arXiv:1906.08356v4
+                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) in arXiv:1906.08356v4
+                // polarization factor N_k in Eq. (9) in arXiv:1906.08356v4
         	    A.k[i] = 	other.GetA().k[i];
         	    B.k[i] = 	other.GetB().k[i];
         	    C.k[i] = 	other.GetC().k[i];
@@ -183,7 +183,7 @@ namespace medusa {
         //-------------------------------------
 
         // update the values of the angular coefficients a_k, b_k, c_k, d_k and the polarization factor N_k
-        // by using the formulas in Table 3 on arXiv:1906.08356v4
+        // by using the formulas in Table 3 in arXiv:1906.08356v4
         void Update(void) override
         {
             Update_ATCoefficients();
@@ -191,7 +191,7 @@ namespace medusa {
         }
 
 
-        // evaluate the sum in Eq. (9) on arXiv:1906.08356v4
+        // evaluate the sum in Eq. (9) in arXiv:1906.08356v4
         __hydra_dual__ 
         inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi)  const
         {
@@ -267,13 +267,13 @@ namespace medusa {
 
 
         // update the values of the angular coefficients a_k, b_k, c_k, d_k
-        // by using the formulas in Table 3 on arXiv:1906.08356v4
-        // (see implementation on Update_ATCoefficients.inl)
+        // by using the formulas in Table 3 in arXiv:1906.08356v4
+        // (see implementation in Update_ATCoefficients.inl)
         void Update_ATCoefficients();
 
 
         // update the values of the polarization factor N_k
-        // by using the formulas in Table 3 on arXiv:1906.08356v4
+        // by using the formulas in Table 3 in arXiv:1906.08356v4
         void Update_NFactors()
         {
     	    /*
@@ -299,7 +299,7 @@ namespace medusa {
         }
 
 
-        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) on arXiv:1906.08356v4
+        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) in arXiv:1906.08356v4
         __hydra_dual__
         inline double Time_Factor(int index, double time, double chT1, double shT1, double cT2, double sT2) const
         {

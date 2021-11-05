@@ -29,8 +29,8 @@
  *  Reference: arXiv:1906.08356v4
  */
 
-#ifndef PHIS_FULL_H_
-#define PHIS_FULL_H_
+#ifndef FULL_ANALYTIC_PHIS_H_
+#define FULL_ANALYTIC_PHIS_H_
 
 
 // std
@@ -56,15 +56,17 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
+#include <medusa/Cerf.h>
 
 
 namespace medusa {
 
     /*
-    *  @class PhisFull
+    *  @class FullAnalyticPhis
     *  Functor that provides the time dependent formula used in phi_s analysis in the full model,
-    *  i.e. signal + experimental artifacts (tagging, time resolution and acceptances)
-    *  [see Eq. (12) on arXiv:1906.08356v4]
+    *  i.e. signal + experimental artifacts (tagging, time resolution and acceptances),
+    *  with analytical convolution and integration
+    *  [see Eq. (12) in arXiv:1906.08356v4]
     * 
     *  The implementation of the method Update_ATCoefficients() is inside the detail/ folder
     *
@@ -78,17 +80,18 @@ namespace medusa {
              typename ArgTypeQSS,
              typename ArgTypeEtaOS,
              typename ArgTypeEtaSS,
+             typename ArgTypeDelta,
              typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS) >
-    class PhisFull: public hydra::BaseFunctor< PhisFull< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS >, Signature, 18>
+                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta) >
+    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18>
     {
 
-        using ThisBaseFunctor = hydra::BaseFunctor< PhisFull< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                                ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS >, Signature, 18 >;
+        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                                                ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18 >;
 
-        using hydra::BaseFunctor< PhisFull< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS >, Signature, 18 >::_par;
+        using hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18 >::_par;
 
 
         public:
@@ -97,11 +100,11 @@ namespace medusa {
         //           Constructors
         //-------------------------------------
 
-        PhisFull() = delete;
+        FullAnalyticPhis() = delete;
 
         // ctor with list of hydra::Parameter
         // the user has to respect the parameters order
-        PhisFull(hydra::Parameter const& A_0,           hydra::Parameter const& A_perp,     hydra::Parameter const& A_S, 
+        FullAnalyticPhis(hydra::Parameter const& A_0,           hydra::Parameter const& A_perp,     hydra::Parameter const& A_S, 
                        hydra::Parameter const& DeltaGamma_sd, hydra::Parameter const& DeltaGamma, hydra::Parameter const& DeltaM,
                        hydra::Parameter const& phi_0,         hydra::Parameter const& phi_par,
                        hydra::Parameter const& phi_perp,      hydra::Parameter const& phi_S,
@@ -119,7 +122,7 @@ namespace medusa {
 
         // ctor with array of hydra::Parameter
         // the user has to respect the parameters order as the main ctor
-        explicit PhisFull( const hydra::Parameter (&Hs)[18] ):
+        explicit FullAnalyticPhis( const hydra::Parameter (&Hs)[18] ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                          Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
         {
@@ -129,7 +132,7 @@ namespace medusa {
 
         // ctor with array of double
         // the user has to respect the parameters order as the main ctor
-        explicit PhisFull( const double (&Hs)[18] ):
+        explicit FullAnalyticPhis( const double (&Hs)[18] ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                          Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
         {
@@ -137,18 +140,18 @@ namespace medusa {
         }
 
 
-        // ctor with other PhisFull instance (copy ctor)
+        // ctor with other FullAnalyticPhis instance (copy ctor)
         __hydra_dual__
-        PhisFull(PhisFull<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                        ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS> const& other):
+        FullAnalyticPhis(FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                        ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
         ThisBaseFunctor(other)
         {
 
     	    #pragma unroll 10
     	    for(size_t i=0; i<10; i++)
     	    {   
-                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) on arXiv:1906.08356v4
-                // polarization factor N_k in Eq. (9) on arXiv:1906.08356v4
+                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) in arXiv:1906.08356v4
+                // polarization factor N_k in Eq. (9) in arXiv:1906.08356v4
     		    A.k[i] = 	other.GetA().k[i];
     		    B.k[i] = 	other.GetB().k[i];
     		    C.k[i] = 	other.GetC().k[i];
@@ -164,10 +167,10 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        PhisFull<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS>& 
-        operator=( PhisFull<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS> const& other)
+        FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta>& 
+        operator=( FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other)
         {
             if(this == &other) return *this;
             ThisBaseFunctor::operator=(other);
@@ -175,8 +178,8 @@ namespace medusa {
 		    #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
-                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) on arXiv:1906.08356v4
-                // polarization factor N_k in Eq. (9) on arXiv:1906.08356v4
+                // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) in arXiv:1906.08356v4
+                // polarization factor N_k in Eq. (9) in arXiv:1906.08356v4
         	    A.k[i] = 	other.GetA().k[i];
         	    B.k[i] = 	other.GetB().k[i];
         	    C.k[i] = 	other.GetC().k[i];
@@ -193,7 +196,7 @@ namespace medusa {
         //-------------------------------------
 
         // update the values of the angular coefficients a_k, b_k, c_k, d_k and the polarization factor N_k
-        // by using the formulas in Table 3 on arXiv:1906.08356v4
+        // by using the formulas in Table 3 in arXiv:1906.08356v4
         void Update(void) override
         {
             Update_ATCoefficients();
@@ -201,31 +204,25 @@ namespace medusa {
         }
 
 
-        // evaluate the sum in Eq. (9) on arXiv:1906.08356v4
+        // evaluate the sum in Eq. (9) in arXiv:1906.08356v4
         __hydra_dual__ 
         inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi,
-                                            ArgTypeQOS qOS, ArgTypeQSS qSS, ArgTypeEtaOS etaOS, ArgTypeEtaSS etaSS)  const
+                                    ArgTypeQOS qOS, ArgTypeQSS qSS, ArgTypeEtaOS etaOS, ArgTypeEtaSS etaSS, ArgTypeDelta delta_time)  const
         {
             auto F = parameters::AngularFunctions(theta_h, theta_l, phi);
 
-            double T1 = 0.5 * time * _par[4];
-    	    double T2 = time * _par[5];
-
-            double chT1 = ::cosh(T1);
-            double shT1 = ::sinh(T1);
-            double cT2 = ::cos(T2);
-            double sT2 = ::sin(T2);
-
             double TagB0s = B0sTag(qOS, qSS, etaOS, etaSS);
             double TagB0sbar = B0sbarTag(qOS, qSS, etaOS, etaSS);
+
+            double sigma_eff = Sigma_eff(delta_time);
 
             double result = 0;
 
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
-            	result += F.fk[i]*N.k[i]*( TagB0s*Time_Factor(i, time, chT1, shT1, cT2, sT2, 1) +
-                                                TagB0sbar*Time_Factor(i, time, chT1, shT1, cT2, sT2, -1) );
+            	result += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, time, sigma_eff, 1) +
+                                                TagB0sbar*Convoluted_Time_Factor(i, time, sigma_eff, -1) );
             }
 
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
@@ -282,13 +279,13 @@ namespace medusa {
 
 
         // update the values of the angular coefficients a_k, b_k, c_k, d_k
-        // by using the formulas in Table 3 on arXiv:1906.08356v4
-        // (see implementation on Update_ATCoefficients.inl)
+        // by using the formulas in Table 3 in arXiv:1906.08356v4
+        // (see implementation in Update_ATCoefficients.inl)
         void Update_ATCoefficients();
 
 
         // update the values of the polarization factor N_k
-        // by using the formulas in Table 3 on arXiv:1906.08356v4
+        // by using the formulas in Table 3 in arXiv:1906.08356v4
         void Update_NFactors()
         {
     	    /*
@@ -314,9 +311,9 @@ namespace medusa {
         }
 
 
-        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) on arXiv:1906.08356v4
+        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) in arXiv:1906.08356v4
         __hydra_dual__
-        inline double Time_Factor(int index, double time, double chT1, double shT1, double cT2, double sT2, int Tag) const
+        inline double Convoluted_Time_Factor(int index, double time, double sigma_eff, int Tag) const
         {
 		    /*
 		    0: A_0,
@@ -327,15 +324,57 @@ namespace medusa {
 		    5: DeltaM,
 		    */
 
-    	    static const double f = 0.238732414638; // 3./(4*PI)
+    	    static const double f = 0.05968310365946074; // 3./(16*PI)
+            static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
+            std::complex<double> I(0.0, 1.0); // Imaginary unit
 
-            return f * ::exp( -(_par[3] + 0.65789) * time) *
-                                    ( A.k[index]*chT1 + B.k[index]*shT1 +
-                                        Tag*( C.k[index]*cT2 + D.k[index]*sT2 ) );
+            double Gamma = _par[3] + 0.65789;
+            double x = time/(sigma_eff*Sqrt2);
+
+            double z1 = (Gamma - 0.5*_par[4])*sigma_eff/Sqrt2;
+            double z2 = (Gamma + 0.5*_par[4])*sigma_eff/Sqrt2;
+            std::complex<double> Z_1(0.0, z1 - x);
+            std::complex<double> Z_2(0.0, z2 - x);
+
+            double Re_Z3 =   _par[5]*sigma_eff/Sqrt2;
+            double Re_Z4 = - _par[5]*sigma_eff/Sqrt2;
+            double Im_Z3 = - Gamma*sigma_eff/Sqrt2 - x;
+            double Im_Z4 =   Gamma*sigma_eff/Sqrt2 - x;
+            std::complex<double> Z_3(Re_Z3, Im_Z3);
+            std::complex<double> Z_4(Re_Z4, Im_Z4);
+
+            std::complex<double> faddeeva_sum12  = cerf::faddeeva(Z_1) + cerf::faddeeva(Z_2);
+            std::complex<double> faddeeva_diff12 = cerf::faddeeva(Z_1) - cerf::faddeeva(Z_2);
+            std::complex<double> faddeeva_sum34  = cerf::faddeeva(Z_3) + cerf::faddeeva(Z_4);
+            std::complex<double> faddeeva_diff34 = (cerf::faddeeva(Z_3) - cerf::faddeeva(Z_4)) / I;
+
+            double Re_faddeeva_sum12 = faddeeva_sum12.real();
+            double Re_faddeeva_sum34 = faddeeva_sum34.real();
+            double Re_faddeeva_diff12 = faddeeva_diff12.real();
+            double Re_faddeeva_diff34 = faddeeva_diff34.real();
+
+            double ConvoluteTimeFactor = f * ::exp( - ::pow(x, 2.0) ) *
+                                            ( A.k[index] * Re_faddeeva_sum12 + B.k[index] * Re_faddeeva_diff12 +
+                                                Tag*( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
+
+            return ConvoluteTimeFactor;
         }
 
 
-        // Tagging of B0s (See Eq. (5), (6), (13) and Table 1 on arXiv:1906.08356v4)
+        // effective resolution (See definition in page 7 in arXiv:1906.08356v4)
+        __hydra_dual__
+        inline double Sigma_eff(ArgTypeDelta delta_time) const
+        {
+            static const double b0 = 0.01297;
+            static const double b1 = 0.8446;
+
+            double sigma_eff = b0 + b1 * delta_time;
+
+            return sigma_eff;
+        }
+
+
+        // Tagging of B0s (See Eq. (5), (6), (13) and Table 1 in arXiv:1906.08356v4)
         __hydra_dual__
         inline double B0sTag(int qOS, int qSS, double etaOS, double etaSS) const
         {
@@ -359,7 +398,8 @@ namespace medusa {
             return TagB0s;
         }
 
-        // Tagging of B0sbar (See Eq. (5), (6), (14) and Table 1 on arXiv:1906.08356v4)
+
+        // Tagging of B0sbar (See Eq. (5), (6), (14) and Table 1 in arXiv:1906.08356v4)
         __hydra_dual__
         inline double B0sbarTag(int qOS, int qSS, double etaOS, double etaSS) const
         {
@@ -398,4 +438,4 @@ namespace medusa {
 // Medusa
 #include<medusa/phi_s/phis_full/details/Update_ATCoefficients.inl>
 
-#endif /* PHIS_FULL_H_ */
+#endif /* FULL_ANALYTIC_PHIS_H_ */

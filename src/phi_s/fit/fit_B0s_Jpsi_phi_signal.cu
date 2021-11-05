@@ -21,11 +21,11 @@
  *
  *---------------------------------------------------------------------------*/
 /*----------------------------------------
- *  Created: 29/10/2021
+ *  Created: 26/05/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  fit_B0s_Jpsi_phi_full.cpp
+ *  fit_B0s_Jpsi_phi_signal.cu
  *----------------------------------------*/
 
-#include <src/fit/fit_B0s_Jpsi_phi_full.inl>
+#include <src/phi_s/fit/fit_B0s_Jpsi_phi_signal.inl>

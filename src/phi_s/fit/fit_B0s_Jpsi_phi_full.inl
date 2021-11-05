@@ -28,8 +28,9 @@
  *  B0s -> J/psi  (Phi -> K+ K-)
  *          |-> mu+ mu-
  * 
- *  Fit with full model, i.e. signal plus experimental artifacts (tagging,
- *  time resolution and acceptances)
+ *  Fit with full analytic model, i.e. signal plus experimental artifacts
+ *  (tagging, time resolution and acceptances) with analytical convolution
+ *  and integration.
  *---------------------------------------------------------------------------*/
 
 #ifndef FIT_B0S_JPSI_PHI_FULL_INL_
@@ -82,7 +83,7 @@
 #include "Minuit2/MnMinimize.h"
 
 // Medusa
-#include <medusa/phi_s/phis_full/PhisFull.h>
+#include <medusa/phi_s/phis_full/FullAnalyticPhis.h>
 #include <medusa/phi_s/phis_full/GenerateDataset.h>
 
 
@@ -221,7 +222,7 @@ int main(int argv, char** argc)
                                         lambda_0_p, lambda_par_p, lambda_perp_p, lambda_S_p,
                                         delta_0_p,  delta_par_p,  delta_perp_p,   delta_S_p};
 
-    auto Model = medusa::PhisFull<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t>(hydraparams);
+    auto Model = medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(hydraparams);
 
 
     //---------------------------------
@@ -229,12 +230,12 @@ int main(int argv, char** argc)
     //---------------------------------
 
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t> , hydra::host::sys_t> dataset_h;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
-    GenerateDataset_PhisFull(Model, dataset_h, nentries, nentries);
+    GenerateDataset_FullAnalyticPhis(Model, dataset_h, nentries, nentries);
     
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);
 
 
@@ -248,7 +249,7 @@ int main(int argv, char** argc)
 
     #ifdef _ROOT_AVAILABLE_
 
-        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin",100, 0, 20);
+        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 5);
         TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
         TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin",100, -1, 1);
         TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin",50, 0, 2*PI);
@@ -344,7 +345,7 @@ int main(int argv, char** argc)
                                          flambda_0_p,      flambda_par_p, flambda_perp_p, flambda_S_p,
                                          fdelta_0_p,       fdelta_par_p,  fdelta_perp_p,  fdelta_S_p};
 
-    auto model = medusa::PhisSignal<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t>(hydrafparams);
+    auto model = medusa::PhisFull<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(hydrafparams);
 
 
     //---------------------------------
