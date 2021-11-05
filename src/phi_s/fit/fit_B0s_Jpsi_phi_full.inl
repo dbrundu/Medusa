@@ -224,11 +224,13 @@ int main(int argv, char** argc)
 
     auto Model = medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(hydraparams);
 
+    Model(1,1,1,1,1,1,1,1,0.1);
+
 
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
-
+/*
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
@@ -285,7 +287,7 @@ int main(int argv, char** argc)
     //---------------------------------------------
     //   Set the starting values for the fit
     //---------------------------------------------
-/*
+
     // model parameters
     const double fA0         = ::sqrt(0.542)*distortion;
     const double fAperp      = ::sqrt(0.206)*distortion;

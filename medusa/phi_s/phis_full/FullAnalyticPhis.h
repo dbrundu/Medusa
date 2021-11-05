@@ -218,6 +218,8 @@ namespace medusa {
 
             double result = 0;
 
+            return Convoluted_Time_Factor(0, time, 0.1, 1);
+/*
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
@@ -236,6 +238,7 @@ namespace medusa {
             {
                 return result;
             }
+*/
         }
 
 
@@ -338,8 +341,8 @@ namespace medusa {
 
             double Re_Z3 =   _par[5]*sigma_eff/Sqrt2;
             double Re_Z4 = - _par[5]*sigma_eff/Sqrt2;
-            double Im_Z3 = - Gamma*sigma_eff/Sqrt2 - x;
-            double Im_Z4 =   Gamma*sigma_eff/Sqrt2 - x;
+            double Im_Z3 = Gamma*sigma_eff/Sqrt2 - x;
+            double Im_Z4 = Gamma*sigma_eff/Sqrt2 - x;
             std::complex<double> Z_3(Re_Z3, Im_Z3);
             std::complex<double> Z_4(Re_Z4, Im_Z4);
 
@@ -353,11 +356,23 @@ namespace medusa {
             double Re_faddeeva_diff12 = faddeeva_diff12.real();
             double Re_faddeeva_diff34 = faddeeva_diff34.real();
 
-            double ConvoluteTimeFactor = f * ::exp( - ::pow(x, 2.0) ) *
+            double ConvolutedTimeFactor = f * ::exp( - ::pow(x, 2.0) ) *
                                             ( A.k[index] * Re_faddeeva_sum12 + B.k[index] * Re_faddeeva_diff12 +
                                                 Tag*( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
 
-            return ConvoluteTimeFactor;
+            std::cout << "x = " << x << std::endl;
+            std::cout << "Z_3 = " << Z_3 << std::endl;
+            std::cout << "Z_4 = " << Z_4 << std::endl;
+            std::cout << "w3 = " << cerf::faddeeva(Z_3) << std::endl;
+            std::cout << "w4 = " << cerf::faddeeva(Z_4) << std::endl;
+            std::cout << "w3+w4 = " << faddeeva_sum34 << std::endl;
+
+            std::cout << "Convolution_ak = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_sum12 << std::endl;
+            std::cout << "Convolution_bk = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_diff12 << std::endl;
+            std::cout << "Convolution_ck = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_sum34 << std::endl;
+            std::cout << "Convolution_dk = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_diff34 << std::endl;
+
+            return ConvolutedTimeFactor;
         }
 
 
