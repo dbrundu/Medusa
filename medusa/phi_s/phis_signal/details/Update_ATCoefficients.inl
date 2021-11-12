@@ -20,17 +20,16 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-
-/*
- * PhisSignal.inl
+/*---------------------------------------------------------------------------
+ *  PhisSignal.inl
  *
  *  Created on: 24/07/2020
  *      Author: Antonio Augusto Alves Junior
  * 		Updated by Alessandro Maria Ricci in 04/06/2021
  * 
- * 	This function updates the values of the angular coefficients a_k, b_k, c_k, d_k
- *  by using the formulas in Table 3 on arXiv:1906.08356v4.
- */
+ * 	This function updates the values of the angular coefficients a_k, b_k,
+ *  c_k, d_k by using the formulas in Table 3 in arXiv:1906.08356v4.
+ *---------------------------------------------------------------------------*/
 
 #ifndef PHIS_SIGNAL_INL_
 #define PHIS_SIGNAL_INL_

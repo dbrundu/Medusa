@@ -20,17 +20,16 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-
-/*
- * PhisFull.inl
+/*---------------------------------------------------------------------------
+ *  FullAnalyticPhis.inl
  *
  *  Created on: 29/10/2020
  *      Author: Antonio Augusto Alves Junior
  * 		Updated by Alessandro Maria Ricci in 04/11/2021
  * 
- * 	This function updates the values of the angular coefficients a_k, b_k, c_k, d_k
- *  by using the formulas in Table 3 in arXiv:1906.08356v4.
- */
+ * 	This function updates the values of the angular coefficients a_k, b_k,
+ *  c_k, d_k by using the formulas in Table 3 in arXiv:1906.08356v4.
+ *---------------------------------------------------------------------------*/
 
 #ifndef FULL_ANALYTIC_PHIS_INL_
 #define FULL_ANALYTIC_PHIS_INL_

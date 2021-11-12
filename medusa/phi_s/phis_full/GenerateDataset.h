@@ -20,15 +20,13 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-
-/*----------------------------------------
- *  GenerateDataset_PhisFull.h
+/*------------------------------------------
+ *  GenerateDataset_FullAnalyticPhis.h
  *
  *  Created: 29/10/2021
  *
  *  Author: Alessandro Maria Ricci
- * 
- *----------------------------------------*/
+ *------------------------------------------*/
 
 #ifndef GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_
 #define GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_

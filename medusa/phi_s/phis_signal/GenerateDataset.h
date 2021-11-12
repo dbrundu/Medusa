@@ -20,14 +20,12 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-
 /*----------------------------------------
  *  GenerateDataset_PhisSignal.h
  *
  *  Created: 07/07/2021
  *
  *  Author: Alessandro Maria Ricci
- * 
  *----------------------------------------*/
 
 #ifndef GENERATE_DATASET_PHIS_SIGNAL_H_

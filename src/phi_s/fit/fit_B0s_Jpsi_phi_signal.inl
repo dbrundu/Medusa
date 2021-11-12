@@ -285,65 +285,65 @@ int main(int argv, char** argc)
     //---------------------------------------------
 
     // model parameters
-    const double fA0         = ::sqrt(0.542)*distortion;
-    const double fAperp      = ::sqrt(0.206)*distortion;
-    const double fAS         = ::sqrt(0.0037)*distortion;
+    const double dA0         = ::sqrt(0.542)*distortion;
+    const double dAperp      = ::sqrt(0.206)*distortion;
+    const double dAS         = ::sqrt(0.0037)*distortion;
 
-    const double fphi0       = -0.082*distortion;
-    const double fphipar     = -0.125*distortion;            // -0.043 + phi0
-    const double fphiperp    = -0.156*distortion;            // -0.074 + phi0
-    const double fphiS       = -0.061*distortion;            //  0.021 + phi0
+    const double dphi0       = -0.082*distortion;
+    const double dphipar     = -0.125*distortion;            // -0.043 + phi0
+    const double dphiperp    = -0.156*distortion;            // -0.074 + phi0
+    const double dphiS       = -0.061*distortion;            //  0.021 + phi0
 
-    const double flambda0    = 0.955*distortion; 
-    const double flambdapar  = 0.93399*distortion;           // 0.978*lambda0
-    const double flambdaperp = 1.17465*distortion;           // 1.23*lambda0
-    const double flambdaS    = 1.2224*distortion;            // 1.28*lambda0
+    const double dlambda0    = 0.955*distortion; 
+    const double dlambdapar  = 0.93399*distortion;           // 0.978*lambda0
+    const double dlambdaperp = 1.17465*distortion;           // 1.23*lambda0
+    const double dlambdaS    = 1.2224*distortion;            // 1.28*lambda0
 
-    const double fdelta0     = 0.0;
-    const double fdeltapar   = 3.030*distortion;            // + delta0
-    const double fdeltaperp  = 2.60*distortion;             // + delta0
-    const double fdeltaS     = -0.30*distortion;            // + delta0
+    const double ddelta0     = 0.0;
+    const double ddeltapar   = 3.030*distortion;            // + delta0
+    const double ddeltaperp  = 2.60*distortion;             // + delta0
+    const double ddeltaS     = -0.30*distortion;            // + delta0
 
-    const double fdeltagammasd = -0.0044*distortion;
-    const double fdeltagammas  = 0.0782*distortion;
-    const double fdeltams      = 17.713*distortion;
+    const double ddeltagammasd = -0.0044*distortion;
+    const double ddeltagammas  = 0.0782*distortion;
+    const double ddeltams      = 17.713*distortion;
 
-    std::vector<double> fparameters = {fA0, fAperp, fAS, 
-                                      fdeltagammasd, fdeltagammas, fdeltams,
-                                      fphi0,    fphipar,    fphiperp,    fphiS,
-                                      flambda0, flambdapar, flambdaperp, flambdaS,
-                                      fdelta0,  fdeltapar,  fdeltaperp,  fdeltaS};
+    std::vector<double> dparameters = {dA0, dAperp, dAS, 
+                                      ddeltagammasd, ddeltagammas, ddeltams,
+                                      dphi0,    dphipar,    dphiperp,    dphiS,
+                                      dlambda0, dlambdapar, dlambdaperp, dlambdaS,
+                                      ddelta0,  ddeltapar,  ddeltaperp,  ddeltaS};
 
-    auto fA0_p             = hydra::Parameter::Create("fA0" ).Value(fA0).Error(0.0001).Limits(fA0-0.6, fA0+0.6);
-    auto fAperp_p          = hydra::Parameter::Create("fAperp").Value(fAperp).Error(0.0001).Limits(fAperp-0.6, fAperp+0.6);
-    auto fAS_p             = hydra::Parameter::Create("fAS" ).Value(fAS).Error(0.0001).Limits(fAS-0.3, fAS+0.3);
+    auto dA0_p             = hydra::Parameter::Create("fA0" ).Value(dA0).Error(0.0001).Limits(-1, 1);
+    auto dAperp_p          = hydra::Parameter::Create("fAperp").Value(dAperp).Error(0.0001).Limits(-1, 1);
+    auto dAS_p             = hydra::Parameter::Create("fAS" ).Value(dAS).Error(0.0001).Limits(-1, 1);
 
-    auto fDeltaGamma_sd_p  = hydra::Parameter::Create("fDeltaGamma_sd" ).Value(fdeltagammasd).Error(0.0001).Limits(fdeltagammasd-0.3, fdeltagammasd+0.3);
-    auto fDeltaGamma_p     = hydra::Parameter::Create("fDeltaGamma").Value(fdeltagammas).Error(0.0001).Limits(fdeltagammas-0.3, fdeltagammas+0.3);
-    auto fDeltaM_p         = hydra::Parameter::Create("fDeltaM" ).Value(fdeltams).Error(0.0001).Limits(fdeltams-3, fdeltams+3);
+    auto dDeltaGamma_sd_p  = hydra::Parameter::Create("fDeltaGamma_sd" ).Value(ddeltagammasd).Error(0.0001).Limits(ddeltagammasd-0.3, ddeltagammasd+0.3);
+    auto dDeltaGamma_p     = hydra::Parameter::Create("fDeltaGamma").Value(ddeltagammas).Error(0.0001).Limits(ddeltagammas-0.3, ddeltagammas+0.3);
+    auto dDeltaM_p         = hydra::Parameter::Create("fDeltaM" ).Value(ddeltams).Error(0.0001).Limits(ddeltams-3, ddeltams+3);
 
-    auto fphi_0_p          = hydra::Parameter::Create("fphi_0").Value(fphi0).Error(0.0001).Limits(fphi0-0.3, fphi0+0.3);
-    auto fphi_par_p        = hydra::Parameter::Create("fphi_par" ).Value(fphipar).Error(0.0001).Limits(fphipar-0.3, fphipar+0.3);
-    auto fphi_perp_p       = hydra::Parameter::Create("fphi_perp").Value(fphiperp).Error(0.0001).Limits(fphiperp-0.3, fphiperp+0.3);
-    auto fphi_S_p          = hydra::Parameter::Create("fphi_S" ).Value(fphiS).Error(0.0001).Limits(fphiS-0.3, fphiS+0.3);
+    auto dphi_0_p          = hydra::Parameter::Create("fphi_0").Value(dphi0).Error(0.0001).Limits(dphi0-0.3, dphi0+0.3);
+    auto dphi_par_p        = hydra::Parameter::Create("fphi_par" ).Value(dphipar).Error(0.0001).Limits(dphipar-0.3, dphipar+0.3);
+    auto dphi_perp_p       = hydra::Parameter::Create("fphi_perp").Value(dphiperp).Error(0.0001).Limits(dphiperp-0.3, dphiperp+0.3);
+    auto dphi_S_p          = hydra::Parameter::Create("fphi_S" ).Value(dphiS).Error(0.0001).Limits(dphiS-0.3, dphiS+0.3);
 
-    auto flambda_0_p       = hydra::Parameter::Create("flambda_0").Value(flambda0).Error(0.0001).Limits(flambda0-0.5, flambda0+0.5);
-    auto flambda_par_p     = hydra::Parameter::Create("flambda_par" ).Value(flambdapar).Error(0.0001).Limits(flambdapar-0.5,flambdapar+0.5);
-    auto flambda_perp_p    = hydra::Parameter::Create("flambda_perp").Value(flambdaperp).Error(0.0001).Limits(flambdaperp-0.5, flambdaperp+0.5);
-    auto flambda_S_p       = hydra::Parameter::Create("flambda_S" ).Value(flambdaS).Error(0.0001).Limits(flambdaS-0.5, flambdaS+0.5);
+    auto dlambda_0_p       = hydra::Parameter::Create("flambda_0").Value(dlambda0).Error(0.0001).Limits(dlambda0-0.5, dlambda0+0.5);
+    auto dlambda_par_p     = hydra::Parameter::Create("flambda_par" ).Value(dlambdapar).Error(0.0001).Limits(dlambdapar-0.5,dlambdapar+0.5);
+    auto dlambda_perp_p    = hydra::Parameter::Create("flambda_perp").Value(dlambdaperp).Error(0.0001).Limits(dlambdaperp-0.5, dlambdaperp+0.5);
+    auto dlambda_S_p       = hydra::Parameter::Create("flambda_S" ).Value(dlambdaS).Error(0.0001).Limits(dlambdaS-0.5, dlambdaS+0.5);
 
-    auto fdelta_0_p        = hydra::Parameter::Create("fdelta_0").Value(fdelta0).Error(0.0001).Limits(fdelta0-0.5, fdelta0+0.5);
-    auto fdelta_par_p      = hydra::Parameter::Create("fdelta_par").Value(fdeltapar).Error(0.0001).Limits(fdeltapar-2, fdeltapar+2);
-    auto fdelta_perp_p     = hydra::Parameter::Create("fdelta_perp" ).Value(fdeltaperp).Error(0.0001).Limits(fdeltaperp-2, fdeltaperp+2);
-    auto fdelta_S_p        = hydra::Parameter::Create("fdelta_S").Value(fdeltaS).Error(0.0001).Limits(fdeltaS-2, fdeltaS+2);
+    auto ddelta_0_p        = hydra::Parameter::Create("fdelta_0").Value(ddelta0).Error(0.0001).Limits(ddelta0-0.5, ddelta0+0.5);
+    auto ddelta_par_p      = hydra::Parameter::Create("fdelta_par").Value(ddeltapar).Error(0.0001).Limits(ddeltapar-2, ddeltapar+2);
+    auto ddelta_perp_p     = hydra::Parameter::Create("fdelta_perp" ).Value(ddeltaperp).Error(0.0001).Limits(ddeltaperp-2, ddeltaperp+2);
+    auto ddelta_S_p        = hydra::Parameter::Create("fdelta_S").Value(ddeltaS).Error(0.0001).Limits(ddeltaS-2, ddeltaS+2);
 
-    hydra::Parameter hydrafparams[18] = {fA0_p,            fAperp_p,      fAS_p,
-                                         fDeltaGamma_sd_p, fDeltaGamma_p, fDeltaM_p,
-                                         fphi_0_p,         fphi_par_p,    fphi_perp_p,    fphi_S_p,
-                                         flambda_0_p,      flambda_par_p, flambda_perp_p, flambda_S_p,
-                                         fdelta_0_p,       fdelta_par_p,  fdelta_perp_p,  fdelta_S_p};
+    hydra::Parameter hydradparams[18] = {dA0_p,            dAperp_p,      dAS_p,
+                                         dDeltaGamma_sd_p, dDeltaGamma_p, dDeltaM_p,
+                                         dphi_0_p,         dphi_par_p,    dphi_perp_p,    dphi_S_p,
+                                         dlambda_0_p,      dlambda_par_p, dlambda_perp_p, dlambda_S_p,
+                                         ddelta_0_p,       ddelta_par_p,  ddelta_perp_p,  ddelta_S_p};
 
-    auto model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydrafparams);
+    auto model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydradparams);
 
 
     //---------------------------------

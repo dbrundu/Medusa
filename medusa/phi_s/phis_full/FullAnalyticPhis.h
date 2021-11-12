@@ -20,14 +20,14 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*
- *  PhisFull.h
+/*---------------------------------------------------------------------------
+ *  FullAnalyticPhis.h
  *
  *  Created on: 29/10/2021
  *      Author: Alessandro Maria Ricci
  * 
  *  Reference: arXiv:1906.08356v4
- */
+ *---------------------------------------------------------------------------*/
 
 #ifndef FULL_ANALYTIC_PHIS_H_
 #define FULL_ANALYTIC_PHIS_H_
@@ -48,6 +48,7 @@
 #include <hydra/detail/BackendPolicy.h>
 #include <hydra/Types.h>
 #include <hydra/Function.h>
+#include <hydra/Integrator.h>
 #include <hydra/Pdf.h>
 #include <hydra/Tuple.h>
 #include <hydra/functions/Utils.h>
@@ -56,7 +57,7 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/Cerf.h>
+#include <medusa/Faddeeva.h>
 
 
 namespace medusa {
@@ -218,14 +219,20 @@ namespace medusa {
 
             double result = 0;
 
-            return Convoluted_Time_Factor(0, time, 0.1, 1);
-/*
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
             	result += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, time, sigma_eff, 1) +
                                                 TagB0sbar*Convoluted_Time_Factor(i, time, sigma_eff, -1) );
             }
+
+            // This macro controls if result is NaN. If yes, it prints a warning with the parameter values for whom we obtain a NaN.
+            hydra::CHECK_VALUE(result, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
+                                       "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
+                                       "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
+                                        _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
+                                        _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
+                                        _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
 
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
             // Don't use the function ::abs(), because it changes the values of about 10^-03-10^-04 units.
@@ -238,7 +245,6 @@ namespace medusa {
             {
                 return result;
             }
-*/
         }
 
 
@@ -329,27 +335,27 @@ namespace medusa {
 
     	    static const double f = 0.05968310365946074; // 3./(16*PI)
             static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
-            std::complex<double> I(0.0, 1.0); // Imaginary unit
+            hydra::complex<double> I(0.0, 1.0); // Imaginary unit
 
             double Gamma = _par[3] + 0.65789;
             double x = time/(sigma_eff*Sqrt2);
 
             double z1 = (Gamma - 0.5*_par[4])*sigma_eff/Sqrt2;
             double z2 = (Gamma + 0.5*_par[4])*sigma_eff/Sqrt2;
-            std::complex<double> Z_1(0.0, z1 - x);
-            std::complex<double> Z_2(0.0, z2 - x);
+            hydra::complex<double> Z_1(0.0, z1 - x);
+            hydra::complex<double> Z_2(0.0, z2 - x);
 
-            double Re_Z3 =   _par[5]*sigma_eff/Sqrt2;
-            double Re_Z4 = - _par[5]*sigma_eff/Sqrt2;
+            double Re_Z3 =  _par[5]*sigma_eff/Sqrt2;
+            double Re_Z4 = -_par[5]*sigma_eff/Sqrt2;
             double Im_Z3 = Gamma*sigma_eff/Sqrt2 - x;
             double Im_Z4 = Gamma*sigma_eff/Sqrt2 - x;
-            std::complex<double> Z_3(Re_Z3, Im_Z3);
-            std::complex<double> Z_4(Re_Z4, Im_Z4);
+            hydra::complex<double> Z_3(Re_Z3, Im_Z3);
+            hydra::complex<double> Z_4(Re_Z4, Im_Z4);
 
-            std::complex<double> faddeeva_sum12  = cerf::faddeeva(Z_1) + cerf::faddeeva(Z_2);
-            std::complex<double> faddeeva_diff12 = cerf::faddeeva(Z_1) - cerf::faddeeva(Z_2);
-            std::complex<double> faddeeva_sum34  = cerf::faddeeva(Z_3) + cerf::faddeeva(Z_4);
-            std::complex<double> faddeeva_diff34 = (cerf::faddeeva(Z_3) - cerf::faddeeva(Z_4)) / I;
+            hydra::complex<double> faddeeva_sum12  = faddeeva::w(Z_1) + faddeeva::w(Z_2);
+            hydra::complex<double> faddeeva_diff12 = faddeeva::w(Z_1) - faddeeva::w(Z_2);
+            hydra::complex<double> faddeeva_sum34  = faddeeva::w(Z_3) + faddeeva::w(Z_4);
+            hydra::complex<double> faddeeva_diff34 = (faddeeva::w(Z_3) - faddeeva::w(Z_4)) / I;
 
             double Re_faddeeva_sum12 = faddeeva_sum12.real();
             double Re_faddeeva_sum34 = faddeeva_sum34.real();
@@ -359,18 +365,6 @@ namespace medusa {
             double ConvolutedTimeFactor = f * ::exp( - ::pow(x, 2.0) ) *
                                             ( A.k[index] * Re_faddeeva_sum12 + B.k[index] * Re_faddeeva_diff12 +
                                                 Tag*( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
-
-            std::cout << "x = " << x << std::endl;
-            std::cout << "Z_3 = " << Z_3 << std::endl;
-            std::cout << "Z_4 = " << Z_4 << std::endl;
-            std::cout << "w3 = " << cerf::faddeeva(Z_3) << std::endl;
-            std::cout << "w4 = " << cerf::faddeeva(Z_4) << std::endl;
-            std::cout << "w3+w4 = " << faddeeva_sum34 << std::endl;
-
-            std::cout << "Convolution_ak = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_sum12 << std::endl;
-            std::cout << "Convolution_bk = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_diff12 << std::endl;
-            std::cout << "Convolution_ck = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_sum34 << std::endl;
-            std::cout << "Convolution_dk = " << 0.25 * ::exp( - ::pow(x, 2.0) )*Re_faddeeva_diff34 << std::endl;
 
             return ConvolutedTimeFactor;
         }
@@ -451,6 +445,7 @@ namespace medusa {
 } // namespace medusa
 
 // Medusa
-#include<medusa/phi_s/phis_full/details/Update_ATCoefficients.inl>
+#include <medusa/phi_s/phis_full/details/Update_ATCoefficients.inl>
+#include <medusa/phi_s/phis_full/details/IntegrationFormula.inl>
 
 #endif /* FULL_ANALYTIC_PHIS_H_ */

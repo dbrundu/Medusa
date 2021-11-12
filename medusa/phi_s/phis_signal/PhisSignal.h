@@ -20,14 +20,14 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*
+/*---------------------------------------------------------------------------
  *  PhisSignal.h
  *
  *  Created on: 14/06/2021
  *      Author: Alessandro Maria Ricci
  * 
  *  Reference: arXiv:1906.08356v4
- */
+ *---------------------------------------------------------------------------*/
 
 #ifndef PHIS_SIGNAL_H_
 #define PHIS_SIGNAL_H_
@@ -213,6 +213,14 @@ namespace medusa {
             	result += F.fk[i]*N.k[i]*Time_Factor(i, time, chT1, shT1, cT2, sT2);
             }
 
+            // This macro controls if result is NaN. If yes, it prints a warning with the parameter values for whom we obtain a NaN.
+            hydra::CHECK_VALUE(result, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
+                                       "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
+                                       "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
+                                        _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
+                                        _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
+                                        _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
+
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
             // Don't use the function ::abs(), because it changes the values of about 10^-03-10^-04 units.
             // Don't deactivate this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
@@ -314,9 +322,11 @@ namespace medusa {
 
     	    static const double f = 0.238732414638; // 3./(4*PI)
 
-            return f * ::exp( -(_par[3] + 0.65789) * time) *
-                                    ( A.k[index]*chT1 + B.k[index]*shT1 +
-                                        ( C.k[index]*cT2 + D.k[index]*sT2 )*CP );
+            double time_factor = f * ::exp( -(_par[3] + 0.65789) * time) *
+                                        ( A.k[index]*chT1 + B.k[index]*shT1 +
+                                            ( C.k[index]*cT2 + D.k[index]*sT2 )*CP );
+            
+            return time_factor;
         }
 
 
@@ -334,6 +344,6 @@ namespace medusa {
 } // namespace medusa
 
 // Medusa
-#include<medusa/phi_s/phis_signal/details/Update_ATCoefficients.inl>
+#include <medusa/phi_s/phis_signal/details/Update_ATCoefficients.inl>
 
 #endif /* PHIS_SIGNAL_H_ */
