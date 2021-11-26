@@ -20,13 +20,17 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*---------------------------------------------------
+/*---------------------------------------------------------------------------
  *  Created on: 12/11/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  Integration formula for FullAnalyticPhis.h
- *---------------------------------------------------*/
+ *  Class IntegrationFormula for FullAnalyticPhis.h.
+ *  This class always returns 1.0, because the normalization is computed
+ *  in FullAnalyticPhis.h. This choice is justified by the fact that Hydra
+ *  does not support a normalization factor which depends from
+ *  the experimental variables.
+ ---------------------------------------------------------------------------*/
 
 #ifndef INTEGRATION_FORMULA_PHIS_INL_
 #define INTEGRATION_FORMULA_PHIS_INL_
@@ -34,7 +38,8 @@
 // I use the hydra namespace, because the class implementation in different namespaces has not permitted.
 namespace hydra {
 
-    template<typename ArgTypeTime,
+    template<bool NormEnable,
+             typename ArgTypeTime,
              typename ArgTypeThetah,
              typename ArgTypeThetal,
              typename ArgTypePhi,
@@ -43,22 +48,18 @@ namespace hydra {
              typename ArgTypeEtaOS,
              typename ArgTypeEtaSS,
              typename ArgTypeDelta>
-    class IntegrationFormula< medusa::FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+    class IntegrationFormula< medusa::FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                         ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, 1>
     {
+        using ThisFunctor = medusa::FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                                      ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >;
         protected:
 
-/*        inline std::pair<double, double>
-	    EvalFormula( FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                       ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta > const& functor,
-                                                                                                          double LowerLimit,
-                                                                                                          double UpperLimit ) const
+        inline std::pair<double, double>
+	    EvalFormula( ThisFunctor const& functor, double LowerLimit, double UpperLimit ) const
         {
-            return
+            return std::make_pair(1.0, 0.0);
 	    }
-*/
-        private:
-
     };
 
 } // namespace medusa

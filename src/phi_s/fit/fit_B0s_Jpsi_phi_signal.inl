@@ -314,28 +314,28 @@ int main(int argv, char** argc)
                                       dlambda0, dlambdapar, dlambdaperp, dlambdaS,
                                       ddelta0,  ddeltapar,  ddeltaperp,  ddeltaS};
 
-    auto dA0_p             = hydra::Parameter::Create("fA0" ).Value(dA0).Error(0.0001).Limits(-1, 1);
-    auto dAperp_p          = hydra::Parameter::Create("fAperp").Value(dAperp).Error(0.0001).Limits(-1, 1);
-    auto dAS_p             = hydra::Parameter::Create("fAS" ).Value(dAS).Error(0.0001).Limits(-1, 1);
+    auto dA0_p             = hydra::Parameter::Create("dA0" ).Value(dA0).Error(0.0001).Limits(0.1, 0.9);
+    auto dAperp_p          = hydra::Parameter::Create("dAperp").Value(dAperp).Error(0.0001).Limits(0.1, 0.9);
+    auto dAS_p             = hydra::Parameter::Create("dAS" ).Value(dAS).Error(0.0001).Limits(-0.1, 0.8);
 
-    auto dDeltaGamma_sd_p  = hydra::Parameter::Create("fDeltaGamma_sd" ).Value(ddeltagammasd).Error(0.0001).Limits(ddeltagammasd-0.3, ddeltagammasd+0.3);
-    auto dDeltaGamma_p     = hydra::Parameter::Create("fDeltaGamma").Value(ddeltagammas).Error(0.0001).Limits(ddeltagammas-0.3, ddeltagammas+0.3);
-    auto dDeltaM_p         = hydra::Parameter::Create("fDeltaM" ).Value(ddeltams).Error(0.0001).Limits(ddeltams-3, ddeltams+3);
+    auto dDeltaGamma_sd_p  = hydra::Parameter::Create("dDeltaGamma_sd" ).Value(ddeltagammasd).Error(0.0001).Limits(-0.2, 0.2);
+    auto dDeltaGamma_p     = hydra::Parameter::Create("dDeltaGamma").Value(ddeltagammas).Error(0.0001).Limits(0.03, 0.15);
+    auto dDeltaM_p         = hydra::Parameter::Create("dDeltaM" ).Value(ddeltams).Error(0.0001).Limits(16.0, 20.0);
 
-    auto dphi_0_p          = hydra::Parameter::Create("fphi_0").Value(dphi0).Error(0.0001).Limits(dphi0-0.3, dphi0+0.3);
-    auto dphi_par_p        = hydra::Parameter::Create("fphi_par" ).Value(dphipar).Error(0.0001).Limits(dphipar-0.3, dphipar+0.3);
-    auto dphi_perp_p       = hydra::Parameter::Create("fphi_perp").Value(dphiperp).Error(0.0001).Limits(dphiperp-0.3, dphiperp+0.3);
-    auto dphi_S_p          = hydra::Parameter::Create("fphi_S" ).Value(dphiS).Error(0.0001).Limits(dphiS-0.3, dphiS+0.3);
+    auto dphi_0_p          = hydra::Parameter::Create("dphi_0").Value(dphi0).Error(0.0001).Limits(-1.0, 1.0);
+    auto dphi_par_p        = hydra::Parameter::Create("dphi_par" ).Value(dphipar).Error(0.0001).Limits(-1.0, 1.0);
+    auto dphi_perp_p       = hydra::Parameter::Create("dphi_perp").Value(dphiperp).Error(0.0001).Limits(-1.0, 1.0);
+    auto dphi_S_p          = hydra::Parameter::Create("dphi_S" ).Value(dphiS).Error(0.0001).Limits(-1.0, 1.0);
 
-    auto dlambda_0_p       = hydra::Parameter::Create("flambda_0").Value(dlambda0).Error(0.0001).Limits(dlambda0-0.5, dlambda0+0.5);
-    auto dlambda_par_p     = hydra::Parameter::Create("flambda_par" ).Value(dlambdapar).Error(0.0001).Limits(dlambdapar-0.5,dlambdapar+0.5);
-    auto dlambda_perp_p    = hydra::Parameter::Create("flambda_perp").Value(dlambdaperp).Error(0.0001).Limits(dlambdaperp-0.5, dlambdaperp+0.5);
-    auto dlambda_S_p       = hydra::Parameter::Create("flambda_S" ).Value(dlambdaS).Error(0.0001).Limits(dlambdaS-0.5, dlambdaS+0.5);
+    auto dlambda_0_p       = hydra::Parameter::Create("dlambda_0").Value(dlambda0).Error(0.0001).Limits(0.7, 1.6);
+    auto dlambda_par_p     = hydra::Parameter::Create("dlambda_par" ).Value(dlambdapar).Error(0.0001).Limits(0.7, 1.6);
+    auto dlambda_perp_p    = hydra::Parameter::Create("dlambda_perp").Value(dlambdaperp).Error(0.0001).Limits(0.7, 1.6);
+    auto dlambda_S_p       = hydra::Parameter::Create("dlambda_S" ).Value(dlambdaS).Error(0.0001).Limits(0.7, 1.6);
 
-    auto ddelta_0_p        = hydra::Parameter::Create("fdelta_0").Value(ddelta0).Error(0.0001).Limits(ddelta0-0.5, ddelta0+0.5);
-    auto ddelta_par_p      = hydra::Parameter::Create("fdelta_par").Value(ddeltapar).Error(0.0001).Limits(ddeltapar-2, ddeltapar+2);
-    auto ddelta_perp_p     = hydra::Parameter::Create("fdelta_perp" ).Value(ddeltaperp).Error(0.0001).Limits(ddeltaperp-2, ddeltaperp+2);
-    auto ddelta_S_p        = hydra::Parameter::Create("fdelta_S").Value(ddeltaS).Error(0.0001).Limits(ddeltaS-2, ddeltaS+2);
+    auto ddelta_0_p        = hydra::Parameter::Create("ddelta_0").Value(ddelta0).Error(0.0001).Limits(-6.0, 6.0);
+    auto ddelta_par_p      = hydra::Parameter::Create("ddelta_par").Value(ddeltapar).Error(0.0001).Limits(-6.28, 6.28);
+    auto ddelta_perp_p     = hydra::Parameter::Create("ddelta_perp" ).Value(ddeltaperp).Error(0.0001).Limits(-6.28, 6.28);
+    auto ddelta_S_p        = hydra::Parameter::Create("ddelta_S").Value(ddeltaS).Error(0.0001).Limits(-6.0, 6.0);
 
     hydra::Parameter hydradparams[18] = {dA0_p,            dAperp_p,      dAS_p,
                                          dDeltaGamma_sd_p, dDeltaGamma_p, dDeltaM_p,
@@ -392,6 +392,8 @@ int main(int argv, char** argc)
     //---------------------------------
 
     auto fcn = hydra::make_loglikehood_fcn(model_PDF, dataset_d);
+
+    fcn.SetFcnMaxValue(2.22507e+12);
 
 
     //---------------------------------

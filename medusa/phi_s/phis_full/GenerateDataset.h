@@ -70,7 +70,7 @@ namespace medusa {
      */
 
     template<typename Model, typename Container>
-    size_t GenerateDataset_FullAnalyticPhis(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
+    size_t GenerateDataset_FullAnalyticPhis(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size, dtime_t LowerLimit, dtime_t UpperLimit)
     {
 
         // default namespaces
@@ -87,10 +87,10 @@ namespace medusa {
 
         // function that takes the four-vectors and returns the decay times, helicity angles and tagging
         auto CastToVariables  = hydra::wrap_lambda(
-                [] __hydra_dual__ (Jpsi jpsi, Phi phi, MuonP mup, MuonM mum, KaonP kaonp, KaonM kaonm, size_t n )
+                [LowerLimit, UpperLimit] __hydra_dual__ (Jpsi jpsi, Phi phi, MuonP mup, MuonM mum, KaonP kaonp, KaonM kaonm, size_t n )
         {
             hydra_thrust::default_random_engine engine;
-            hydra_thrust::uniform_real_distribution<double> uniDist(0.0, 20.0);
+            hydra_thrust::uniform_real_distribution<double> uniDist(LowerLimit, UpperLimit);
             engine.discard(n);
             dtime_t decay_time = uniDist(engine);
 
@@ -106,7 +106,7 @@ namespace medusa {
             engine.discard(1);
             etaSS_t etaSS = uniDist3(engine);
 
-            hydra_thrust::uniform_real_distribution<double> uniDist4(0.0, 0.1);
+            hydra_thrust::uniform_real_distribution<double> uniDist4(0, 0.1);
             engine.discard(1);
             delta_t delta_time = uniDist4(engine);
 

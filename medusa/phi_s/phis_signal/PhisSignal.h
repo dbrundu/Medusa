@@ -93,7 +93,7 @@ namespace medusa {
         PhisSignal() = delete;
 
         // ctor with list of hydra::Parameter
-        // the user has to respect the parameters order
+        // the user has to respect the parameter order
         PhisSignal(hydra::Parameter const& A_0,           hydra::Parameter const& A_perp,     hydra::Parameter const& A_S, 
                        hydra::Parameter const& DeltaGamma_sd, hydra::Parameter const& DeltaGamma, hydra::Parameter const& DeltaM,
                        hydra::Parameter const& phi_0,         hydra::Parameter const& phi_par,
@@ -111,7 +111,7 @@ namespace medusa {
 
 
         // ctor with array of hydra::Parameter
-        // the user has to respect the parameters order as the main ctor
+        // the user has to respect the parameter order as the main ctor
         explicit PhisSignal( const hydra::Parameter (&Hs)[18] ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                          Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
@@ -121,7 +121,7 @@ namespace medusa {
 
 
         // ctor with array of double
-        // the user has to respect the parameters order as the main ctor
+        // the user has to respect the parameter order as the main ctor
         explicit PhisSignal( const double (&Hs)[18] ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                          Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
@@ -147,7 +147,6 @@ namespace medusa {
     		    D.k[i] = 	other.GetD().k[i];
     		    N.k[i] =  other.GetN().k[i];
     	    }
-
         }
 
 
@@ -193,8 +192,19 @@ namespace medusa {
 
         // evaluate the sum in Eq. (9) in arXiv:1906.08356v4
         __hydra_dual__ 
-        inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi)  const
+        inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi) const
         {
+            double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+            
+            double UnnormPDF = 0;
+
+            // This is a safety mechanism that is necessary when A_par2 takes negative values (see Update_NFactors()).
+            // UnnormPDF = 0 activates the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
+            if(A_par2 < 0)
+            {
+                return UnnormPDF;
+            }
+
             auto F = parameters::AngularFunctions(theta_h, theta_l, phi);
 
             double T1 = 0.5 * time * _par[4];
@@ -205,32 +215,31 @@ namespace medusa {
             double cT2 = ::cos(T2);
             double sT2 = ::sin(T2);
 
-            double result = 0;
-
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
-            	result += F.fk[i]*N.k[i]*Time_Factor(i, time, chT1, shT1, cT2, sT2);
+            	UnnormPDF += F.fk[i]*N.k[i]*Time_Factor(i, time, chT1, shT1, cT2, sT2);
             }
 
+
             // This macro controls if result is NaN. If yes, it prints a warning with the parameter values for whom we obtain a NaN.
-            hydra::CHECK_VALUE(result, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
-                                       "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
-                                       "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
-                                        _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
-                                        _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
-                                        _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
+            hydra::CHECK_VALUE(UnnormPDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
+                                          "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
+                                          "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
+                                          _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
+                                          _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
+                                          _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
 
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
-            // Don't use the function ::abs(), because it changes the values of about 10^-03-10^-04 units.
+            // Don't use the function ::abs(), because it changes the values of about 10^{-03} - 10^{-04} units.
             // Don't deactivate this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
-            if(result < 0)
+            if(UnnormPDF < 0)
             {
-                return result = 2.225073858507e-308;
+                return UnnormPDF = 0;
             }
             else
             {
-                return result;
+                return UnnormPDF;
             }
         }
 
@@ -292,18 +301,24 @@ namespace medusa {
     	    4: DeltaGamma,
     	    5: DeltaM,
     	    */
-    	    double A_par = ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]);
 
-    	    N.k[0] = _par[0]*_par[0];     //A_0*A_0 ;
-    	    N.k[1] =   A_par*A_par;       //A_par*A_par
-    	    N.k[2] = _par[1]*_par[1];     //A_perp*A_perp;
-    	    N.k[3] = _par[1]*A_par;       //A_perp*A_par;
-    	    N.k[4] = _par[0]*A_par;       //A_0*A_par;
-    	    N.k[5] = _par[0]*_par[1];     //A_0*A_perp;
-    	    N.k[6] = _par[2]*_par[2];     //A_S*A_S;
-    	    N.k[7] = _par[2]*A_par;       //A_S*A_par;
-    	    N.k[8] = _par[2]*_par[1];     //A_S*A_perp;
-    	    N.k[9] = _par[2]*_par[0];     //A_S*A_0;
+           double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+
+           if(A_par2 > 0)
+           {
+                double A_par = ::sqrt(A_par2);
+
+    	        N.k[0] = _par[0]*_par[0];     //A_0*A_0 ;
+    	        N.k[1] =   A_par*A_par;       //A_par*A_par
+    	        N.k[2] = _par[1]*_par[1];     //A_perp*A_perp;
+    	        N.k[3] = _par[1]*A_par;       //A_perp*A_par;
+    	        N.k[4] = _par[0]*A_par;       //A_0*A_par;
+    	        N.k[5] = _par[0]*_par[1];     //A_0*A_perp;
+    	        N.k[6] = _par[2]*_par[2];     //A_S*A_S;
+    	        N.k[7] = _par[2]*A_par;       //A_S*A_par;
+    	        N.k[8] = _par[2]*_par[1];     //A_S*A_perp;
+    	        N.k[9] = _par[2]*_par[0];     //A_S*A_0;
+           }
         }
 
 

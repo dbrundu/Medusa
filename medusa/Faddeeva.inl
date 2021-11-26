@@ -134,6 +134,10 @@
           12 May 2015: Bugfix for systems lacking copysign function.
 *----------------------------------------------------------------------------*/
 
+
+namespace medusa {
+    namespace faddeeva {
+
 // Auxiliary routines to compute other special functions based on w(z)
 
 // compute erfcx(z) = exp(z^2) erfz(z)
@@ -145,7 +149,33 @@ cmplx FADDEEVA(erfcx)(cmplx z, double relerr)
 // compute the error function erf(x)
 double FADDEEVA_RE(erf)(double x)
 {
+#if !defined(__cplusplus)
+  return erf(x); // C99 supplies erf in math.h
+#elif (__cplusplus >= 201103L) || defined(HAVE_ERF)
   return ::erf(x); // C++11 supplies std::erf in cmath
+#else
+  double mx2 = -x*x;
+  if (mx2 < -750) // underflow
+    return (x >= 0 ? 1.0 : -1.0);
+
+  if (x >= 0) {
+    if (x < 8e-2) goto taylor;
+    return 1.0 - exp(mx2) * FADDEEVA_RE(erfcx)(x);
+  }
+  else { // x < 0
+    if (x > -8e-2) goto taylor;
+    return exp(mx2) * FADDEEVA_RE(erfcx)(-x) - 1.0;
+  }
+
+  // Use Taylor series for small |x|, to avoid cancellation inaccuracy
+  //   erf(x) = 2/sqrt(pi) * x * (1 - x^2/3 + x^4/10 - x^6/42 + x^8/216 + ...)
+ taylor:
+  return x * (1.1283791670955125739
+              + mx2 * (0.37612638903183752464
+                       + mx2 * (0.11283791670955125739
+                                + mx2 * (0.026866170645131251760
+                                         + mx2 * 0.0052239776254421878422))));
+#endif
 }
 
 // compute the error function erf(z)
@@ -257,7 +287,16 @@ double FADDEEVA_RE(erfi)(double x)
 // erfc(x) = 1 - erf(x)
 double FADDEEVA_RE(erfc)(double x)
 {
+#if !defined(__cplusplus)
+  return erfc(x); // C99 supplies erfc in math.h
+#elif (__cplusplus >= 201103L) || defined(HAVE_ERFC)
   return ::erfc(x); // C++11 supplies std::erfc in cmath
+#else
+  if (x*x > 750) // underflow
+    return (x >= 0 ? 0.0 : 2.0);
+  return x >= 0 ? exp(-x*x) * FADDEEVA_RE(erfcx)(x) 
+    : 2. - exp(-x*x) * FADDEEVA_RE(erfcx)(-x);
+#endif
 }
 
 // erfc(z) = 1 - erf(z)
@@ -454,7 +493,7 @@ static inline double sqr(double x) { return x*x; }
 
 // precomputed table of expa2n2[n-1] = exp(-a2*n*n)
 // for double-precision a2 = 0.26865... in FADDEEVA(w), below.
-static const double expa2n2[] = {
+/*static const double expa2n2[] = {
   7.64405281671221563e-01,
   3.41424527166548425e-01,
   8.91072646929412548e-02,
@@ -507,11 +546,10 @@ static const double expa2n2[] = {
   2.03797051314726829e-292,
   3.34880215927873807e-304,
   0.0 // underflow (also prevents reads past array end, below)
-};
+}; */
 
-// Note by A. M. Ricci: introduced a new variable for expa2n2[0] to resolve problems
-// with CUDA at compilation time in lines 679 and 698.
-static const double expa2n2_0 = 7.64405281671221563e-01;
+// Note by A. M. Ricci: in lines 717 and 736 expa2n2[n-1] replaced with
+// exp(-a2*(n*n)) to resolve problems with CUDA at the compilation time.
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -674,8 +712,8 @@ cmplx FADDEEVA(w)(cmplx z, double relerr)
         const double expm2ax =
           1 - ax2 * (1 - ax2 * (0.5 - 0.166666666666666666667*ax2));
         for (int n = 1; 1; ++n) {
-          // note by A. M. Ricci: expa2n2[n-1] replaced by expa2n2_0
-          const double coef = expa2n2_0 * expx2 / (a2*(n*n) + y*y);
+          // note by A. M. Ricci: expa2n2[n-1] replaced by exp(-a2*(n*n))
+          const double coef = exp(-a2*(n*n)) * expx2 / (a2*(n*n) + y*y);
           prod2ax *= exp2ax;
           prodm2ax *= expm2ax;
           sum1 += coef;
@@ -693,8 +731,8 @@ cmplx FADDEEVA(w)(cmplx z, double relerr)
         expx2 = exp(-x*x);
         const double exp2ax = exp((2*a)*x), expm2ax = 1 / exp2ax;
         for (int n = 1; 1; ++n) {
-          // note by A. M. Ricci: expa2n2[n-1] replaced by expa2n2_0
-          const double coef = expa2n2_0 * expx2 / (a2*(n*n) + y*y);
+          // note by A. M. Ricci: expa2n2[n-1] replaced by exp(-a2*(n*n))
+          const double coef = exp(-a2*(n*n)) * expx2 / (a2*(n*n) + y*y);
           prod2ax *= exp2ax;
           prodm2ax *= expm2ax;
           sum1 += coef;
@@ -1728,3 +1766,6 @@ double FADDEEVA(w_im)(double x)
     return -w_im_y100(100/(1-x), -x);
   }
 }
+
+    } // namespace faddeeva
+} // namespace medusa

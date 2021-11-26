@@ -47,8 +47,8 @@
 #include <hydra/detail/Config.h>
 #include <hydra/detail/BackendPolicy.h>
 #include <hydra/Types.h>
+#include <hydra/Complex.h>
 #include <hydra/Function.h>
-#include <hydra/Integrator.h>
 #include <hydra/Pdf.h>
 #include <hydra/Tuple.h>
 #include <hydra/functions/Utils.h>
@@ -73,7 +73,8 @@ namespace medusa {
     *
     *  ArgTypes = argument types of the functor
     */
-    template<typename ArgTypeTime,
+    template<bool NormEnable,
+             typename ArgTypeTime,
              typename ArgTypeThetah,
              typename ArgTypeThetal,
              typename ArgTypePhi,
@@ -84,14 +85,14 @@ namespace medusa {
              typename ArgTypeDelta,
              typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta) >
-    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                             ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18>
     {
 
-        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                                 ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18 >;
 
-        using hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        using hydra::BaseFunctor< FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18 >::_par;
 
 
@@ -104,7 +105,7 @@ namespace medusa {
         FullAnalyticPhis() = delete;
 
         // ctor with list of hydra::Parameter
-        // the user has to respect the parameters order
+        // the user has to respect the parameter order
         FullAnalyticPhis(hydra::Parameter const& A_0,           hydra::Parameter const& A_perp,     hydra::Parameter const& A_S, 
                        hydra::Parameter const& DeltaGamma_sd, hydra::Parameter const& DeltaGamma, hydra::Parameter const& DeltaM,
                        hydra::Parameter const& phi_0,         hydra::Parameter const& phi_par,
@@ -112,41 +113,50 @@ namespace medusa {
                        hydra::Parameter const& lambda_0,      hydra::Parameter const& lambda_par,
                        hydra::Parameter const& lambda_perp,   hydra::Parameter const& lambda_S,
                        hydra::Parameter const& delta_0,       hydra::Parameter const& delta_par,
-                       hydra::Parameter const& delta_perp,    hydra::Parameter const& delta_S):
+                       hydra::Parameter const& delta_perp,    hydra::Parameter const& delta_S,
+                       ArgTypeTime const& LowerLimit,         ArgTypeTime const& UpperLimit):
         ThisBaseFunctor({A_0, A_perp, A_S, DeltaGamma_sd, DeltaGamma, DeltaM,
                          phi_0,       phi_par,    phi_perp,    phi_S,          lambda_0,   lambda_par,
                          lambda_perp, lambda_S,   delta_0,     delta_par,      delta_perp, delta_S })
         {
+            fLowerLimit = LowerLimit;
+            fUpperLimit = UpperLimit;
             Update();
         }
 
 
         // ctor with array of hydra::Parameter
-        // the user has to respect the parameters order as the main ctor
-        explicit FullAnalyticPhis( const hydra::Parameter (&Hs)[18] ):
+        // the user has to respect the parameter order as the main ctor
+        explicit FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                          Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
         {
+            fLowerLimit = LowerLimit;
+            fUpperLimit = UpperLimit;
             Update();
         }
 
 
         // ctor with array of double
-        // the user has to respect the parameters order as the main ctor
-        explicit FullAnalyticPhis( const double (&Hs)[18] ):
+        // the user has to respect the parameter order as the main ctor
+        explicit FullAnalyticPhis( const double (&Hs)[20] ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
                          Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
         {
+            fLowerLimit = Hs[18];
+            fUpperLimit = Hs[19];
             Update();
         }
 
 
         // ctor with other FullAnalyticPhis instance (copy ctor)
         __hydra_dual__
-        FullAnalyticPhis(FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        FullAnalyticPhis(FullAnalyticPhis<NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                         ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
         ThisBaseFunctor(other)
         {
+            fLowerLimit = other.GetLowerLimit();
+            fUpperLimit = other.GetUpperLimit();
 
     	    #pragma unroll 10
     	    for(size_t i=0; i<10; i++)
@@ -159,7 +169,6 @@ namespace medusa {
     		    D.k[i] = 	other.GetD().k[i];
     		    N.k[i] =  other.GetN().k[i];
     	    }
-
         }
 
 
@@ -168,13 +177,16 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        FullAnalyticPhis<NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                             ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta>& 
-        operator=( FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        operator=( FullAnalyticPhis<NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other)
         {
             if(this == &other) return *this;
             ThisBaseFunctor::operator=(other);
+
+            fLowerLimit = other.GetLowerLimit();
+            fUpperLimit = other.GetUpperLimit();
 
 		    #pragma unroll 10
             for(size_t i=0; i<10; i++)
@@ -208,8 +220,23 @@ namespace medusa {
         // evaluate the sum in Eq. (9) in arXiv:1906.08356v4
         __hydra_dual__ 
         inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi,
-                                    ArgTypeQOS qOS, ArgTypeQSS qSS, ArgTypeEtaOS etaOS, ArgTypeEtaSS etaSS, ArgTypeDelta delta_time)  const
+                                    ArgTypeQOS qOS, ArgTypeQSS qSS, ArgTypeEtaOS etaOS, ArgTypeEtaSS etaSS, ArgTypeDelta delta_time) const
         {
+            static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
+
+            double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+
+            double UnnormPDF = 0;
+            double NormFactor = 0;
+            double PDF = 0;
+
+            // This is a safety mechanism that is necessary when A_par2 takes negative values (see Update_NFactors()).
+            // PDF = 0 activates the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
+            if(A_par2 < 0)
+            {
+                return PDF;
+            }
+
             auto F = parameters::AngularFunctions(theta_h, theta_l, phi);
 
             double TagB0s = B0sTag(qOS, qSS, etaOS, etaSS);
@@ -217,33 +244,50 @@ namespace medusa {
 
             double sigma_eff = Sigma_eff(delta_time);
 
-            double result = 0;
+            double Gamma = _par[3] + 0.65789;
+            double z1 = (Gamma - 0.5*_par[4])*sigma_eff/Sqrt2;
+            double z2 = (Gamma + 0.5*_par[4])*sigma_eff/Sqrt2;
+            hydra::complex<double> z3( Gamma*sigma_eff/Sqrt2, -_par[5]*sigma_eff/Sqrt2 );
+            hydra::complex<double> z4( Gamma*sigma_eff/Sqrt2,  _par[5]*sigma_eff/Sqrt2 );
 
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
-            	result += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, time, sigma_eff, 1) +
-                                                TagB0sbar*Convoluted_Time_Factor(i, time, sigma_eff, -1) );
+            	UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, time, sigma_eff, Gamma, z1, z2, z3, z4, 1) +
+                                                TagB0sbar*Convoluted_Time_Factor(i, time, sigma_eff, Gamma, z1, z2, z3, z4, -1) );
+                
+                NormFactor += F.fk[i]*N.k[i]*( TagB0s*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, 1) +
+                                                TagB0sbar*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, -1) );
             }
 
-            // This macro controls if result is NaN. If yes, it prints a warning with the parameter values for whom we obtain a NaN.
-            hydra::CHECK_VALUE(result, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
-                                       "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
-                                       "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
-                                        _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
-                                        _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
-                                        _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
-
-            // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
-            // Don't use the function ::abs(), because it changes the values of about 10^-03-10^-04 units.
-            // Don't deactivate this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
-            if(result < 0)
+            if(NE > 0)
             {
-                return result = 2.225073858507e-308;
+                PDF = UnnormPDF/NormFactor;
             }
             else
             {
-                return result;
+                PDF = UnnormPDF;
+            }
+            
+            // This macro controls if PDF is NaN. If yes, it prints a warning
+            // with the parameter value for whom we obtain a NaN.
+            hydra::CHECK_VALUE(PDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
+                                    "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
+                                    "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
+                                    _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
+                                    _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
+                                    _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
+
+            // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
+            // Don't use the function ::abs(), because it changes the values of about 10^{-03} - 10^{-04} units.
+            // Don't deactivate this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
+            if(PDF < 0)
+            {
+                return PDF = 0;
+            }
+            else
+            {
+                return PDF;
             }
         }
 
@@ -282,6 +326,35 @@ namespace medusa {
 		    return N;
 	    }
 
+        __hydra_dual__
+        ArgTypeTime GetLowerLimit() const
+        {
+            return fLowerLimit;
+        }
+
+        __hydra_dual__
+        ArgTypeTime GetUpperLimit() const
+        {
+            return fUpperLimit;
+        }
+
+
+        //-------------------------------------
+        //          Setting functions
+        //-------------------------------------
+
+        __hydra_dual__
+        void SetLowerLimit(ArgTypeTime LowerLimit)
+        {
+            fLowerLimit = LowerLimit;
+        }
+
+        __hydra_dual__
+        void SetUpperLimit(ArgTypeTime UpperLimit)
+        {
+            fUpperLimit = UpperLimit;
+        }
+
 
 
         private:
@@ -305,24 +378,32 @@ namespace medusa {
     	    4: DeltaGamma,
     	    5: DeltaM,
     	    */
-    	    double A_par = ::sqrt(1 - _par[0]*_par[0] -_par[1]*_par[1]);
 
-    	    N.k[0] = _par[0]*_par[0];     //A_0*A_0 ;
-    	    N.k[1] =   A_par*A_par;       //A_par*A_par
-    	    N.k[2] = _par[1]*_par[1];     //A_perp*A_perp;
-    	    N.k[3] = _par[1]*A_par;       //A_perp*A_par;
-    	    N.k[4] = _par[0]*A_par;       //A_0*A_par;
-    	    N.k[5] = _par[0]*_par[1];     //A_0*A_perp;
-    	    N.k[6] = _par[2]*_par[2];     //A_S*A_S;
-    	    N.k[7] = _par[2]*A_par;       //A_S*A_par;
-    	    N.k[8] = _par[2]*_par[1];     //A_S*A_perp;
-    	    N.k[9] = _par[2]*_par[0];     //A_S*A_0;
+           double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+
+           if(A_par2 > 0)
+           {
+                double A_par = ::sqrt(A_par2);
+
+    	        N.k[0] = _par[0]*_par[0];     //A_0*A_0 ;
+    	        N.k[1] =   A_par*A_par;       //A_par*A_par
+    	        N.k[2] = _par[1]*_par[1];     //A_perp*A_perp;
+    	        N.k[3] = _par[1]*A_par;       //A_perp*A_par;
+    	        N.k[4] = _par[0]*A_par;       //A_0*A_par;
+    	        N.k[5] = _par[0]*_par[1];     //A_0*A_perp;
+    	        N.k[6] = _par[2]*_par[2];     //A_S*A_S;
+    	        N.k[7] = _par[2]*A_par;       //A_S*A_par;
+    	        N.k[8] = _par[2]*_par[1];     //A_S*A_perp;
+    	        N.k[9] = _par[2]*_par[0];     //A_S*A_0;
+           }
         }
 
 
         // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) in arXiv:1906.08356v4
+        // convoluted with the Gaussian
         __hydra_dual__
-        inline double Convoluted_Time_Factor(int index, double time, double sigma_eff, int Tag) const
+        inline double Convoluted_Time_Factor(size_t index, double time, double sigma_eff, double Gamma,
+                                             double z1, double z2, hydra::complex<double> z3, hydra::complex<double> z4, int Tag) const
         {
 		    /*
 		    0: A_0,
@@ -333,40 +414,97 @@ namespace medusa {
 		    5: DeltaM,
 		    */
 
-    	    static const double f = 0.05968310365946074; // 3./(16*PI)
+    	    static const double f = 0.05968310365946074; // 3./(16.*PI)
             static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
-            hydra::complex<double> I(0.0, 1.0); // Imaginary unit
+            const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
 
-            double Gamma = _par[3] + 0.65789;
             double x = time/(sigma_eff*Sqrt2);
 
-            double z1 = (Gamma - 0.5*_par[4])*sigma_eff/Sqrt2;
-            double z2 = (Gamma + 0.5*_par[4])*sigma_eff/Sqrt2;
-            hydra::complex<double> Z_1(0.0, z1 - x);
-            hydra::complex<double> Z_2(0.0, z2 - x);
+            double faddeeva_z1 = ::exp( z1*z1 - 2*z1*x ) * faddeeva::erfc(z1-x);
+            double faddeeva_z2 = ::exp( z2*z2 - 2*z2*x ) * faddeeva::erfc(z2-x);
+            hydra::complex<double> faddeeva_z3 = hydra::exp( z3*z3 - 2*z3*x ) * faddeeva::erfc(z3-x);
+            hydra::complex<double> faddeeva_z4 = hydra::exp( z4*z4 - 2*z4*x ) * faddeeva::erfc(z4-x);
 
-            double Re_Z3 =  _par[5]*sigma_eff/Sqrt2;
-            double Re_Z4 = -_par[5]*sigma_eff/Sqrt2;
-            double Im_Z3 = Gamma*sigma_eff/Sqrt2 - x;
-            double Im_Z4 = Gamma*sigma_eff/Sqrt2 - x;
-            hydra::complex<double> Z_3(Re_Z3, Im_Z3);
-            hydra::complex<double> Z_4(Re_Z4, Im_Z4);
-
-            hydra::complex<double> faddeeva_sum12  = faddeeva::w(Z_1) + faddeeva::w(Z_2);
-            hydra::complex<double> faddeeva_diff12 = faddeeva::w(Z_1) - faddeeva::w(Z_2);
-            hydra::complex<double> faddeeva_sum34  = faddeeva::w(Z_3) + faddeeva::w(Z_4);
-            hydra::complex<double> faddeeva_diff34 = (faddeeva::w(Z_3) - faddeeva::w(Z_4)) / I;
-
-            double Re_faddeeva_sum12 = faddeeva_sum12.real();
+            hydra::complex<double> faddeeva_sum34 = faddeeva_z3 + faddeeva_z4;
+            hydra::complex<double> faddeeva_diff34 = ( faddeeva_z3 - faddeeva_z4 ) / I;
             double Re_faddeeva_sum34 = faddeeva_sum34.real();
-            double Re_faddeeva_diff12 = faddeeva_diff12.real();
             double Re_faddeeva_diff34 = faddeeva_diff34.real();
 
-            double ConvolutedTimeFactor = f * ::exp( - ::pow(x, 2.0) ) *
-                                            ( A.k[index] * Re_faddeeva_sum12 + B.k[index] * Re_faddeeva_diff12 +
-                                                Tag*( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
-
+            double ConvolutedTimeFactor = f * ( A.k[index] * (faddeeva_z1 + faddeeva_z2) +
+                                                B.k[index] * (faddeeva_z1 - faddeeva_z2) +
+                                                Tag * ( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
+/*
+            std::cout << "time = " << time << std::endl;
+            std::cout << "sigma = " << sigma_eff << std::endl;
+            std::cout << faddeeva_z1 << std::endl;
+            std::cout << faddeeva_z2 << std::endl;
+            std::cout << faddeeva_z3 << std::endl;
+            std::cout << faddeeva_z4 << std::endl;
+            std::cout << Re_faddeeva_sum34 << std::endl;
+            std::cout << Re_faddeeva_diff34 << std::endl;
+            std::cout << "Convolution1 = " << 0.25*(faddeeva_z1 + faddeeva_z2) << std::endl;
+            std::cout << "Convolution2 = " << 0.25*(faddeeva_z1 - faddeeva_z2) << std::endl;
+            std::cout << "Convolution3 = " << 0.25*Re_faddeeva_sum34 << std::endl;
+            std::cout << "Convolution4 = " << 0.25*Re_faddeeva_diff34 << std::endl;
+*/
             return ConvolutedTimeFactor;
+        }
+
+
+        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) in arXiv:1906.08356v4
+        // convoluted with the Gaussian and integrated in the time variable
+        __hydra_dual__
+        inline double Integrated_Convoluted_Time_Factor(size_t index, double sigma_eff, double Gamma,
+                                                        double z1, double z2, hydra::complex<double> z3, hydra::complex<double> z4, int Tag) const
+        {
+		    /*
+		    0: A_0,
+		    1: A_perp,
+		    2: A_S,
+		    3: DeltaGamma_sd,
+		    4: DeltaGamma,
+		    5: DeltaM,
+		    */
+
+            static const double f = 0.04220232731986434; // 3./(16.*PI*Sqrt2)
+            static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
+            const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
+
+            double x1 = fLowerLimit/(sigma_eff*Sqrt2);
+            double x2 = fUpperLimit/(sigma_eff*Sqrt2);
+
+            double faddeeva_z1diff = ( faddeeva::erf(x2) - ::exp( z1*z1 - 2*z1*x2 ) * faddeeva::erfc(z1-x2) -
+                                            ( faddeeva::erf(x1) - ::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) ) ) / z1;
+
+            double faddeeva_z2diff = ( faddeeva::erf(x2) - ::exp( z2*z2 - 2*z2*x2 ) * faddeeva::erfc(z2-x2) -
+                                            ( faddeeva::erf(x1) - ::exp( z2*z2 - 2*z2*x1 ) * faddeeva::erfc(z2-x1) ) ) / z2;
+
+            hydra::complex<double> faddeeva_z3diff = faddeeva::erf(x2) - hydra::exp( z3*z3 - 2*z3*x2 ) * faddeeva::erfc(z3-x2) -
+                                                            ( faddeeva::erf(x1) - hydra::exp( z3*z3 - 2*z3*x1 ) * faddeeva::erfc(z3-x1) );
+
+            hydra::complex<double> faddeeva_z4diff = faddeeva::erf(x2) - hydra::exp( z4*z4 - 2*z4*x2 ) * faddeeva::erfc(z4-x2) -
+                                                            ( faddeeva::erf(x1) - hydra::exp( z4*z4 - 2*z4*x1 ) * faddeeva::erfc(z4-x1) );
+
+            hydra::complex<double> faddeeva_sum34  = faddeeva_z3diff/z3 + faddeeva_z4diff/z4;
+            hydra::complex<double> faddeeva_diff34 = ( faddeeva_z3diff/z3 - faddeeva_z4diff/z4 ) / I;
+            double Re_faddeeva_sum34  = faddeeva_sum34.real();
+            double Re_faddeeva_diff34 = faddeeva_diff34.real();
+
+            double NormFactor = f * sigma_eff *
+                                    ( A.k[index] * ( faddeeva_z1diff + faddeeva_z2diff ) +
+                                        B.k[index] * ( faddeeva_z1diff - faddeeva_z2diff ) +
+                                            Tag * ( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
+/*
+            std::cout << "sigma = " << sigma_eff << std::endl;
+            std::cout << faddeeva_z1diff << std::endl;
+            std::cout << faddeeva_z2diff << std::endl;
+            std::cout << faddeeva_z3diff/z3 << std::endl;
+            std::cout << faddeeva_z4diff/z4 << std::endl;
+            std::cout << Re_faddeeva_sum34 << std::endl;
+            std::cout << Re_faddeeva_diff34 << std::endl;
+            std::cout << "NormFactor = " << NormFactor << std::endl;
+*/
+            return NormFactor;
         }
 
 
@@ -434,6 +572,10 @@ namespace medusa {
 
 
 
+        int NE  =  (NormEnable==true) ? 1 : -1;
+
+        ArgTypeTime fLowerLimit;                    // Lower limit in the time integration
+        ArgTypeTime fUpperLimit;                    // Upper limit in the time integration
         parameters::NFactors N;                     // polarization factor N_k
         parameters::AngularTimeCoefficients A;      // angular coefficient a_k
         parameters::AngularTimeCoefficients B;      // angular coefficient b_k
