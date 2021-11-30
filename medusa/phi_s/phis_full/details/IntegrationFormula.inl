@@ -38,8 +38,7 @@
 // I use the hydra namespace, because the class implementation in different namespaces has not permitted.
 namespace hydra {
 
-    template<bool NormEnable,
-             typename ArgTypeTime,
+    template<typename ArgTypeTime,
              typename ArgTypeThetah,
              typename ArgTypeThetal,
              typename ArgTypePhi,
@@ -48,10 +47,10 @@ namespace hydra {
              typename ArgTypeEtaOS,
              typename ArgTypeEtaSS,
              typename ArgTypeDelta>
-    class IntegrationFormula< medusa::FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+    class IntegrationFormula< medusa::FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                         ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, 1>
     {
-        using ThisFunctor = medusa::FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        using ThisFunctor = medusa::FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                       ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >;
         protected:
 

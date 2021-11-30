@@ -69,6 +69,70 @@ declarg(etaSS_t, double)
 declarg(delta_t, double)
 
 
+//-------------------------------------
+// Experimental parameters for:
+//  B0s -> J/psi  (Phi -> K+ K-)
+//          |-> mu+ mu-
+//-------------------------------------
+
+const double b0 = 0.01297;
+const double b1 = 0.8446;
+
+const double p0_OS = 0.3890;
+const double p1_OS = 0.8486;
+const double DeltaP0_OS = 0.009;
+const double DeltaP1_OS = 0.0143;
+const double AvgEta_OS = 0.3602;
+
+const double p0_SS = 0.4325;
+const double p1_SS = 0.9241;
+const double DeltaP0_SS = 0.;
+const double DeltaP1_SS = 0.;
+const double AvgEta_SS = 0.4167;
+
+const double Omega[10] = {1.0, 1.0208, 1.0208,
+						  0.0024, 0.00321, -0.00018,
+							1.0113, -0.00003, -0.00003,
+													-0.0022};
+
+const double OmegaErr[10] = {0, 0.0014, 0.0014,
+							 0.0012, 0.00067, 0.00067,
+							 0.001, 0.00087, 0.00088,
+							 						0.0018};
+
+auto b0_p = hydra::Parameter::Create("b0").Value(b0).Error(0.00022).Fixed();
+auto b1_p = hydra::Parameter::Create("b1").Value(b1).Error(0.0057).Fixed();
+
+auto p0_OS_p = hydra::Parameter::Create("p0_OS").Value(p0_OS).Error(0.0007 + 0.0028).Fixed();
+auto p1_OS_p = hydra::Parameter::Create("p1_OS").Value(p1_OS).Error(0.0062 + 0.0265).Fixed();
+auto DeltaP0_OS_p = hydra::Parameter::Create("DeltaP0_OS").Value(DeltaP0_OS).Error(0.0014).Fixed();
+auto DeltaP1_OS_p = hydra::Parameter::Create("DeltaP1_OS").Value(DeltaP1_OS).Error(0.0124).Fixed();
+auto AgvEta_OS_p = hydra::Parameter::Create("AvgEta_OS").Value(AvgEta_OS).Error(0).Fixed();
+
+auto p0_SS_p = hydra::Parameter::Create("p0_SS").Value(p0_SS).Error(0.0108 + 0.003).Fixed();
+auto p1_SS_p = hydra::Parameter::Create("p1_SS").Value(p1_SS).Error(0.1314 + 0.0196).Fixed();
+auto DeltaP0_SS_p = hydra::Parameter::Create("DeltaP0_SS").Value(DeltaP0_SS).Error(0.03).Fixed();
+auto DeltaP1_SS_p = hydra::Parameter::Create("DeltaP1_SS").Value(DeltaP1_SS).Error(0.03).Fixed();
+auto AgvEta_SS_p = hydra::Parameter::Create("AvgEta_SS").Value(AvgEta_SS).Error(0).Fixed();
+
+auto Omega_1_p = hydra::Parameter::Create("Omega_1").Value(Omega[0]).Error(OmegaErr[0]).Fixed();
+auto Omega_2_p = hydra::Parameter::Create("Omega_2").Value(Omega[1]).Error(OmegaErr[1]).Fixed();
+auto Omega_3_p = hydra::Parameter::Create("Omega_3").Value(Omega[2]).Error(OmegaErr[2]).Fixed();
+auto Omega_4_p = hydra::Parameter::Create("Omega_4").Value(Omega[3]).Error(OmegaErr[3]).Fixed();
+auto Omega_5_p = hydra::Parameter::Create("Omega_5").Value(Omega[4]).Error(OmegaErr[4]).Fixed();
+auto Omega_6_p = hydra::Parameter::Create("Omega_6").Value(Omega[5]).Error(OmegaErr[5]).Fixed();
+auto Omega_7_p = hydra::Parameter::Create("Omega_7").Value(Omega[6]).Error(OmegaErr[6]).Fixed();
+auto Omega_8_p = hydra::Parameter::Create("Omega_8").Value(Omega[7]).Error(OmegaErr[7]).Fixed();
+auto Omega_9_p = hydra::Parameter::Create("Omega_9").Value(Omega[8]).Error(OmegaErr[8]).Fixed();
+auto Omega_10_p = hydra::Parameter::Create("Omega_10").Value(Omega[9]).Error(OmegaErr[9]).Fixed();
+
+hydra::Parameter ExpParams[22] = {b0_p, b1_p,
+                         		  p0_OS_p, p1_OS_p, DeltaP0_OS_p, DeltaP1_OS_p, AgvEta_OS_p,
+                         		  p0_SS_p, p1_SS_p, DeltaP0_SS_p, DeltaP1_SS_p, AgvEta_SS_p,
+                        		  Omega_1_p, Omega_2_p, Omega_3_p, Omega_4_p, Omega_5_p,
+                         		  Omega_6_p, Omega_7_p, Omega_8_p, Omega_9_p, Omega_10_p};
+
+
 
 namespace medusa {
 

@@ -73,8 +73,7 @@ namespace medusa {
     *
     *  ArgTypes = argument types of the functor
     */
-    template<bool NormEnable,
-             typename ArgTypeTime,
+    template<typename ArgTypeTime,
              typename ArgTypeThetah,
              typename ArgTypeThetal,
              typename ArgTypePhi,
@@ -85,15 +84,15 @@ namespace medusa {
              typename ArgTypeDelta,
              typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta) >
-    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18>
+    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 40>
     {
 
-        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                                ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18 >;
+        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                                                ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 40 >;
 
-        using hydra::BaseFunctor< FullAnalyticPhis< NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 18 >::_par;
+        using hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 40 >::_par;
 
 
         public:
@@ -106,18 +105,30 @@ namespace medusa {
 
         // ctor with list of hydra::Parameter
         // the user has to respect the parameter order
-        FullAnalyticPhis(hydra::Parameter const& A_0,           hydra::Parameter const& A_perp,     hydra::Parameter const& A_S, 
-                       hydra::Parameter const& DeltaGamma_sd, hydra::Parameter const& DeltaGamma, hydra::Parameter const& DeltaM,
-                       hydra::Parameter const& phi_0,         hydra::Parameter const& phi_par,
-                       hydra::Parameter const& phi_perp,      hydra::Parameter const& phi_S,
-                       hydra::Parameter const& lambda_0,      hydra::Parameter const& lambda_par,
-                       hydra::Parameter const& lambda_perp,   hydra::Parameter const& lambda_S,
-                       hydra::Parameter const& delta_0,       hydra::Parameter const& delta_par,
-                       hydra::Parameter const& delta_perp,    hydra::Parameter const& delta_S,
-                       ArgTypeTime const& LowerLimit,         ArgTypeTime const& UpperLimit):
-        ThisBaseFunctor({A_0, A_perp, A_S, DeltaGamma_sd, DeltaGamma, DeltaM,
-                         phi_0,       phi_par,    phi_perp,    phi_S,          lambda_0,   lambda_par,
-                         lambda_perp, lambda_S,   delta_0,     delta_par,      delta_perp, delta_S })
+        FullAnalyticPhis(hydra::Parameter const& A_0,             hydra::Parameter const& A_perp,      hydra::Parameter const& A_S,
+                         hydra::Parameter const& DeltaGamma_sd,   hydra::Parameter const& DeltaGamma,  hydra::Parameter const& DeltaM,
+                         hydra::Parameter const& phi_0,           hydra::Parameter const& phi_par,     hydra::Parameter const& phi_perp,
+                         hydra::Parameter const& phi_S,           hydra::Parameter const& lambda_0,    hydra::Parameter const& lambda_par,
+                         hydra::Parameter const& lambda_perp,     hydra::Parameter const& lambda_S,    hydra::Parameter const& delta_0,
+                         hydra::Parameter const& delta_par,       hydra::Parameter const& delta_perp,  hydra::Parameter const& delta_S,
+                         hydra::Parameter const& b0,              hydra::Parameter const& b1,          hydra::Parameter const& p0_OS,
+                         hydra::Parameter const& p1_OS,           hydra::Parameter const& DeltaP0_OS,  hydra::Parameter const& DeltaP1_OS,
+                         hydra::Parameter const& AvgEta_OS,       hydra::Parameter const& p0_SS,       hydra::Parameter const& p1_SS,
+                         hydra::Parameter const& DeltaP0_SS,      hydra::Parameter const& DeltaP1_SS,  hydra::Parameter const& AvgEta_SS,
+                         hydra::Parameter const& Omega_1,         hydra::Parameter const& Omega_2,     hydra::Parameter const& Omega_3,
+                         hydra::Parameter const& Omega_4,         hydra::Parameter const& Omega_5,     hydra::Parameter const& Omega_6,
+                         hydra::Parameter const& Omega_7,         hydra::Parameter const& Omega_8,     hydra::Parameter const& Omega_9,
+                         hydra::Parameter const& Omega_10,        ArgTypeTime const& LowerLimit,       ArgTypeTime const& UpperLimit):
+        ThisBaseFunctor({A_0, A_perp, A_S,
+                         DeltaGamma_sd, DeltaGamma, DeltaM,
+                         phi_0, phi_par, phi_perp, phi_S, 
+                         lambda_0, lambda_par, lambda_perp, lambda_S,
+                         delta_0, delta_par, delta_perp, delta_S,
+                         b0, b1,
+                         p0_OS, p1_OS, DeltaP0_OS, DeltaP1_OS, AvgEta_OS,
+                         p0_SS, p1_SS, DeltaP0_SS, DeltaP1_SS, AvgEta_SS,
+                         Omega_1, Omega_2, Omega_3, Omega_4, Omega_5,
+                         Omega_6, Omega_7, Omega_8, Omega_9, Omega_10 })
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
@@ -127,9 +138,13 @@ namespace medusa {
 
         // ctor with array of hydra::Parameter
         // the user has to respect the parameter order as the main ctor
-        explicit FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit ):
-        ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
-                         Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
+        explicit FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const hydra::Parameter (&Ps)[22],
+                                                        const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit ):
+        ThisBaseFunctor{ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
+                         Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
+                         Ps[0],  Ps[1],  Ps[2],  Ps[3],  Ps[4],  Ps[5],  Ps[6],  Ps[7],
+                         Ps[8],  Ps[9],  Ps[10], Ps[11], Ps[12], Ps[13], Ps[14], Ps[15], Ps[16], Ps[17],
+                         Ps[18], Ps[19], Ps[20], Ps[21] }
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
@@ -139,19 +154,22 @@ namespace medusa {
 
         // ctor with array of double
         // the user has to respect the parameter order as the main ctor
-        explicit FullAnalyticPhis( const double (&Hs)[20] ):
-        ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
-                         Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
+        explicit FullAnalyticPhis( const double (&Hs)[42] ):
+        ThisBaseFunctor{ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
+                         Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
+                         Hs[18], Hs[19], Hs[20], Hs[21], Hs[22], Hs[23], Hs[24], Hs[25],
+                         Hs[26], Hs[27], Hs[28], Hs[29], Hs[30], Hs[31], Hs[32], Hs[33], Hs[34], Hs[35],
+                         Hs[36], Hs[37], Hs[38], Hs[39] }
         {
-            fLowerLimit = Hs[18];
-            fUpperLimit = Hs[19];
+            fLowerLimit = Hs[40];
+            fUpperLimit = Hs[41];
             Update();
         }
 
 
         // ctor with other FullAnalyticPhis instance (copy ctor)
         __hydra_dual__
-        FullAnalyticPhis(FullAnalyticPhis<NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        FullAnalyticPhis(FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                         ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
         ThisBaseFunctor(other)
         {
@@ -177,9 +195,9 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        FullAnalyticPhis<NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                             ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta>& 
-        operator=( FullAnalyticPhis<NormEnable, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        operator=( FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other)
         {
             if(this == &other) return *this;
@@ -220,8 +238,27 @@ namespace medusa {
         // evaluate the sum in Eq. (9) in arXiv:1906.08356v4
         __hydra_dual__ 
         inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi,
-                                    ArgTypeQOS qOS, ArgTypeQSS qSS, ArgTypeEtaOS etaOS, ArgTypeEtaSS etaSS, ArgTypeDelta delta_time) const
+                                ArgTypeQOS qOS, ArgTypeQSS qSS, ArgTypeEtaOS etaOS, ArgTypeEtaSS etaSS, ArgTypeDelta delta_time) const
         {
+            /*
+		     0: A_0,
+		     1: A_perp,
+		     2: A_S,
+		     3: DeltaGamma_sd,
+		     4: DeltaGamma,
+		     5: DeltaM,
+            30: Omega_1,
+            31: Omega_2,
+            32: Omega_3,
+            33: Omega_4,
+            34: Omega_5,
+            35: Omega_6,
+            36: Omega_7,
+            37: Omega_8,
+            38: Omega_9,
+            39: Omega_10,
+		    */
+
             static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
 
             double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
@@ -256,18 +293,11 @@ namespace medusa {
             	UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, time, sigma_eff, Gamma, z1, z2, z3, z4, 1) +
                                                 TagB0sbar*Convoluted_Time_Factor(i, time, sigma_eff, Gamma, z1, z2, z3, z4, -1) );
                 
-                NormFactor += F.fk[i]*N.k[i]*( TagB0s*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, 1) +
-                                                TagB0sbar*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, -1) );
+                NormFactor += _par[30+i]*N.k[i]*( TagB0s*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, 1) +
+                                                    TagB0sbar*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, -1) );
             }
 
-            if(NE > 0)
-            {
-                PDF = UnnormPDF/NormFactor;
-            }
-            else
-            {
-                PDF = UnnormPDF;
-            }
+            PDF = UnnormPDF/NormFactor;
             
             // This macro controls if PDF is NaN. If yes, it prints a warning
             // with the parameter value for whom we obtain a NaN.
@@ -455,17 +485,8 @@ namespace medusa {
         // convoluted with the Gaussian and integrated in the time variable
         __hydra_dual__
         inline double Integrated_Convoluted_Time_Factor(size_t index, double sigma_eff, double Gamma,
-                                                        double z1, double z2, hydra::complex<double> z3, hydra::complex<double> z4, int Tag) const
+                                            double z1, double z2, hydra::complex<double> z3, hydra::complex<double> z4, int Tag) const
         {
-		    /*
-		    0: A_0,
-		    1: A_perp,
-		    2: A_S,
-		    3: DeltaGamma_sd,
-		    4: DeltaGamma,
-		    5: DeltaM,
-		    */
-
             static const double f = 0.04220232731986434; // 3./(16.*PI*Sqrt2)
             static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
             const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
@@ -512,10 +533,12 @@ namespace medusa {
         __hydra_dual__
         inline double Sigma_eff(ArgTypeDelta delta_time) const
         {
-            static const double b0 = 0.01297;
-            static const double b1 = 0.8446;
+            /*
+		    18: b0,
+		    19: b1,
+		    */
 
-            double sigma_eff = b0 + b1 * delta_time;
+            double sigma_eff = _par[18] + _par[19] * delta_time;
 
             return sigma_eff;
         }
@@ -525,20 +548,21 @@ namespace medusa {
         __hydra_dual__
         inline double B0sTag(int qOS, int qSS, double etaOS, double etaSS) const
         {
-            static const double p0_OS = 0.3890;
-            static const double p1_OS = 0.8486;
-            static const double DeltaP0_OS = 0.009;
-            static const double DeltaP1_OS = 0.0143;
-            static const double AvgEta_OS = 0.3602;
+            /*
+		    20: p0_OS,
+		    21: p1_OS,
+		    22: DeltaP0_OS,
+		    23: DeltaP1_OS,
+		    24: AvgEta_OS,
+		    25: p0_SS,
+		    26: p1_SS,
+		    27: DeltaP0_SS,
+		    28: DeltaP1_SS,
+		    29: AvgEta_SS,
+		    */
 
-            static const double p0_SS = 0.4325;
-            static const double p1_SS = 0.9241;
-            static const double DeltaP0_SS = 0.;
-            static const double DeltaP1_SS = 0.;
-            static const double AvgEta_SS = 0.4167;
-
-            double omegaOS = (p0_OS + 0.5*DeltaP0_OS) + (p1_OS + 0.5*DeltaP1_OS)*(etaOS - AvgEta_OS);
-            double omegaSS = (p0_SS + 0.5*DeltaP0_SS) + (p1_SS + 0.5*DeltaP1_SS)*(etaSS - AvgEta_SS);
+            double omegaOS = (_par[20] + 0.5*_par[22]) + (_par[21] + 0.5*_par[23])*(etaOS - _par[24]);
+            double omegaSS = (_par[25] + 0.5*_par[27]) + (_par[26] + 0.5*_par[28])*(etaSS - _par[29]);
 
             double TagB0s = (1 + qOS*(1 - 2*omegaOS))*(1 + qSS*(1 - 2*omegaSS));
 
@@ -550,20 +574,21 @@ namespace medusa {
         __hydra_dual__
         inline double B0sbarTag(int qOS, int qSS, double etaOS, double etaSS) const
         {
-            static const double p0_OS = 0.3890;
-            static const double p1_OS = 0.8486;
-            static const double DeltaP0_OS = 0.009;
-            static const double DeltaP1_OS = 0.0143;
-            static const double AvgEta_OS = 0.3602;
+            /*
+		    20: p0_OS,
+		    21: p1_OS,
+		    22: DeltaP0_OS,
+		    23: DeltaP1_OS,
+		    24: AvgEta_OS,
+		    25: p0_SS,
+		    26: p1_SS,
+		    27: DeltaP0_SS,
+		    28: DeltaP1_SS,
+		    29: AvgEta_SS,
+		    */
 
-            static const double p0_SS = 0.4325;
-            static const double p1_SS = 0.9241;
-            static const double DeltaP0_SS = 0.;
-            static const double DeltaP1_SS = 0.;
-            static const double AvgEta_SS = 0.4167;
-
-            double OmegaBarOS = (p0_OS - 0.5*DeltaP0_OS) + (p1_OS - 0.5*DeltaP1_OS)*(etaOS - AvgEta_OS);
-            double OmegaBarSS = (p0_SS - 0.5*DeltaP0_SS) + (p1_SS - 0.5*DeltaP1_SS)*(etaSS - AvgEta_SS);
+            double OmegaBarOS = (_par[20] - 0.5*_par[22]) + (_par[21] - 0.5*_par[23])*(etaOS - _par[24]);
+            double OmegaBarSS = (_par[25] - 0.5*_par[27]) + (_par[26] - 0.5*_par[28])*(etaSS - _par[29]);
 
             double TagB0sbar = (1 - qOS*(1 - 2*OmegaBarOS))*(1 - qSS*(1 - 2*OmegaBarSS));
 
@@ -571,8 +596,6 @@ namespace medusa {
         }
 
 
-
-        int NE  =  (NormEnable==true) ? 1 : -1;
 
         ArgTypeTime fLowerLimit;                    // Lower limit in the time integration
         ArgTypeTime fUpperLimit;                    // Upper limit in the time integration
