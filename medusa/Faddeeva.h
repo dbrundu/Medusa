@@ -33,7 +33,7 @@
  *----------------------------------------------------------------------------*/
 
 #ifndef MEDUSA_FADDEEVA_H
-#define MEDUSA_FADDEEVA_H 1
+#define MEDUSA_FADDEEVA_H
 
 //////////////////////////////////////////////////////////////////////////////
 /* If this file is compiled as a part of a larger project,

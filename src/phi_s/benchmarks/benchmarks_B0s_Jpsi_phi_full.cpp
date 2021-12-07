@@ -28,4 +28,4 @@
  *  benchmarks_B0s_Jpsi_phi.cpp
  *----------------------------------------*/
 
-#include <src/benchmarks/benchmarks_B0s_Jpsi_phi.inl>
+#include <src/phi_s/benchmarks/benchmarks_B0s_Jpsi_phi_full.inl>

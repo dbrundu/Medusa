@@ -57,7 +57,7 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/Faddeeva.h>
+#include <medusa/Functions.h>
 
 
 namespace medusa {
@@ -66,8 +66,7 @@ namespace medusa {
     *  @class FullAnalyticPhis
     *  Functor that provides the time dependent formula used in phi_s analysis in the full model,
     *  i.e. signal + experimental artifacts (tagging, time resolution and acceptances),
-    *  with analytical convolution and integration
-    *  [see Eq. (12) in arXiv:1906.08356v4]
+    *  with analytical convolution and integration [Reference: Eq. (12) in arXiv:1906.08356v4]
     * 
     *  The implementation of the method Update_ATCoefficients() is inside the detail/ folder
     *
@@ -259,8 +258,6 @@ namespace medusa {
             39: Omega_10,
 		    */
 
-            static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
-
             double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
 
             double UnnormPDF = 0;
@@ -282,23 +279,31 @@ namespace medusa {
             double sigma_eff = Sigma_eff(delta_time);
 
             double Gamma = _par[3] + 0.65789;
-            double z1 = (Gamma - 0.5*_par[4])*sigma_eff/Sqrt2;
-            double z2 = (Gamma + 0.5*_par[4])*sigma_eff/Sqrt2;
-            hydra::complex<double> z3( Gamma*sigma_eff/Sqrt2, -_par[5]*sigma_eff/Sqrt2 );
-            hydra::complex<double> z4( Gamma*sigma_eff/Sqrt2,  _par[5]*sigma_eff/Sqrt2 );
+            double HalfDeltaGamma = 0.5*_par[4];
+
+            double conv_exp_cosh = functions::Convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, 1);
+            double conv_exp_sinh = functions::Convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, -1);
+            double conv_exp_cos = functions::Convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, 1);
+            double conv_exp_sin = functions::Convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, -1);
+
+            double int_conv_exp_cosh = functions::Integrated_convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
+            double int_conv_exp_sinh = functions::Integrated_convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
+            double int_conv_exp_cos = functions::Integrated_convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
+            double int_conv_exp_sin = functions::Integrated_convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
 
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
-            	UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, time, sigma_eff, Gamma, z1, z2, z3, z4, 1) +
-                                                TagB0sbar*Convoluted_Time_Factor(i, time, sigma_eff, Gamma, z1, z2, z3, z4, -1) );
+            	UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
+                                                TagB0sbar*Convoluted_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
                 
-                NormFactor += _par[30+i]*N.k[i]*( TagB0s*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, 1) +
-                                                    TagB0sbar*Integrated_Convoluted_Time_Factor(i, sigma_eff, Gamma, z1, z2, z3, z4, -1) );
+                NormFactor +=  _par[30+i]*N.k[i]*
+                                ( TagB0s*Integrated_Convoluted_Time_Factor(i, sigma_eff, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
+                                    TagB0sbar*Integrated_Convoluted_Time_Factor(i, sigma_eff, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
             }
 
             PDF = UnnormPDF/NormFactor;
-            
+
             // This macro controls if PDF is NaN. If yes, it prints a warning
             // with the parameter value for whom we obtain a NaN.
             hydra::CHECK_VALUE(PDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
@@ -429,107 +434,37 @@ namespace medusa {
         }
 
 
-        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) in arXiv:1906.08356v4
-        // convoluted with the Gaussian
+        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian
+        // (Reference: Eq. (10) and (11) in arXiv:1906.08356v4)
         __hydra_dual__
-        inline double Convoluted_Time_Factor(size_t index, double time, double sigma_eff, double Gamma,
-                                             double z1, double z2, hydra::complex<double> z3, hydra::complex<double> z4, int Tag) const
+        inline double Convoluted_Time_Factor(size_t index, double conv_exp_cosh, double conv_exp_sinh,
+                                                                double conv_exp_cos, double conv_exp_sin, int Tag) const
         {
-		    /*
-		    0: A_0,
-		    1: A_perp,
-		    2: A_S,
-		    3: DeltaGamma_sd,
-		    4: DeltaGamma,
-		    5: DeltaM,
-		    */
-
     	    static const double f = 0.05968310365946074; // 3./(16.*PI)
-            static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
-            const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
 
-            double x = time/(sigma_eff*Sqrt2);
+            double ConvolutedTimeFactor = f * ( A.k[index] * conv_exp_cosh + B.k[index] * conv_exp_sinh +
+                                                    Tag * ( C.k[index] * conv_exp_cos + D.k[index] * conv_exp_sin ) );
 
-            double faddeeva_z1 = ::exp( z1*z1 - 2*z1*x ) * faddeeva::erfc(z1-x);
-            double faddeeva_z2 = ::exp( z2*z2 - 2*z2*x ) * faddeeva::erfc(z2-x);
-            hydra::complex<double> faddeeva_z3 = hydra::exp( z3*z3 - 2*z3*x ) * faddeeva::erfc(z3-x);
-            hydra::complex<double> faddeeva_z4 = hydra::exp( z4*z4 - 2*z4*x ) * faddeeva::erfc(z4-x);
-
-            hydra::complex<double> faddeeva_sum34 = faddeeva_z3 + faddeeva_z4;
-            hydra::complex<double> faddeeva_diff34 = ( faddeeva_z3 - faddeeva_z4 ) / I;
-            double Re_faddeeva_sum34 = faddeeva_sum34.real();
-            double Re_faddeeva_diff34 = faddeeva_diff34.real();
-
-            double ConvolutedTimeFactor = f * ( A.k[index] * (faddeeva_z1 + faddeeva_z2) +
-                                                B.k[index] * (faddeeva_z1 - faddeeva_z2) +
-                                                Tag * ( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
-/*
-            std::cout << "time = " << time << std::endl;
-            std::cout << "sigma = " << sigma_eff << std::endl;
-            std::cout << faddeeva_z1 << std::endl;
-            std::cout << faddeeva_z2 << std::endl;
-            std::cout << faddeeva_z3 << std::endl;
-            std::cout << faddeeva_z4 << std::endl;
-            std::cout << Re_faddeeva_sum34 << std::endl;
-            std::cout << Re_faddeeva_diff34 << std::endl;
-            std::cout << "Convolution1 = " << 0.25*(faddeeva_z1 + faddeeva_z2) << std::endl;
-            std::cout << "Convolution2 = " << 0.25*(faddeeva_z1 - faddeeva_z2) << std::endl;
-            std::cout << "Convolution3 = " << 0.25*Re_faddeeva_sum34 << std::endl;
-            std::cout << "Convolution4 = " << 0.25*Re_faddeeva_diff34 << std::endl;
-*/
             return ConvolutedTimeFactor;
         }
 
 
-        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) in Eq. (10) and (11) in arXiv:1906.08356v4
-        // convoluted with the Gaussian and integrated in the time variable
+        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian and integrated in the time
+        // (Reference: Eq. (10) and (11) in arXiv:1906.08356v4)
         __hydra_dual__
-        inline double Integrated_Convoluted_Time_Factor(size_t index, double sigma_eff, double Gamma,
-                                            double z1, double z2, hydra::complex<double> z3, hydra::complex<double> z4, int Tag) const
+        inline double Integrated_Convoluted_Time_Factor(size_t index, double sigma, double int_conv_exp_cosh, double int_conv_exp_sinh,
+                                                                                    double int_conv_exp_cos, double int_conv_exp_sin, int Tag) const
         {
             static const double f = 0.04220232731986434; // 3./(16.*PI*Sqrt2)
-            static const double Sqrt2 = 1.414213562373095; // \sqrt{2}
-            const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
 
-            double x1 = fLowerLimit/(sigma_eff*Sqrt2);
-            double x2 = fUpperLimit/(sigma_eff*Sqrt2);
+            double NormFactor = f * sigma * ( A.k[index] * int_conv_exp_cosh + B.k[index] * int_conv_exp_sinh +
+                                                    Tag * ( C.k[index] * int_conv_exp_cos + D.k[index] * int_conv_exp_sin ) );
 
-            double faddeeva_z1diff = ( faddeeva::erf(x2) - ::exp( z1*z1 - 2*z1*x2 ) * faddeeva::erfc(z1-x2) -
-                                            ( faddeeva::erf(x1) - ::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) ) ) / z1;
-
-            double faddeeva_z2diff = ( faddeeva::erf(x2) - ::exp( z2*z2 - 2*z2*x2 ) * faddeeva::erfc(z2-x2) -
-                                            ( faddeeva::erf(x1) - ::exp( z2*z2 - 2*z2*x1 ) * faddeeva::erfc(z2-x1) ) ) / z2;
-
-            hydra::complex<double> faddeeva_z3diff = faddeeva::erf(x2) - hydra::exp( z3*z3 - 2*z3*x2 ) * faddeeva::erfc(z3-x2) -
-                                                            ( faddeeva::erf(x1) - hydra::exp( z3*z3 - 2*z3*x1 ) * faddeeva::erfc(z3-x1) );
-
-            hydra::complex<double> faddeeva_z4diff = faddeeva::erf(x2) - hydra::exp( z4*z4 - 2*z4*x2 ) * faddeeva::erfc(z4-x2) -
-                                                            ( faddeeva::erf(x1) - hydra::exp( z4*z4 - 2*z4*x1 ) * faddeeva::erfc(z4-x1) );
-
-            hydra::complex<double> faddeeva_sum34  = faddeeva_z3diff/z3 + faddeeva_z4diff/z4;
-            hydra::complex<double> faddeeva_diff34 = ( faddeeva_z3diff/z3 - faddeeva_z4diff/z4 ) / I;
-            double Re_faddeeva_sum34  = faddeeva_sum34.real();
-            double Re_faddeeva_diff34 = faddeeva_diff34.real();
-
-            double NormFactor = f * sigma_eff *
-                                    ( A.k[index] * ( faddeeva_z1diff + faddeeva_z2diff ) +
-                                        B.k[index] * ( faddeeva_z1diff - faddeeva_z2diff ) +
-                                            Tag * ( C.k[index] * Re_faddeeva_sum34 + D.k[index] * Re_faddeeva_diff34 ) );
-/*
-            std::cout << "sigma = " << sigma_eff << std::endl;
-            std::cout << faddeeva_z1diff << std::endl;
-            std::cout << faddeeva_z2diff << std::endl;
-            std::cout << faddeeva_z3diff/z3 << std::endl;
-            std::cout << faddeeva_z4diff/z4 << std::endl;
-            std::cout << Re_faddeeva_sum34 << std::endl;
-            std::cout << Re_faddeeva_diff34 << std::endl;
-            std::cout << "NormFactor = " << NormFactor << std::endl;
-*/
             return NormFactor;
         }
 
 
-        // effective resolution (See definition in page 7 in arXiv:1906.08356v4)
+        // effective resolution (Reference: page 7 in arXiv:1906.08356v4)
         __hydra_dual__
         inline double Sigma_eff(ArgTypeDelta delta_time) const
         {
@@ -544,7 +479,7 @@ namespace medusa {
         }
 
 
-        // Tagging of B0s (See Eq. (5), (6), (13) and Table 1 in arXiv:1906.08356v4)
+        // Tagging of B0s (Reference: Eq. (5), (6), (13) and Table 1 in arXiv:1906.08356v4)
         __hydra_dual__
         inline double B0sTag(int qOS, int qSS, double etaOS, double etaSS) const
         {
@@ -570,7 +505,7 @@ namespace medusa {
         }
 
 
-        // Tagging of B0sbar (See Eq. (5), (6), (14) and Table 1 in arXiv:1906.08356v4)
+        // Tagging of B0sbar (Reference: Eq. (5), (6), (14) and Table 1 in arXiv:1906.08356v4)
         __hydra_dual__
         inline double B0sbarTag(int qOS, int qSS, double etaOS, double etaSS) const
         {

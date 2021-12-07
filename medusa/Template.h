@@ -24,7 +24,7 @@
  *  Created on:
  *
  *  Author:
- * 
+ *
  *----------------------------------------*/
 
-namespace medusa { }
+namespace medusa { } // namespace medusa

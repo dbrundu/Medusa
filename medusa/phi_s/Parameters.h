@@ -20,15 +20,14 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*
+/*---------------------------------------------------------------------------
  * 	Parameters.h
  *
  *  Created on: 04/06/2021
  *      Author: Alessandro Maria Ricci
  * 
  * 	This library contains all parameters used by PhisSignal.h amd PhisComplete.h.
- */
-
+ *---------------------------------------------------------------------------*/
 
 #ifndef PHIS_PARAMETERS_H_
 #define PHIS_PARAMETERS_H_
@@ -90,15 +89,15 @@ const double DeltaP0_SS = 0.;
 const double DeltaP1_SS = 0.;
 const double AvgEta_SS = 0.4167;
 
-const double Omega[10] = {1.0, 1.0208, 1.0208,
-						  0.0024, 0.00321, -0.00018,
-							1.0113, -0.00003, -0.00003,
-													-0.0022};
+const double Omega[10] = {1.0, 1.0336, 1.0336,
+						  0.0028, 0.00298, -0.0002,
+							1.0196, 0.00019, 0.00019,
+													0.0057};
 
-const double OmegaErr[10] = {0, 0.0014, 0.0014,
-							 0.0012, 0.00067, 0.00067,
-							 0.001, 0.00087, 0.00088,
-							 						0.0018};
+const double OmegaErr[10] = {0, 0.0015, 0.0015,
+							 0.0013, 0.00074, 0.00072,
+							 0.0011, 0.00094, 0.00094,
+							 						0.0019};
 
 auto b0_p = hydra::Parameter::Create("b0").Value(b0).Error(0.00022).Fixed();
 auto b1_p = hydra::Parameter::Create("b1").Value(b1).Error(0.0057).Fixed();
@@ -135,7 +134,6 @@ hydra::Parameter ExpParams[22] = {b0_p, b1_p,
 
 
 namespace medusa {
-
 	namespace parameters {
 
 
@@ -206,7 +204,6 @@ namespace medusa {
 
 
 	} // namespace parameters
-
 }  // namespace medusa
 
 #endif /* PHIS_PARAMETERS_H_ */

@@ -50,8 +50,7 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/Angles.h>
-
+#include <medusa/Functions.h>
 
 
 namespace medusa {
@@ -110,9 +109,9 @@ namespace medusa {
             engine.discard(1);
             delta_t delta_time = uniDist4(engine);
 
-            theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(jpsi + phi, phi,  kaonp) );
-            theta_h_t theta_h    = ::acos( medusa::cos_decay_angle(jpsi + phi, jpsi, mup) );
-            phi_t     phiangle   = medusa::phi_plane_angle(kaonm, kaonp, mup, mum);
+            theta_l_t theta_l    = ::acos( medusa::functions::cos_decay_angle(jpsi + phi, phi,  kaonp) );
+            theta_h_t theta_h    = ::acos( medusa::functions::cos_decay_angle(jpsi + phi, jpsi, mup) );
+            phi_t     phiangle   = medusa::functions::phi_plane_angle(kaonm, kaonp, mup, mum);
 
             return hydra::make_tuple(decay_time, theta_h, theta_l, phiangle, qOS, qSS, etaOS, etaSS, delta_time) ;
 
