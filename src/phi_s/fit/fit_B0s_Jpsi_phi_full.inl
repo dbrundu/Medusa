@@ -150,6 +150,9 @@ int main(int argv, char** argc)
     const dtime_t LowerLimit = 0;
     const dtime_t UpperLimit = 20.0;
 
+    // weight to improve the numerical fit
+    const double Weight = 0.25;
+
     // model parameters
     const double A0_dataset         = ::sqrt(0.542);
     const double Aperp_dataset      = ::sqrt(0.206);
@@ -210,7 +213,7 @@ int main(int argv, char** argc)
                                                 delta_0_pd,        delta_par_pd,   delta_perp_pd,   delta_S_pd};
 
     auto Model = medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t,
-                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams, LowerLimit, UpperLimit);
+                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams, LowerLimit, UpperLimit, Weight);
 
 //    Model(2.54933, 1, 1, 1, 1, 1, 1, 1, 0.01);
 
@@ -335,7 +338,7 @@ int main(int argv, char** argc)
                                         delta_0_p,       delta_par_p,  delta_perp_p,  delta_S_p};
 
     auto model = medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t,
-                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, LowerLimit, UpperLimit);
+                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, LowerLimit, UpperLimit, Weight);
 
     //---------------------------------
     //          PDF generation

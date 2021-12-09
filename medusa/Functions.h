@@ -171,6 +171,8 @@ namespace medusa {
         inline double Integrated_convoluted_exp_sinhcosh(double time, double a, double b, double mu, double sigma,
                                                                                 double LowerLimit, double UpperLimit, int tag)
         {
+            static const double f = 0.3535533905932738; // 1./Sqrt[8.]
+
             double x1 = (LowerLimit - mu)/(sigma*sqrt2);
             double x2 = (UpperLimit - mu)/(sigma*sqrt2);
 
@@ -178,16 +180,16 @@ namespace medusa {
             double z2 = (a + b)*sigma/sqrt2;
 
             double cumulative_z1 = ( faddeeva::erf(x2) - ::exp( z1*z1 - 2*z1*x2 ) * faddeeva::erfc(z1-x2) -
-                                            ( faddeeva::erf(x1) - ::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) ) ) / z1;
+                                            ( faddeeva::erf(x1) - ::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) ) ) / (2*z1);
 
             double cumulative_z2 = ( faddeeva::erf(x2) - ::exp( z2*z2 - 2*z2*x2 ) * faddeeva::erfc(z2-x2) -
-                                            ( faddeeva::erf(x1) - ::exp( z2*z2 - 2*z2*x1 ) * faddeeva::erfc(z2-x1) ) ) / z2;
+                                            ( faddeeva::erf(x1) - ::exp( z2*z2 - 2*z2*x1 ) * faddeeva::erfc(z2-x1) ) ) / (2*z2);
 
             double Integrated_convolution = 0;
 
-            if(tag > 0) Integrated_convolution = cumulative_z1 + cumulative_z2;
+            if(tag > 0) Integrated_convolution = f * sigma * (cumulative_z1 + cumulative_z2);
 
-            if(tag < 0) Integrated_convolution = cumulative_z1 - cumulative_z2;
+            if(tag < 0) Integrated_convolution = f * sigma * (cumulative_z1 - cumulative_z2);
 
             return Integrated_convolution;
         }
@@ -199,6 +201,7 @@ namespace medusa {
         inline double Integrated_convoluted_exp_sincos(double time, double a, double b, double mu, double sigma,
                                                                                 double LowerLimit, double UpperLimit, int tag)
         {
+            static const double f = 0.3535533905932738; // 1./Sqrt[8.]
             const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
 
             double x1 = (LowerLimit - mu)/(sigma*sqrt2);
@@ -215,11 +218,11 @@ namespace medusa {
 
             hydra::complex<double> result = 0;
 
-            if(tag > 0) result  = cumulative_z1/z1 + cumulative_z2/z2;
+            if(tag > 0) result  = cumulative_z1/(2*z1) + cumulative_z2/(2*z2);
             
-            if(tag < 0) result = ( cumulative_z1/z1 - cumulative_z2/z2 ) / I;
+            if(tag < 0) result = ( cumulative_z1/(2*z1) - cumulative_z2/(2*z2) ) / I;
 
-            double Integrated_convolution = result.real();
+            double Integrated_convolution = f * sigma * result.real();
 
             return Integrated_convolution;
         }

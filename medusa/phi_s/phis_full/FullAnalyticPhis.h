@@ -117,7 +117,7 @@ namespace medusa {
                          hydra::Parameter const& Omega_1,         hydra::Parameter const& Omega_2,     hydra::Parameter const& Omega_3,
                          hydra::Parameter const& Omega_4,         hydra::Parameter const& Omega_5,     hydra::Parameter const& Omega_6,
                          hydra::Parameter const& Omega_7,         hydra::Parameter const& Omega_8,     hydra::Parameter const& Omega_9,
-                         hydra::Parameter const& Omega_10,        ArgTypeTime const& LowerLimit,       ArgTypeTime const& UpperLimit):
+                         hydra::Parameter const& Omega_10,        ArgTypeTime const& LowerLimit,       ArgTypeTime const& UpperLimit,       double const& Weight):
         ThisBaseFunctor({A_0, A_perp, A_S,
                          DeltaGamma_sd, DeltaGamma, DeltaM,
                          phi_0, phi_par, phi_perp, phi_S, 
@@ -131,6 +131,7 @@ namespace medusa {
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
+            fweight = Weight;
             Update();
         }
 
@@ -138,7 +139,7 @@ namespace medusa {
         // ctor with array of hydra::Parameter
         // the user has to respect the parameter order as the main ctor
         explicit FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const hydra::Parameter (&Ps)[22],
-                                                        const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit ):
+                                                        const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit, const double &Weight ):
         ThisBaseFunctor{ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
                          Ps[0],  Ps[1],  Ps[2],  Ps[3],  Ps[4],  Ps[5],  Ps[6],  Ps[7],
@@ -147,13 +148,14 @@ namespace medusa {
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
+            fweight = Weight;
             Update();
         }
 
 
         // ctor with array of double
         // the user has to respect the parameter order as the main ctor
-        explicit FullAnalyticPhis( const double (&Hs)[42] ):
+        explicit FullAnalyticPhis( const double (&Hs)[43] ):
         ThisBaseFunctor{ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
                          Hs[18], Hs[19], Hs[20], Hs[21], Hs[22], Hs[23], Hs[24], Hs[25],
@@ -162,6 +164,7 @@ namespace medusa {
         {
             fLowerLimit = Hs[40];
             fUpperLimit = Hs[41];
+            fweight = Hs[42];
             Update();
         }
 
@@ -174,6 +177,7 @@ namespace medusa {
         {
             fLowerLimit = other.GetLowerLimit();
             fUpperLimit = other.GetUpperLimit();
+            fweight = other.GetWeight();
 
     	    #pragma unroll 10
     	    for(size_t i=0; i<10; i++)
@@ -204,6 +208,7 @@ namespace medusa {
 
             fLowerLimit = other.GetLowerLimit();
             fUpperLimit = other.GetUpperLimit();
+            fweight = other.GetWeight();
 
 		    #pragma unroll 10
             for(size_t i=0; i<10; i++)
@@ -262,13 +267,13 @@ namespace medusa {
 
             double UnnormPDF = 0;
             double NormFactor = 0;
-            double PDF = 0;
+            double wPDF = 0;
 
             // This is a safety mechanism that is necessary when A_par2 takes negative values (see Update_NFactors()).
             // PDF = 0 activates the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
             if(A_par2 < 0)
             {
-                return PDF;
+                return wPDF;
             }
 
             auto F = parameters::AngularFunctions(theta_h, theta_l, phi);
@@ -298,31 +303,31 @@ namespace medusa {
                                                 TagB0sbar*Convoluted_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
                 
                 NormFactor +=  _par[30+i]*N.k[i]*
-                                ( TagB0s*Integrated_Convoluted_Time_Factor(i, sigma_eff, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
-                                    TagB0sbar*Integrated_Convoluted_Time_Factor(i, sigma_eff, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
+                                ( TagB0s*Integrated_Convoluted_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
+                                    TagB0sbar*Integrated_Convoluted_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
             }
 
-            PDF = UnnormPDF/NormFactor;
+            wPDF = fweight*UnnormPDF/NormFactor;
 
             // This macro controls if PDF is NaN. If yes, it prints a warning
             // with the parameter value for whom we obtain a NaN.
-            hydra::CHECK_VALUE(PDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
-                                    "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
-                                    "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
-                                    _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
-                                    _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
-                                    _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
+            hydra::CHECK_VALUE(wPDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
+                                     "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
+                                     "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
+                                     _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
+                                     _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
+                                     _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
 
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
             // Don't use the function ::abs(), because it changes the values of about 10^{-03} - 10^{-04} units.
             // Don't deactivate this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
-            if(PDF < 0)
+            if(wPDF < 0)
             {
-                return PDF = 0;
+                return wPDF = 0;
             }
             else
             {
-                return PDF;
+                return wPDF;
             }
         }
 
@@ -362,15 +367,21 @@ namespace medusa {
 	    }
 
         __hydra_dual__
-        ArgTypeTime GetLowerLimit() const
+        const ArgTypeTime GetLowerLimit() const
         {
             return fLowerLimit;
         }
 
         __hydra_dual__
-        ArgTypeTime GetUpperLimit() const
+        const ArgTypeTime GetUpperLimit() const
         {
             return fUpperLimit;
+        }
+
+        __hydra_dual__
+        double GetWeight() const
+        {
+            return fweight;
         }
 
 
@@ -388,6 +399,12 @@ namespace medusa {
         void SetUpperLimit(ArgTypeTime UpperLimit)
         {
             fUpperLimit = UpperLimit;
+        }
+
+        __hydra_dual__
+        void SetWeight(double Weight)
+        {
+            fweight = Weight;
         }
 
 
@@ -440,7 +457,7 @@ namespace medusa {
         inline double Convoluted_Time_Factor(size_t index, double conv_exp_cosh, double conv_exp_sinh,
                                                                 double conv_exp_cos, double conv_exp_sin, int Tag) const
         {
-    	    static const double f = 0.05968310365946074; // 3./(16.*PI)
+    	    static const double f = 0.2387324146378430; // 3./(4.*PI)
 
             double ConvolutedTimeFactor = f * ( A.k[index] * conv_exp_cosh + B.k[index] * conv_exp_sinh +
                                                     Tag * ( C.k[index] * conv_exp_cos + D.k[index] * conv_exp_sin ) );
@@ -452,13 +469,13 @@ namespace medusa {
         // time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian and integrated in the time
         // (Reference: Eq. (10) and (11) in arXiv:1906.08356v4)
         __hydra_dual__
-        inline double Integrated_Convoluted_Time_Factor(size_t index, double sigma, double int_conv_exp_cosh, double int_conv_exp_sinh,
-                                                                                    double int_conv_exp_cos, double int_conv_exp_sin, int Tag) const
+        inline double Integrated_Convoluted_Time_Factor(size_t index, double int_conv_exp_cosh, double int_conv_exp_sinh,
+                                                                        double int_conv_exp_cos, double int_conv_exp_sin, int Tag) const
         {
-            static const double f = 0.04220232731986434; // 3./(16.*PI*Sqrt2)
+            static const double f = 0.2387324146378430; // 3./(4.*PI)
 
-            double NormFactor = f * sigma * ( A.k[index] * int_conv_exp_cosh + B.k[index] * int_conv_exp_sinh +
-                                                    Tag * ( C.k[index] * int_conv_exp_cos + D.k[index] * int_conv_exp_sin ) );
+            double NormFactor = f * ( A.k[index] * int_conv_exp_cosh + B.k[index] * int_conv_exp_sinh +
+                                            Tag * ( C.k[index] * int_conv_exp_cos + D.k[index] * int_conv_exp_sin ) );
 
             return NormFactor;
         }
@@ -532,6 +549,7 @@ namespace medusa {
 
 
 
+        double fweight;                             // weight to improve the numerical fit
         ArgTypeTime fLowerLimit;                    // Lower limit in the time integration
         ArgTypeTime fUpperLimit;                    // Upper limit in the time integration
         parameters::NFactors N;                     // polarization factor N_k
