@@ -44,14 +44,11 @@
 // Hydra
 #include <hydra/detail/Config.h>
 #include <hydra/Complex.h>
-#include <hydra/Types.h>
 #include <hydra/Vector4R.h>
 
 // Medusa
+#include <medusa/Constants.h>
 #include <medusa/Faddeeva.h>
-
-// macro
-#define sqrt2 hydra::math_constants::sqrt2
 
 
 namespace medusa {
@@ -116,14 +113,14 @@ namespace medusa {
 
 
         // Convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t ) with the Gaussian
-        // [tag > 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1906.08356v4)
+        // [tag > 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Convoluted_exp_sinhcosh(double time, double a, double b, double mu, double sigma, int tag)
+        inline double Convolve_exp_sinhcosh(double time, double a, double b, double mu, double sigma, int tag)
         {
-            double x = (time - mu)/(sigma*sqrt2);
+            double x = (time - mu)/(sigma*M_Sqrt2);
 
-            double z1 = (a - b)*sigma/sqrt2;
-            double z2 = (a + b)*sigma/sqrt2;
+            double z1 = (a - b)*sigma/M_Sqrt2;
+            double z2 = (a + b)*sigma/M_Sqrt2;
 
             double faddeeva_z1 = ::exp( z1*z1 - 2*z1*x ) * faddeeva::erfc(z1-x);
             double faddeeva_z2 = ::exp( z2*z2 - 2*z2*x ) * faddeeva::erfc(z2-x);
@@ -139,16 +136,14 @@ namespace medusa {
 
 
         // Convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t ) with the Gaussian
-        // [tag > 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1906.08356v4)
+        // [tag > 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Convoluted_exp_sincos(double time, double a, double b, double mu, double sigma, int tag)
+        inline double Convolve_exp_sincos(double time, double a, double b, double mu, double sigma, int tag)
         {
-            const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
+            double x = (time - mu)/(sigma*M_Sqrt2);
 
-            double x = (time - mu)/(sigma*sqrt2);
-
-            hydra::complex<double> z1( a*sigma/sqrt2, -b*sigma/sqrt2 );
-            hydra::complex<double> z2( a*sigma/sqrt2,  b*sigma/sqrt2 );
+            hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
+            hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
 
             hydra::complex<double> faddeeva_z1 = hydra::exp( z1*z1 - 2*z1*x ) * faddeeva::erfc(z1-x);
             hydra::complex<double> faddeeva_z2 = hydra::exp( z2*z2 - 2*z2*x ) * faddeeva::erfc(z2-x);
@@ -157,7 +152,7 @@ namespace medusa {
             
             if(tag > 0) result = faddeeva_z1 + faddeeva_z2;
 
-            if(tag < 0) result = (faddeeva_z1 - faddeeva_z2)/I;
+            if(tag < 0) result = (faddeeva_z1 - faddeeva_z2)/M_I;
 
             double Convolution = 0.25*result.real();
 
@@ -165,19 +160,17 @@ namespace medusa {
         }
 
 
-        // Convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t ) with the Gaussian
-        // integrated in the time [tag > 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1906.08356v4)
+        // Integrate in the time the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+        // with the Gaussian [tag > 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrated_convoluted_exp_sinhcosh(double time, double a, double b, double mu, double sigma,
+        inline double Integrate_convolved_exp_sinhcosh(double time, double a, double b, double mu, double sigma,
                                                                                 double LowerLimit, double UpperLimit, int tag)
         {
-            static const double f = 0.3535533905932738; // 1./Sqrt[8.]
+            double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
 
-            double x1 = (LowerLimit - mu)/(sigma*sqrt2);
-            double x2 = (UpperLimit - mu)/(sigma*sqrt2);
-
-            double z1 = (a - b)*sigma/sqrt2;
-            double z2 = (a + b)*sigma/sqrt2;
+            double z1 = (a - b)*sigma/M_Sqrt2;
+            double z2 = (a + b)*sigma/M_Sqrt2;
 
             double cumulative_z1 = ( faddeeva::erf(x2) - ::exp( z1*z1 - 2*z1*x2 ) * faddeeva::erfc(z1-x2) -
                                             ( faddeeva::erf(x1) - ::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) ) ) / (2*z1);
@@ -187,28 +180,25 @@ namespace medusa {
 
             double Integrated_convolution = 0;
 
-            if(tag > 0) Integrated_convolution = f * sigma * (cumulative_z1 + cumulative_z2);
+            if(tag > 0) Integrated_convolution = M_1_Sqrt8 * sigma * (cumulative_z1 + cumulative_z2);
 
-            if(tag < 0) Integrated_convolution = f * sigma * (cumulative_z1 - cumulative_z2);
+            if(tag < 0) Integrated_convolution = M_1_Sqrt8 * sigma * (cumulative_z1 - cumulative_z2);
 
             return Integrated_convolution;
         }
 
 
-        // Convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t ) with the Gaussian
-        // integrated in the time [tag > 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1906.08356v4)
+        // Integrate in the time the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+        // with the Gaussian [tag > 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrated_convoluted_exp_sincos(double time, double a, double b, double mu, double sigma,
-                                                                                double LowerLimit, double UpperLimit, int tag)
+        inline double Integrate_convolved_exp_sincos(double time, double a, double b, double mu, double sigma,
+                                                                            double LowerLimit, double UpperLimit, int tag)
         {
-            static const double f = 0.3535533905932738; // 1./Sqrt[8.]
-            const hydra::complex<double> I(0.0, 1.0); // Imaginary unit
+            double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
 
-            double x1 = (LowerLimit - mu)/(sigma*sqrt2);
-            double x2 = (UpperLimit - mu)/(sigma*sqrt2);
-
-            hydra::complex<double> z1( a*sigma/sqrt2, -b*sigma/sqrt2 );
-            hydra::complex<double> z2( a*sigma/sqrt2,  b*sigma/sqrt2 );
+            hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
+            hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
 
             hydra::complex<double> cumulative_z1 = faddeeva::erf(x2) - hydra::exp( z1*z1 - 2*z1*x2 ) * faddeeva::erfc(z1-x2) -
                                                     ( faddeeva::erf(x1) - hydra::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) );
@@ -220,9 +210,9 @@ namespace medusa {
 
             if(tag > 0) result  = cumulative_z1/(2*z1) + cumulative_z2/(2*z2);
             
-            if(tag < 0) result = ( cumulative_z1/(2*z1) - cumulative_z2/(2*z2) ) / I;
+            if(tag < 0) result = ( cumulative_z1/(2*z1) - cumulative_z2/(2*z2) ) / M_I;
 
-            double Integrated_convolution = f * sigma * result.real();
+            double Integrated_convolution = M_1_Sqrt8 * sigma * result.real();
 
             return Integrated_convolution;
         }

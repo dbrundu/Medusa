@@ -35,6 +35,10 @@
 // Hydra
 #include <hydra/detail/Config.h>
 #include <hydra/Vector4R.h>
+#include <hydra/Parameter.h>
+
+// Medusa
+#include <medusa/Constants.h>
 
 
 using namespace hydra::arguments;
@@ -89,12 +93,20 @@ const double DeltaP0_SS = 0.;
 const double DeltaP1_SS = 0.;
 const double AvgEta_SS = 0.4167;
 
+const double Spline_Knots[7] = {0.3, 0.58, 0.91,
+								1.35, 1.96, 3.01,
+												7.00};
+
+const double Spline_coeffs[9] = {1.0, 1.49, 2.06,
+								 2.12, 2.28, 2.29,
+								 2.46, 2.25, 2.34};
+
 const double Omega[10] = {1.0, 1.0336, 1.0336,
 						  0.0028, 0.00298, -0.0002,
 							1.0196, 0.00019, 0.00019,
 													0.0057};
 
-const double OmegaErr[10] = {0, 0.0015, 0.0015,
+const double OmegaErr[10] = {0.0, 0.0015, 0.0015,
 							 0.0013, 0.00074, 0.00072,
 							 0.0011, 0.00094, 0.00094,
 							 						0.0019};
@@ -106,13 +118,23 @@ auto p0_OS_p = hydra::Parameter::Create("p0_OS").Value(p0_OS).Error(0.0007 + 0.0
 auto p1_OS_p = hydra::Parameter::Create("p1_OS").Value(p1_OS).Error(0.0062 + 0.0265).Fixed();
 auto DeltaP0_OS_p = hydra::Parameter::Create("DeltaP0_OS").Value(DeltaP0_OS).Error(0.0014).Fixed();
 auto DeltaP1_OS_p = hydra::Parameter::Create("DeltaP1_OS").Value(DeltaP1_OS).Error(0.0124).Fixed();
-auto AgvEta_OS_p = hydra::Parameter::Create("AvgEta_OS").Value(AvgEta_OS).Error(0).Fixed();
+auto AgvEta_OS_p = hydra::Parameter::Create("AvgEta_OS").Value(AvgEta_OS).Error(0.0).Fixed();
 
 auto p0_SS_p = hydra::Parameter::Create("p0_SS").Value(p0_SS).Error(0.0108 + 0.003).Fixed();
 auto p1_SS_p = hydra::Parameter::Create("p1_SS").Value(p1_SS).Error(0.1314 + 0.0196).Fixed();
 auto DeltaP0_SS_p = hydra::Parameter::Create("DeltaP0_SS").Value(DeltaP0_SS).Error(0.03).Fixed();
 auto DeltaP1_SS_p = hydra::Parameter::Create("DeltaP1_SS").Value(DeltaP1_SS).Error(0.03).Fixed();
-auto AgvEta_SS_p = hydra::Parameter::Create("AvgEta_SS").Value(AvgEta_SS).Error(0).Fixed();
+auto AgvEta_SS_p = hydra::Parameter::Create("AvgEta_SS").Value(AvgEta_SS).Error(0.0).Fixed();
+
+auto Spline_c0_p = hydra::Parameter::Create("c0").Value(Spline_coeffs[0]).Error(0.0).Fixed();
+auto Spline_c1_p = hydra::Parameter::Create("c1").Value(Spline_coeffs[1]).Error(0.16).Fixed();
+auto Spline_c2_p = hydra::Parameter::Create("c2").Value(Spline_coeffs[2]).Error(0.13).Fixed();
+auto Spline_c3_p = hydra::Parameter::Create("c3").Value(Spline_coeffs[3]).Error(0.17).Fixed();
+auto Spline_c4_p = hydra::Parameter::Create("c4").Value(Spline_coeffs[4]).Error(0.16).Fixed();
+auto Spline_c5_p = hydra::Parameter::Create("c5").Value(Spline_coeffs[5]).Error(0.17).Fixed();
+auto Spline_c6_p = hydra::Parameter::Create("c6").Value(Spline_coeffs[6]).Error(0.19).Fixed();
+auto Spline_c7_p = hydra::Parameter::Create("c7").Value(Spline_coeffs[7]).Error(0.18).Fixed();
+auto Spline_c8_p = hydra::Parameter::Create("c8").Value(Spline_coeffs[8]).Error(0.17).Fixed();
 
 auto Omega_1_p = hydra::Parameter::Create("Omega_1").Value(Omega[0]).Error(OmegaErr[0]).Fixed();
 auto Omega_2_p = hydra::Parameter::Create("Omega_2").Value(Omega[1]).Error(OmegaErr[1]).Fixed();
@@ -155,11 +177,6 @@ namespace medusa {
 			__hydra_dual__
 			AngularFunctions(double theta_h, double theta_l, double phi)
 			{
-				const static  double Sqrt2     = 1.414213562373095; //	\sqrt{2}
-				const static  double OneThird  = 0.333333333333333; //	1./3.
-				const static  double N2DSqrt6  = 0.816496580927726; //	2.0/sqrt6
-				const static  double N2DSqrt3  = 1.154700538379252; //	2.0/sqrt3
-
 				const double cx = ::cos(theta_h);
 				const double sx = ::sin(theta_h);
 				const double cz = ::cos(phi);
@@ -180,22 +197,22 @@ namespace medusa {
 				fk[3] = sx * sy; fk[3]*=cz*sz*fk[3];
 
 				//sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-				fk[4] = Sqrt2* sx * cx * sy * cy * cz ;
+				fk[4] = M_Sqrt2* sx * cx * sy * cy * cz ;
 
 				//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-				fk[5] = -Sqrt2* sx *  cx * sy * cy * sz;
+				fk[5] = -M_Sqrt2* sx *  cx * sy * cy * sz;
 
 				//1./3. * ::pow( ::sin(theta_l) , 2 )
-				fk[6] = OneThird*sy*sy;
+				fk[6] = M_1_3*sy*sy;
 
 				//2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-				fk[7] = N2DSqrt6 * sx * sy * cy * cz;
+				fk[7] = M_2_Sqrt6 * sx * sy * cy * cz;
 
 				//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-				fk[8] = -N2DSqrt6* sx * sy * cy * sz;
+				fk[8] = -M_2_Sqrt6* sx * sy * cy * sz;
 
 				//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
-				fk[9] = N2DSqrt3 * cx * sy * sy;
+				fk[9] = M_2_Sqrt3 * cx * sy * sy;
 			}
 
 			double fk[10];

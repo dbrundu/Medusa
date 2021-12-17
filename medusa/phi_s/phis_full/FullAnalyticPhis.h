@@ -46,7 +46,6 @@
 // Hydra
 #include <hydra/detail/Config.h>
 #include <hydra/detail/BackendPolicy.h>
-#include <hydra/Types.h>
 #include <hydra/Complex.h>
 #include <hydra/Function.h>
 #include <hydra/Pdf.h>
@@ -58,6 +57,7 @@
 // Medusa
 #include <medusa/phi_s/Parameters.h>
 #include <medusa/Functions.h>
+#include <medusa/CubicSpline.h>
 
 
 namespace medusa {
@@ -138,8 +138,8 @@ namespace medusa {
 
         // ctor with array of hydra::Parameter
         // the user has to respect the parameter order as the main ctor
-        explicit FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const hydra::Parameter (&Ps)[22],
-                                                        const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit, const double &Weight ):
+        FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const hydra::Parameter (&Ps)[22],
+                            const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit, const double &Weight ):
         ThisBaseFunctor{ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
                          Ps[0],  Ps[1],  Ps[2],  Ps[3],  Ps[4],  Ps[5],  Ps[6],  Ps[7],
@@ -286,25 +286,25 @@ namespace medusa {
             double Gamma = _par[3] + 0.65789;
             double HalfDeltaGamma = 0.5*_par[4];
 
-            double conv_exp_cosh = functions::Convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, 1);
-            double conv_exp_sinh = functions::Convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, -1);
-            double conv_exp_cos = functions::Convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, 1);
-            double conv_exp_sin = functions::Convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, -1);
+            double conv_exp_cosh = functions::Convolve_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, 1);
+            double conv_exp_sinh = functions::Convolve_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, -1);
+            double conv_exp_cos = functions::Convolve_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, 1);
+            double conv_exp_sin = functions::Convolve_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, -1);
 
-            double int_conv_exp_cosh = functions::Integrated_convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
-            double int_conv_exp_sinh = functions::Integrated_convoluted_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
-            double int_conv_exp_cos = functions::Integrated_convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
-            double int_conv_exp_sin = functions::Integrated_convoluted_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
+            double int_conv_exp_cosh = functions::Integrate_convolved_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
+            double int_conv_exp_sinh = functions::Integrate_convolved_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
+            double int_conv_exp_cos = functions::Integrate_convolved_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
+            double int_conv_exp_sin = functions::Integrate_convolved_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
 
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
             {
-            	UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convoluted_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
-                                                TagB0sbar*Convoluted_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
+            	UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
+                                                TagB0sbar*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
                 
                 NormFactor +=  _par[30+i]*N.k[i]*
-                                ( TagB0s*Integrated_Convoluted_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
-                                    TagB0sbar*Integrated_Convoluted_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
+                                ( TagB0s*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
+                                    TagB0sbar*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
             }
 
             wPDF = fweight*UnnormPDF/NormFactor;
@@ -454,8 +454,8 @@ namespace medusa {
         // time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian
         // (Reference: Eq. (10) and (11) in arXiv:1906.08356v4)
         __hydra_dual__
-        inline double Convoluted_Time_Factor(size_t index, double conv_exp_cosh, double conv_exp_sinh,
-                                                                double conv_exp_cos, double conv_exp_sin, int Tag) const
+        inline double Convolved_Time_Factor(size_t index, double conv_exp_cosh, double conv_exp_sinh,
+                                                            double conv_exp_cos, double conv_exp_sin, int Tag) const
         {
     	    static const double f = 0.2387324146378430; // 3./(4.*PI)
 
@@ -469,8 +469,8 @@ namespace medusa {
         // time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian and integrated in the time
         // (Reference: Eq. (10) and (11) in arXiv:1906.08356v4)
         __hydra_dual__
-        inline double Integrated_Convoluted_Time_Factor(size_t index, double int_conv_exp_cosh, double int_conv_exp_sinh,
-                                                                        double int_conv_exp_cos, double int_conv_exp_sin, int Tag) const
+        inline double Integrated_Convolved_Time_Factor(size_t index, double int_conv_exp_cosh, double int_conv_exp_sinh,
+                                                                     double int_conv_exp_cos, double int_conv_exp_sin, int Tag) const
         {
             static const double f = 0.2387324146378430; // 3./(4.*PI)
 

@@ -217,10 +217,70 @@ int main(int argv, char** argc)
 
 //    Model(2.54933, 1, 1, 1, 1, 1, 1, 1, 0.01);
 
+    auto Spline = medusa::CubicSpline<7>(Spline_Knots, Spline_coeffs);
+
+    std::cout << Spline.eval(0.4) << std::endl;
+    std::cout << Spline.eval(1.) << std::endl;
+    std::cout << Spline.eval(6.99) << std::endl;
+    std::cout << Spline.eval(8.) << std::endl;
+
+    for (size_t i=0; i<13; i++)
+    {
+        std::cout << Spline.GetKnots()[i] << std::endl;
+    }
+
+    for (size_t i=0; i<7; i++)
+    {
+        std::cout << "A0[" << i << "] = " << Spline.GetOverCoeffO0()[i] << std::endl;
+    }
+
+    for (size_t i=0; i<7; i++)
+    {
+        std::cout << "A1[" << i << "] = " << Spline.GetOverCoeffO1()[i] << std::endl;
+    }
+
+    for (size_t i=0; i<7; i++)
+    {
+        std::cout << "A2[" << i << "] = " << Spline.GetOverCoeffO2()[i] << std::endl;
+    }
+
+    for (size_t i=0; i<7; i++)
+    {
+        std::cout << "A3[" << i << "] = " << Spline.GetOverCoeffO3()[i] << std::endl;
+    }
+
+    for (size_t i=0; i<7; i++)
+    {
+        std::cout << "K[" << i << "] = " << Spline.K(3.0, i) << std::endl;
+    }
+
+    for (size_t i=0; i<7; i++)
+    {
+        std::cout << "M[" << i << "] = " << Spline.M(0.5, 3.0, 5.0, i) << std::endl;
+    }
+/*
+    double Gamma = deltagammasd_dataset + 0.65789;
+    double HalfDeltaGamma = 0.5*deltagammas_dataset;
+
+    double int_conv_exp_cosh = medusa::functions::Integrated_convoluted_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+    double int_conv_exp_sinh = medusa::functions::Integrated_convoluted_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+    double int_conv_exp_cos = medusa::functions::Integrated_convoluted_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+    double int_conv_exp_sin = medusa::functions::Integrated_convoluted_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+
+    const double f = 0.2387324146378430; // 3./(4.*PI)
+
+    double NormFactor = f * ( int_conv_exp_cosh + int_conv_exp_sinh + int_conv_exp_cos + int_conv_exp_sin );
+
+    std::cout << int_conv_exp_cosh << std::endl;
+    std::cout << int_conv_exp_sinh << std::endl;
+    std::cout << int_conv_exp_cos << std::endl;
+    std::cout << int_conv_exp_sin << std::endl;
+    std::cout << NormFactor << std::endl;
+*/
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
-
+/*
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
@@ -395,7 +455,7 @@ int main(int argv, char** argc)
 	std::cout << "-----------------------------------------"<< std::endl;
 	std::cout << "| Time (ms) ="<< elapsed.count()          << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
-
+*/
     return 0;
 
 } // main

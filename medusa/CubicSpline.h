@@ -31,17 +31,12 @@
 #ifndef MEDUSA_CUBIC_SPLINE_H
 #define MEDUSA_CUBIC_SPLINE_H
 
-// std
-#include <algorithm>
-#include <vector>
-#include <string>
-#include <iterator>
-
 // Hydra
 #include <hydra/detail/Config.h>
-#include <hydra/device/System.h>
-#include <hydra/Distance.h>
-#include <hydra/detail/external/hydra_thrust/binary_search.h>
+#include <hydra/Complex.h>
+
+// Medusa
+#include <medusa/Constants.h>
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
@@ -91,6 +86,7 @@ namespace medusa {
             u[nKnots+5] = knots[nKnots-1];
 
             // calculate prefactors
+            double P[nKnots], Q[nKnots], R[nKnots], S[nKnots];
             for(size_t i=0; i<nKnots; i++)
             {
                 P[i] = (u[i+4]-u[i+1])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
@@ -174,13 +170,49 @@ namespace medusa {
             // determine if and where this linear part gets negative
             if(A1[nKnots-1]<0)
             {
-                getsNegative = true;
+                NegativePart = true;
                 xNegative = -A0[nKnots-1]/A1[nKnots-1];
             }
             else
             {
-                getsNegative = false;
+                NegativePart = false;
             }
+        }
+
+
+        // ctor with other CubicSpline instance (copy ctor)
+        __hydra_dual__
+        CubicSpline(CubicSpline<nKnots> const& other)
+        {
+            u[0] = other.GetKnots()[0];
+            u[1] = other.GetKnots()[1];
+            u[2] = other.GetKnots()[2];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                u[3+i] = other.GetKnots()[3+i];
+                b[i] = other.GetSplineCoeff()[i];
+
+                A0[i] = other.GetOverCoeffO0()[i];
+                A1[i] = other.GetOverCoeffO1()[i];
+                A2[i] = other.GetOverCoeffO2()[i];
+                A3[i] = other.GetOverCoeffO3()[i];
+            }
+            b[nKnots] = other.GetSplineCoeff()[nKnots];
+            b[nKnots+1] = other.GetSplineCoeff()[nKnots+1];
+            u[nKnots+3] = other.GetKnots()[nKnots+3];
+            u[nKnots+4] = other.GetKnots()[nKnots+4];
+            u[nKnots+5] = other.GetKnots()[nKnots+5];
+
+            for (size_t i=0; i<4; i++)
+            {
+                a0[i] = other.GetCoeffO0()[i];
+                a1[i] = other.GetCoeffO1()[i];
+                a2[i] = other.GetCoeffO2()[i];
+                a3[i] = other.GetCoeffO3()[i];
+            }
+
+            NegativePart = other.GetNegativePart();
+            xNegative = other.GetxNegative();
         }
 
 
@@ -189,6 +221,7 @@ namespace medusa {
         //-------------------------------------
 
         // Update the spline with new coefficients
+        __hydra_dual__
         void updateCoefficients(double *coeffs)
         {
             for(size_t i=0; i<nKnots+2; i++)
@@ -220,7 +253,7 @@ namespace medusa {
         {
             // Should return 0 here. But small positive number is better for the fitter
             // Change this for your purpose 
-            if(x>xNegative && getsNegative) return 1e-3;
+            if(x>xNegative && NegativePart) return 1e-3;
 
             int j = findKnot(x);
             return A0[j]+A1[j]*x+A2[j]*x*x+A3[j]*x*x*x;
@@ -254,53 +287,97 @@ namespace medusa {
         {
             return u;
         }
-  
-        // get the order 0 coefficients
+
+        // get cubic spline coefficients
+        __hydra_dual__
+        const double* GetSplineCoeff() const
+        {
+            return b;
+        }
+
+        // get the order 0 polynomial coefficients
         __hydra_dual__
         const double* GetCoeffO0() const
+        {
+            return a0;
+        }
+
+        // get the order 1 polynomial coefficients
+        __hydra_dual__
+        const double* GetCoeffO1() const
+        {
+            return a1;
+        }
+
+        // get the order 2 polynomial coefficients
+        __hydra_dual__
+        const double* GetCoeffO2() const
+        {
+            return a2;
+        }
+
+        // get the order 3 polynomial coefficients
+        __hydra_dual__
+        const double* GetCoeffO3() const
+        {
+            return a3;
+        }
+  
+        // get the order 0 overall polynomial coefficients
+        __hydra_dual__
+        const double* GetOverCoeffO0() const
         {
             return A0;
         }
 
-        // get the order 1 coefficients
+        // get the order 1 overall polynomial coefficients
         __hydra_dual__
-        const double* GetCoeffO1() const
+        const double* GetOverCoeffO1() const
         {
             return A1;
         }
         
-        // get the order 2 coefficients
+        // get the order 2 overall polynomial coefficients
         __hydra_dual__
-        const double* GetCoeffO2() const
+        const double* GetOverCoeffO2() const
         {
             return A2;
         }
         
-        // get the order 3 coefficients
+        // get the order 3 overall polynomial coefficients
         __hydra_dual__
-        const double* GetCoeffO3() const
+        const double* GetOverCoeffO3() const
         {
             return A3;
         }
 
         // get the info wether this spline will get negative at some point
         __hydra_dual__
-        bool NegativePart() const
+        bool GetNegativePart() const
         {
-            return getsNegative;
+            return NegativePart;
         }
         
         __hydra_dual__
-        double NegativePartPos() const
+        double GetxNegative() const
         {
             return xNegative;
         }
 
 
+        //-------------------------------------
+        //        methods to integrate
+        //-------------------------------------
 
-        private:
+
+
+
+
+        //private:
+
 
         // calculate overall polynomial coefficients for current set of spline coefficients
+        __hydra_dual__
         void updatePolynomial()
         {
             for(size_t i=0; i<nKnots-1; i++)
@@ -331,12 +408,206 @@ namespace medusa {
             // determine if and where this linear part gets negative
             if(A1[nKnots-1]<0)
             {
-                getsNegative = true;
+                NegativePart = true;
                 xNegative = -A0[nKnots-1]/A1[nKnots-1];
             }
             else
             {
-                getsNegative = false;
+                NegativePart = false;
+            }
+        }
+
+
+        // K_n(z) for z as double (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double K(double z, size_t n)
+        {
+            switch (n)
+            {
+                case 0:
+                {
+                    return 1 /(2*z);
+                }
+                case 1:
+                {
+                    return 1/(2*z*z);
+                }
+                case 2:
+                {
+                    return 1/z*( 1 + 1/(z*z) );
+                }
+                case 3:
+                {
+                    return 3/(z*z) * ( 1 + 1/(z*z) );
+                }
+                case 4:
+                {
+                    return 6/(z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
+                }
+                case 5:
+                {
+                    return 30/(z*z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
+                }
+                case 6:
+                {
+                    return 60/(z*z*z*z*z*z*z) * (6 + 6*z*z + 3*z*z*z*z + z*z*z*z*z*z);
+                }
+                default:
+                {
+                    return 0.0;
+                }
+            }
+        }
+
+
+        // K_n(z) for z as complex (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline hydra::complex<double> K(hydra::complex<double> z, size_t n)
+        {
+            switch (n)
+            {
+                case 0:
+                {
+                    return 1 /(2*z);
+                }
+                case 1:
+                {
+                    return 1/(2*z*z);
+                }
+                case 2:
+                {
+                    return 1/z*( 1 + 1/(z*z) );
+                }
+                case 3:
+                {
+                    return 3/(z*z) * ( 1 + 1/(z*z) );
+                }
+                case 4:
+                {
+                    return 6/(z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
+                }
+                case 5:
+                {
+                    return 30/(z*z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
+                }
+                case 6:
+                {
+                    return 60/(z*z*z*z*z*z*z) * (6 + 6*z*z + 3*z*z*z*z + z*z*z*z*z*z);
+                }
+                default:
+                {
+                    return 0.0;
+                }
+            }
+        }
+
+
+        // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double M(double x1, double x2, double z, size_t n)
+        {
+            switch (n)
+            {
+                case 0:
+                {
+                    return faddeeva::erf(x2) - ::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2) -
+                                ( faddeeva::erf(x1) - ::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1) );
+                }
+                case 1:
+                {
+                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*faddeeva::erfc(z-x2) -
+                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*faddeeva::erfc(z-x1) ) );
+                }
+                case 2:
+                {
+                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*faddeeva::erfc(z-x2) -
+                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*faddeeva::erfc(z-x1) ) );
+                }
+                case 3:
+                {
+                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3)*faddeeva::erfc(z-x2) -
+                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3)*faddeeva::erfc(z-x1) ) );
+                }
+                case 4:
+                {
+                    return -4*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
+                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                ( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
+                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                }
+                case 5:
+                {
+                    return -8*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                ( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                }
+                case 6:
+                {
+                    return -8*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                            (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                ( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                            (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                }
+                default:
+                {
+                    return 0.0;
+                }
+            }
+        }
+
+
+        // M_n(x1, x2; z) for z as complex (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline hydra::complex<double> M(double x1, double x2, hydra::complex<double> z, size_t n)
+        {
+            switch (n)
+            {
+                case 0:
+                {
+                    return faddeeva::erf(x2) - hydra::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2) -
+                                ( faddeeva::erf(x1) - hydra::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1) );
+                }
+                case 1:
+                {
+                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*faddeeva::erfc(z-x2) -
+                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*faddeeva::erfc(z-x1) ) );
+                }
+                case 2:
+                {
+                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*faddeeva::erfc(z-x2) -
+                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*faddeeva::erfc(z-x1) ) );
+                }
+                case 3:
+                {
+                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3)*faddeeva::erfc(z-x2) -
+                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3)*faddeeva::erfc(z-x1) ) );
+                }
+                case 4:
+                {
+                    return -4*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
+                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                ( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
+                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                }
+                case 5:
+                {
+                    return -8*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                ( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                }
+                case 6:
+                {
+                    return -8*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                            (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                ( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                            (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                }
+                default:
+                {
+                    return 0.0;
+                }
             }
         }
 
@@ -348,10 +619,7 @@ namespace medusa {
         // spline coefficients
         double b[nKnots+2];
   
-        // Constants depending only on knotvector
-  
-        // prefactors
-        double P[nKnots], Q[nKnots], R[nKnots], S[nKnots];
+        // Constants depending only on knot vector
 
         // coefficients of polynomial
         double a0[4];
@@ -367,7 +635,7 @@ namespace medusa {
 
         // The spline might get negative values due to the linear extrapolation in/after the last sector
         // Avoid this by checking if we are there and setting the spline to 0
-        bool getsNegative;
+        bool NegativePart;
         double xNegative;
     };
 
