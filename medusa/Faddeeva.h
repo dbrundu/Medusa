@@ -65,9 +65,8 @@
 #include <hydra/detail/Config.h>
 #include <hydra/Complex.h>
 
-// use std::numeric_limits, since 1./0. and 0./0. fail with some compilers (MS)
-#  define Inf std::numeric_limits<double>::infinity()
-#  define NaN std::numeric_limits<double>::quiet_NaN()
+// Medusa
+#include <medusa/Constants.h>
 
 typedef hydra::complex<double> cmplx;
 

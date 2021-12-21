@@ -99,84 +99,85 @@ namespace medusa {
             for(size_t i=0; i<nKnots-1; i++)
             {
                 // Constant
-                a0[0] = u[i+4]*u[i+4]*u[i+4]/P[i];
+                a0[0][i] = u[i+4]*u[i+4]*u[i+4]/P[i];
 
-                a0[1] = -u[i+1]*u[i+4]*u[i+4]/P[i] - u[i+2]*u[i+4]*u[i+5]/Q[i] - u[i+3]*u[i+5]*u[i+5]/R[i];
+                a0[1][i] = -u[i+1]*u[i+4]*u[i+4]/P[i] - u[i+2]*u[i+4]*u[i+5]/Q[i] - u[i+3]*u[i+5]*u[i+5]/R[i];
 
-                a0[2] = u[i+2]*u[i+2]*u[i+4]/Q[i] + u[i+2]*u[i+3]*u[i+5]/R[i] + u[i+3]*u[i+3]*u[i+6]/S[i];
+                a0[2][i] = u[i+2]*u[i+2]*u[i+4]/Q[i] + u[i+2]*u[i+3]*u[i+5]/R[i] + u[i+3]*u[i+3]*u[i+6]/S[i];
 
-                a0[3] = -u[i+3]*u[i+3]*u[i+3]/S[i];
+                a0[3][i] = -u[i+3]*u[i+3]*u[i+3]/S[i];
     
                 // Linear
-                a1[0] = -3*u[i+4]*u[i+4]/P[i];
+                a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
 
-                a1[1] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
+                a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
                         + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
                         + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
 
-                a1[2] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
+                a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
                         -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
                         -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
 
-                a1[3] = 3*u[i+3]*u[i+3]/S[i];
+                a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
     
                 // Quadratic
-                a2[0] = 3*u[i+4]/P[i];
+                a2[0][i] = 3*u[i+4]/P[i];
 
-                a2[1] = -(2*u[i+4]+u[i+1])/P[i]
+                a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
                         -(u[i+2]+u[i+4]+u[i+5])/Q[i]
                         -(2*u[i+5]+u[i+3])/R[i];
 
-                a2[2] = (2*u[i+2]+u[i+4])/Q[i]
+                a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
                         +(u[i+2]+u[i+5]+u[i+3])/R[i]
                         +(2*u[i+3]+u[i+6])/S[i];
 
-                a2[3] = -3*u[i+3]/S[i];
+                a2[3][i] = -3*u[i+3]/S[i];
     
                 // Cubic
-                a3[0] = -1./P[i];
+                a3[0][i] = -1./P[i];
 
-                a3[1] = 1./P[i] + 1./Q[i] + 1./R[i];
+                a3[1][i] = 1./P[i] + 1./Q[i] + 1./R[i];
 
-                a3[2] = -1./Q[i] - 1./R[i] - 1./S[i];
+                a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
 
-                a3[3] = 1./S[i];
-
-                // calculate polynomial coefficients for the current set of spline coefficients
-                A0[i] = b[i]*a0[0] + b[i+1]*a0[1] + b[i+2]*a0[2] + b[i+3]*a0[3];
-                A1[i] = b[i]*a1[0] + b[i+1]*a1[1] + b[i+2]*a1[2] + b[i+3]*a1[3];
-                A2[i] = b[i]*a2[0] + b[i+1]*a2[1] + b[i+2]*a2[2] + b[i+3]*a2[3];
-                A3[i] = b[i]*a3[0] + b[i+1]*a3[1] + b[i+2]*a3[2] + b[i+3]*a3[3];
-                if(std::fabs(A0[i])<1e-9) A0[i]=0;
-                if(std::fabs(A1[i])<1e-9) A1[i]=0;
-                if(std::fabs(A2[i])<1e-9) A2[i]=0;
-                if(std::fabs(A3[i])<1e-9) A3[i]=0;
+                a3[3][i] = 1./S[i];
             }
 
-            // After last knot: Linear extrapolation
-            // value of 2nd last spline at last knot
-            double v=u[nKnots+2];
-            A3[nKnots-1] = 0;
-            A2[nKnots-1] = 0;
+            // calculate polynomial coefficients for the current set of spline coefficients
+            updatePolynomial();
 
-            // In case it should be constant:
-            // A1[nKnots-1] = 0;
-            // A0[nKnots-1] = A0[nKnots-2] + A1[nKnots-2]*v + A2[nKnots-2]*v*v + A3[nKnots-2]*v*v*v;
+            // calculate the factorials
+            kfactorial[0] = 1.0;
+            kfactorial[1] = 1.0;
+            kfactorial[2] = 2.0;
+            kfactorial[3] = 6.0;
 
-            // In case it should be linear:
-            A1[nKnots-1] = A1[nKnots-2] + 2*A2[nKnots-2]*v + 3*A3[nKnots-2]*v*v;
-            A0[nKnots-1] = A0[nKnots-2] + A1[nKnots-2]*v + A2[nKnots-2]*v*v + A3[nKnots-2]*v*v*v - A1[nKnots-1]*v;
+            jfactorial[0] = 1.0;
+            jfactorial[1] = 1.0;
+            jfactorial[2] = 2.0;
+            jfactorial[3] = 6.0;
 
-            // determine if and where this linear part gets negative
-            if(A1[nKnots-1]<0)
-            {
-                NegativePart = true;
-                xNegative = -A0[nKnots-1]/A1[nKnots-1];
-            }
-            else
-            {
-                NegativePart = false;
-            }
+            knfactorial[0] = 1.0;  // (0-0)!
+            knfactorial[1] = 1.0;  // (1-0)!
+            knfactorial[2] = 1.0;  // (1-1)!
+            knfactorial[3] = 2.0;  // (2-0)!
+            knfactorial[4] = 1.0;  // (2-1)!
+            knfactorial[5] = 1.0;  // (2-2)!
+            knfactorial[6] = 6.0;  // (3-0)!
+            knfactorial[7] = 2.0;  // (3-1)!
+            knfactorial[8] = 1.0;  // (3-2)!
+            knfactorial[9] = 1.0;  // (3-3)!
+
+            njfactorial[0] = 1.0;  // (0-0)!
+            njfactorial[1] = 1.0;  // (1-0)!
+            njfactorial[2] = 1.0;  // (1-1)!
+            njfactorial[3] = 2.0;  // (2-0)!
+            njfactorial[4] = 1.0;  // (2-1)!
+            njfactorial[5] = 1.0;  // (2-2)!
+            njfactorial[6] = 6.0;  // (3-0)!
+            njfactorial[7] = 2.0;  // (3-1)!
+            njfactorial[8] = 1.0;  // (3-2)!
+            njfactorial[9] = 1.0;  // (3-3)!
         }
 
 
@@ -205,14 +206,29 @@ namespace medusa {
 
             for (size_t i=0; i<4; i++)
             {
-                a0[i] = other.GetCoeffO0()[i];
-                a1[i] = other.GetCoeffO1()[i];
-                a2[i] = other.GetCoeffO2()[i];
-                a3[i] = other.GetCoeffO3()[i];
+                for(size_t j=0; j<nKnots-1; j++)
+                {
+                    a0[i][j] = other.GetCoeffO0(i,j);
+                    a1[i][j] = other.GetCoeffO1(i,j);
+                    a2[i][j] = other.GetCoeffO2(i,j);
+                    a3[i][j] = other.GetCoeffO3(i,j);
+                }
             }
 
             NegativePart = other.GetNegativePart();
             xNegative = other.GetxNegative();
+
+            for(size_t i=0; i<4; i++)
+            {
+                kfactorial[i] = other.GetKFactorial()[i];
+                jfactorial[i] = other.GetJFactorial()[i];
+            }
+
+            for(size_t i=0; i<10; i++)
+            {
+                knfactorial[i] = other.GetKNFactorial()[i];
+                njfactorial[i] = other.GetNJFactorial()[i];
+            }
         }
 
 
@@ -221,7 +237,6 @@ namespace medusa {
         //-------------------------------------
 
         // Update the spline with new coefficients
-        __hydra_dual__
         void updateCoefficients(double *coeffs)
         {
             for(size_t i=0; i<nKnots+2; i++)
@@ -295,32 +310,60 @@ namespace medusa {
             return b;
         }
 
+        // get k!
+        __hydra_dual__
+        const double* GetKFactorial() const
+        {
+            return kfactorial;
+        }
+
+        // get (k-n)!
+        __hydra_dual__
+        const double* GetKNFactorial() const
+        {
+            return knfactorial;
+        }
+
+        // get j!
+        __hydra_dual__
+        const double* GetJFactorial() const
+        {
+            return jfactorial;
+        }
+
+        // get (n-j)!
+        __hydra_dual__
+        const double* GetNJFactorial() const
+        {
+            return njfactorial;
+        }
+
         // get the order 0 polynomial coefficients
         __hydra_dual__
-        const double* GetCoeffO0() const
+        double GetCoeffO0(size_t i, size_t j) const
         {
-            return a0;
+            return a0[i][j];
         }
 
         // get the order 1 polynomial coefficients
         __hydra_dual__
-        const double* GetCoeffO1() const
+        double GetCoeffO1(size_t i, size_t j) const
         {
-            return a1;
+            return a1[i][j];
         }
 
         // get the order 2 polynomial coefficients
         __hydra_dual__
-        const double* GetCoeffO2() const
+        double GetCoeffO2(size_t i, size_t j) const
         {
-            return a2;
+            return a2[i][j];
         }
 
         // get the order 3 polynomial coefficients
         __hydra_dual__
-        const double* GetCoeffO3() const
+        double GetCoeffO3(size_t i, size_t j) const
         {
-            return a3;
+            return a3[i][j];
         }
   
         // get the order 0 overall polynomial coefficients
@@ -369,30 +412,118 @@ namespace medusa {
         //        methods to integrate
         //-------------------------------------
 
+        // Integrate in the time the convolution of t^k*exp( -a*t )*cosh( b*t ) or t^k*exp( -a*t )*sinh( b*t )
+        // with the Gaussian [tag >= 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(double time, size_t k, double a, double b, double mu,
+                                                                        double sigma, double LowerLimit, double UpperLimit, int tag)
+        {
+            double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
+
+            double z1 = (a - b)*sigma/M_Sqrt2;
+            double z2 = (a + b)*sigma/M_Sqrt2;
+
+            double sum1 = 0.0;
+            double sum2 = 0.0;
+            
+            if(tag >= 0)
+            {
+                for(size_t n=0; n<k+1; n++)
+                {
+                    for(size_t j=0; j<n+1; j++)
+                    {
+                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n+j]);
+                    }
+                
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2;
+                }
+            }
+
+            if(tag < 0)
+            {
+                for(size_t n=0; n<k+1; n++)
+                {
+                    for(size_t j=0; j<n+1; j++)
+                    {
+                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n+j]);
+                    }
+
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2;
+                }
+            }
+
+            return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
+        }
+
+
+        // Integrate in the time the convolution of t^k*exp( -a*t )*cos( b*t ) or t^k*exp( -a*t )*sin( b*t )
+        // with the Gaussian [tag >= 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_t_to_k_times_convolved_exp_sincos(double time, size_t k, double a, double b, double mu,
+                                                                    double sigma, double LowerLimit, double UpperLimit, int tag)
+        {
+            double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
+
+            double z1 = (a - b)*sigma/M_Sqrt2;
+            double z2 = (a + b)*sigma/M_Sqrt2;
+
+            double sum1 = 0.0;
+            hydra::complex<double> sum2(0.0, 0.0);
+            
+            if(tag >= 0)
+            {
+                for(size_t n=0; n<k+1; n++)
+                {
+                    for(size_t j=0; j<n+1; j++)
+                    {
+                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n+j]);
+                    }
+                
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2.real();
+                }
+            }
+
+            if(tag < 0)
+            {
+                for(size_t n=0; n<k+1; n++)
+                {
+                    for(size_t j=0; j<n+1; j++)
+                    {
+                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / M_I*(jfactorial[j]*njfactorial[n+j]);
+                    }
+
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2.real();
+                }
+            }
+
+            return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
+        }
 
 
 
-
-        //private:
+        private:
 
 
         // calculate overall polynomial coefficients for current set of spline coefficients
-        __hydra_dual__
         void updatePolynomial()
         {
             for(size_t i=0; i<nKnots-1; i++)
             {
-                A0[i] = b[i]*a0[0] + b[i+1]*a0[1] + b[i+2]*a0[2] + b[i+3]*a0[3];
-                A1[i] = b[i]*a1[0] + b[i+1]*a1[1] + b[i+2]*a1[2] + b[i+3]*a1[3];
-                A2[i] = b[i]*a2[0] + b[i+1]*a2[1] + b[i+2]*a2[2] + b[i+3]*a2[3];
-                A3[i] = b[i]*a3[0] + b[i+1]*a3[1] + b[i+2]*a3[2] + b[i+3]*a3[3];
+                // calculate polynomial coefficients for the current set of spline coefficients
+                A0[i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
+                A1[i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
+                A2[i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
+                A3[i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
                 if(std::fabs(A0[i])<1e-9) A0[i]=0;
                 if(std::fabs(A1[i])<1e-9) A1[i]=0;
                 if(std::fabs(A2[i])<1e-9) A2[i]=0;
                 if(std::fabs(A3[i])<1e-9) A3[i]=0;
             }
 
-            // linear last sector
+            // After last knot: Linear extrapolation
+            // value of 2nd last spline at last knot
             double v=u[nKnots+2];
             A3[nKnots-1] = 0;
             A2[nKnots-1] = 0;
@@ -401,7 +532,7 @@ namespace medusa {
             // A1[nKnots-1] = 0;
             // A0[nKnots-1] = A0[nKnots-2] + A1[nKnots-2]*v + A2[nKnots-2]*v*v + A3[nKnots-2]*v*v*v;
 
-            // In case it should be linear
+            // In case it should be linear:
             A1[nKnots-1] = A1[nKnots-2] + 2*A2[nKnots-2]*v + 3*A3[nKnots-2]*v*v;
             A0[nKnots-1] = A0[nKnots-2] + A1[nKnots-2]*v + A2[nKnots-2]*v*v + A3[nKnots-2]*v*v*v - A1[nKnots-1]*v;
 
@@ -454,7 +585,13 @@ namespace medusa {
                 }
                 default:
                 {
-                    return 0.0;
+                    // This macro controls if the first argument is NaN. If yes, it prints
+                    // a warning with the parameter value for whom we obtain a NaN.
+                    // In this case, the first argument is always NaN and the macro prints
+                    // the n-value for whom we obtain NaN.
+                    hydra::CHECK_VALUE(NaN, "n=%d", n);
+
+                    return NaN;
                 }
             }
         }
@@ -496,7 +633,13 @@ namespace medusa {
                 }
                 default:
                 {
-                    return 0.0;
+                    // This macro controls if the first argument is NaN. If yes, it prints
+                    // a warning with the parameter value for whom we obtain a NaN.
+                    // In this case, the first argument is always NaN and the macro prints
+                    // the n-value for whom we obtain NaN.
+                    hydra::CHECK_VALUE(NaN, "n=%d", n);
+
+                    return NaN;
                 }
             }
         }
@@ -515,43 +658,53 @@ namespace medusa {
                 }
                 case 1:
                 {
-                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*faddeeva::erfc(z-x2) -
-                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*faddeeva::erfc(z-x1) ) );
+                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
+                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 2:
                 {
-                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*faddeeva::erfc(z-x2) -
-                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*faddeeva::erfc(z-x1) ) );
+                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
+                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 3:
                 {
-                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3)*faddeeva::erfc(z-x2) -
-                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3)*faddeeva::erfc(z-x1) ) );
+                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) *
+                                                                    ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
+                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) *
+                                                                    ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 4:
                 {
                     return -4*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
-                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
                                 ( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
-                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 5:
                 {
                     return -8*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
                                 ( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 6:
                 {
                     return -8*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                            (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) *
+                                                                    ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
                                 ( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                                            (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
+                                                                    ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 default:
                 {
-                    return 0.0;
+                    // This macro controls if the first argument is NaN. If yes, it prints
+                    // a warning with the parameter value for whom we obtain a NaN.
+                    // In this case, the first argument is always NaN and the macro prints
+                    // the n-value for whom we obtain NaN.
+                    hydra::CHECK_VALUE(NaN, "n=%d", n);
+
+                    return NaN;
                 }
             }
         }
@@ -570,43 +723,53 @@ namespace medusa {
                 }
                 case 1:
                 {
-                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*faddeeva::erfc(z-x2) -
-                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*faddeeva::erfc(z-x1) ) );
+                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
+                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 2:
                 {
-                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*faddeeva::erfc(z-x2) -
-                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*faddeeva::erfc(z-x1) ) );
+                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
+                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 3:
                 {
-                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3)*faddeeva::erfc(z-x2) -
-                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3)*faddeeva::erfc(z-x1) ) );
+                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) *
+                                                            hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
+                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) *
+                                                            hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 4:
                 {
                     return -4*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
-                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
                                 ( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
-                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 5:
                 {
                     return -8*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                        x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
                                 ( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                                        x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 case 6:
                 {
                     return -8*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2)*faddeeva::erfc(z-x2) -
+                                    (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) * 
+                                                            hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
                                 ( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1)*faddeeva::erfc(z-x1) ) );
+                                    (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
+                                                            hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
                 }
                 default:
                 {
-                    return 0.0;
+                    // This macro controls if the first argument is NaN. If yes, it prints
+                    // a warning with the parameter value for whom we obtain a NaN.
+                    // In this case, the first argument is always NaN and the macro prints
+                    // the n-value for whom we obtain NaN.
+                    hydra::CHECK_VALUE(NaN, "n=%d", n);
+
+                    return NaN;
                 }
             }
         }
@@ -618,14 +781,20 @@ namespace medusa {
 
         // spline coefficients
         double b[nKnots+2];
+
+        // factorials
+        double kfactorial[4];    // k!
+        double knfactorial[10];  // (k-n)!
+        double jfactorial[4];    // j!
+        double njfactorial[10];  // (n-j)!
   
         // Constants depending only on knot vector
 
         // coefficients of polynomial
-        double a0[4];
-        double a1[4];
-        double a2[4];
-        double a3[4];
+        double a0[4][nKnots];
+        double a1[4][nKnots];
+        double a2[4][nKnots];
+        double a3[4][nKnots];
 
         // Constants depending on the current spline coefficients
 

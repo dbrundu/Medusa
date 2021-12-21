@@ -220,52 +220,35 @@ int main(int argv, char** argc)
     auto Spline = medusa::CubicSpline<7>(Spline_Knots, Spline_coeffs);
 
     std::cout << Spline.eval(0.4) << std::endl;
-    std::cout << Spline.eval(1.) << std::endl;
+    std::cout << Spline.eval(1.0) << std::endl;
     std::cout << Spline.eval(6.99) << std::endl;
-    std::cout << Spline.eval(8.) << std::endl;
+    std::cout << Spline.eval(8.0) << std::endl;
 
-    for (size_t i=0; i<13; i++)
-    {
-        std::cout << Spline.GetKnots()[i] << std::endl;
-    }
-
-    for (size_t i=0; i<7; i++)
-    {
-        std::cout << "A0[" << i << "] = " << Spline.GetOverCoeffO0()[i] << std::endl;
-    }
-
-    for (size_t i=0; i<7; i++)
-    {
-        std::cout << "A1[" << i << "] = " << Spline.GetOverCoeffO1()[i] << std::endl;
-    }
-
-    for (size_t i=0; i<7; i++)
-    {
-        std::cout << "A2[" << i << "] = " << Spline.GetOverCoeffO2()[i] << std::endl;
-    }
-
-    for (size_t i=0; i<7; i++)
-    {
-        std::cout << "A3[" << i << "] = " << Spline.GetOverCoeffO3()[i] << std::endl;
-    }
-
-    for (size_t i=0; i<7; i++)
-    {
-        std::cout << "K[" << i << "] = " << Spline.K(3.0, i) << std::endl;
-    }
-
-    for (size_t i=0; i<7; i++)
-    {
-        std::cout << "M[" << i << "] = " << Spline.M(0.5, 3.0, 5.0, i) << std::endl;
-    }
-/*
     double Gamma = deltagammasd_dataset + 0.65789;
     double HalfDeltaGamma = 0.5*deltagammas_dataset;
 
-    double int_conv_exp_cosh = medusa::functions::Integrated_convoluted_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-    double int_conv_exp_sinh = medusa::functions::Integrated_convoluted_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
-    double int_conv_exp_cos = medusa::functions::Integrated_convoluted_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-    double int_conv_exp_sin = medusa::functions::Integrated_convoluted_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+    double Spline_int_conv_exp_cosh[4];
+    double Spline_int_conv_exp_sinh[4];
+    double Spline_int_conv_exp_cos[4];
+    double Spline_int_conv_exp_sin[4];
+
+    for(size_t i=0; i<4; i++)
+    {
+        Spline_int_conv_exp_cosh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(9.22784, i, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+        Spline_int_conv_exp_sinh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(9.22784, i, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+        Spline_int_conv_exp_cos[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(9.22784, i, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+        Spline_int_conv_exp_sin[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(9.22784, i, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+
+        std::cout << "int_conv_cosh [" << i << "] = " << Spline_int_conv_exp_cosh[i] << std::endl;
+        std::cout << "int_conv_sinh [" << i << "] = " << Spline_int_conv_exp_sinh[i] << std::endl;
+        std::cout << "int_conv_cos [" << i << "] = " << Spline_int_conv_exp_cos[i] << std::endl;
+        std::cout << "int_conv_sin [" << i << "] = " << Spline_int_conv_exp_sin[i] << std::endl;
+    }
+/*
+    double int_conv_exp_cosh = medusa::functions::Integrate_convolved_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+    double int_conv_exp_sinh = medusa::functions::Integrate_convolved_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+    double int_conv_exp_cos = medusa::functions::Integrate_convolved_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+    double int_conv_exp_sin = medusa::functions::Integrate_convolved_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
 
     const double f = 0.2387324146378430; // 3./(4.*PI)
 

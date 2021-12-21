@@ -35,12 +35,17 @@
 #include <hydra/Types.h>
 #include <hydra/Complex.h>
 
+// use std::numeric_limits, since 1./0. and 0./0. fail with some compilers (MS)
+#define Inf std::numeric_limits<double>::infinity()
+#define NaN std::numeric_limits<double>::quiet_NaN()
+
 
 namespace medusa {
     namespace math_constants {
 
 		const double M_1_3      = 0.33333333333333333333;  // 1/3
-        const double M_1_Sqrt8  = 0.35355339059327376220;  // 1/sqrt(8)
+        const double M_1_Sqrt8  = 0.35355339059327376220;  // 1/Sqrt(8)
+        const double M_1_Sqrt32 = 0.17677669529663688110;  // 1/sqrt(32)
         const double M_2_Sqrt3  = 1.15470053837925152902;  // 2/sqrt(3)
 		const double M_2_Sqrt6  = 0.81649658092772603273;  // 2/sqrt(6)
         const double M_1_SqrtPi = 0.56418958354775628695;  // 1/sqrt(Pi)
@@ -53,8 +58,10 @@ namespace medusa {
 
 // macro
 #define M_Sqrt2 hydra::math_constants::sqrt2
+#define M_1_Sqrt2 hydra::math_constants::inverse_sqrt2
 #define M_1_3 medusa::math_constants::M_1_3
 #define M_1_Sqrt8 medusa::math_constants::M_1_Sqrt8
+#define M_1_Sqrt32 medusa::math_constants::M_1_Sqrt32
 #define M_2_Sqrt3 medusa::math_constants::M_2_Sqrt3
 #define M_2_Sqrt6 medusa::math_constants::M_2_Sqrt6
 #define M_1_SqrtPi medusa::math_constants::M_1_SqrtPi
