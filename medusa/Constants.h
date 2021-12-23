@@ -50,8 +50,6 @@ namespace medusa {
 		const double M_2_Sqrt6  = 0.81649658092772603273;  // 2/sqrt(6)
         const double M_1_SqrtPi = 0.56418958354775628695;  // 1/sqrt(Pi)
 
-        const hydra::complex<double> M_I(0.0, 1.0); // Imaginary unit
-
     } // namespace math_constants
 } // namespace medusa
 
@@ -65,6 +63,5 @@ namespace medusa {
 #define M_2_Sqrt3 medusa::math_constants::M_2_Sqrt3
 #define M_2_Sqrt6 medusa::math_constants::M_2_Sqrt6
 #define M_1_SqrtPi medusa::math_constants::M_1_SqrtPi
-#define M_I medusa::math_constants::M_I
 
 #endif // MEDUSA_CONSTANTS_H

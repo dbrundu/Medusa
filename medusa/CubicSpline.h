@@ -147,37 +147,25 @@ namespace medusa {
             updatePolynomial();
 
             // calculate the factorials
-            kfactorial[0] = 1.0;
+            kfactorial[0] = 1.0;  // k!
             kfactorial[1] = 1.0;
             kfactorial[2] = 2.0;
             kfactorial[3] = 6.0;
 
-            jfactorial[0] = 1.0;
+            jfactorial[0] = 1.0;  // j!
             jfactorial[1] = 1.0;
             jfactorial[2] = 2.0;
             jfactorial[3] = 6.0;
 
-            knfactorial[0] = 1.0;  // (0-0)!
-            knfactorial[1] = 1.0;  // (1-0)!
-            knfactorial[2] = 1.0;  // (1-1)!
-            knfactorial[3] = 2.0;  // (2-0)!
-            knfactorial[4] = 1.0;  // (2-1)!
-            knfactorial[5] = 1.0;  // (2-2)!
-            knfactorial[6] = 6.0;  // (3-0)!
-            knfactorial[7] = 2.0;  // (3-1)!
-            knfactorial[8] = 1.0;  // (3-2)!
-            knfactorial[9] = 1.0;  // (3-3)!
+            knfactorial[0] = 1.0;  // (k-n)!
+            knfactorial[1] = 1.0;
+            knfactorial[2] = 2.0;
+            knfactorial[3] = 6.0;
 
-            njfactorial[0] = 1.0;  // (0-0)!
-            njfactorial[1] = 1.0;  // (1-0)!
-            njfactorial[2] = 1.0;  // (1-1)!
-            njfactorial[3] = 2.0;  // (2-0)!
-            njfactorial[4] = 1.0;  // (2-1)!
-            njfactorial[5] = 1.0;  // (2-2)!
-            njfactorial[6] = 6.0;  // (3-0)!
-            njfactorial[7] = 2.0;  // (3-1)!
-            njfactorial[8] = 1.0;  // (3-2)!
-            njfactorial[9] = 1.0;  // (3-3)!
+            njfactorial[0] = 1.0;  // (n-j)!
+            njfactorial[1] = 1.0;
+            njfactorial[2] = 2.0;
+            njfactorial[3] = 6.0;
         }
 
 
@@ -222,10 +210,7 @@ namespace medusa {
             {
                 kfactorial[i] = other.GetKFactorial()[i];
                 jfactorial[i] = other.GetJFactorial()[i];
-            }
 
-            for(size_t i=0; i<10; i++)
-            {
                 knfactorial[i] = other.GetKNFactorial()[i];
                 njfactorial[i] = other.GetNJFactorial()[i];
             }
@@ -415,8 +400,8 @@ namespace medusa {
         // Integrate in the time the convolution of t^k*exp( -a*t )*cosh( b*t ) or t^k*exp( -a*t )*sinh( b*t )
         // with the Gaussian [tag >= 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(double time, size_t k, double a, double b, double mu,
-                                                                        double sigma, double LowerLimit, double UpperLimit, int tag)
+        inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double a, double b, double mu, double sigma,
+                                                                                        double LowerLimit, double UpperLimit, int tag)
         {
             double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
             double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
@@ -425,80 +410,122 @@ namespace medusa {
             double z2 = (a + b)*sigma/M_Sqrt2;
 
             double sum1 = 0.0;
-            double sum2 = 0.0;
-            
-            if(tag >= 0)
+            double sum2;
+
+            if(mu == 0)
             {
-                for(size_t n=0; n<k+1; n++)
+                if(tag >= 0)
                 {
-                    for(size_t j=0; j<n+1; j++)
+                    for(size_t j=0; j<k+1; j++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n+j]);
+                        sum1 = sum1 + ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
                     }
-                
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2;
                 }
+                else
+                {
+                    for(size_t j=0; j<k+1; j++)
+                    {
+                        sum1 = sum1 + ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
+                    }
+                }
+                return M_1_Sqrt8*sigma*kfactorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
             }
-
-            if(tag < 0)
+            else
             {
-                for(size_t n=0; n<k+1; n++)
+                if(tag >= 0)
                 {
-                    for(size_t j=0; j<n+1; j++)
+                    for(size_t n=0; n<k+1; n++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n+j]);
+                        sum2 = 0.0;
+                        for(size_t j=0; j<n+1; j++)
+                        {
+                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                        }
+                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2;
                     }
-
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2;
                 }
+                else
+                {
+                    for(size_t n=0; n<k+1; n++)
+                    {
+                        sum2 = 0.0;
+                        for(size_t j=0; j<n+1; j++)
+                        {
+                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                        }
+                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2;
+                    }
+                }
+                return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
             }
-
-            return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
         }
 
 
         // Integrate in the time the convolution of t^k*exp( -a*t )*cos( b*t ) or t^k*exp( -a*t )*sin( b*t )
         // with the Gaussian [tag >= 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_t_to_k_times_convolved_exp_sincos(double time, size_t k, double a, double b, double mu,
-                                                                    double sigma, double LowerLimit, double UpperLimit, int tag)
+        inline double Integrate_t_to_k_times_convolved_exp_sincos(size_t k, double a, double b, double mu, double sigma,
+                                                                                        double LowerLimit, double UpperLimit, int tag)
         {
             double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
             double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
 
-            double z1 = (a - b)*sigma/M_Sqrt2;
-            double z2 = (a + b)*sigma/M_Sqrt2;
+            hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
+            hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
 
             double sum1 = 0.0;
-            hydra::complex<double> sum2(0.0, 0.0);
+            hydra::complex<double> sum2;
             
-            if(tag >= 0)
+            if(mu == 0)
             {
-                for(size_t n=0; n<k+1; n++)
+                if(tag >= 0)
                 {
-                    for(size_t j=0; j<n+1; j++)
+                    sum2 = 0.0;
+                    for(size_t j=0; j<k+1; j++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n+j]);
+                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
                     }
-                
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2.real();
+                    sum1 = sum2.real();
                 }
+                else
+                {
+                    sum2 = 0.0;
+                    for(size_t j=0; j<k+1; j++)
+                    {
+                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
+                    }
+                    sum1 = sum2.imag();
+                }
+                return M_1_Sqrt8*sigma*kfactorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
             }
-
-            if(tag < 0)
+            else
             {
-                for(size_t n=0; n<k+1; n++)
+                if(tag >= 0)
                 {
-                    for(size_t j=0; j<n+1; j++)
+                    for(size_t n=0; n<k+1; n++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / M_I*(jfactorial[j]*njfactorial[n+j]);
+                        sum2 = 0.0;
+                        for(size_t j=0; j<n+1; j++)
+                        {
+                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                        }
+                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2.real();
                     }
-
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k+n] * sum2.real();
                 }
+                else
+                {
+                    for(size_t n=0; n<k+1; n++)
+                    {
+                        sum2 = 0.0;
+                        for(size_t j=0; j<n+1; j++)
+                        {
+                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                        }
+                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2.imag();
+                    }
+                }
+                return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
             }
-
-            return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
         }
 
 
@@ -784,9 +811,9 @@ namespace medusa {
 
         // factorials
         double kfactorial[4];    // k!
-        double knfactorial[10];  // (k-n)!
+        double knfactorial[4];  // (k-n)!
         double jfactorial[4];    // j!
-        double njfactorial[10];  // (n-j)!
+        double njfactorial[4];  // (n-j)!
   
         // Constants depending only on knot vector
 

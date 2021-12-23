@@ -234,10 +234,10 @@ int main(int argv, char** argc)
 
     for(size_t i=0; i<4; i++)
     {
-        Spline_int_conv_exp_cosh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(9.22784, i, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-        Spline_int_conv_exp_sinh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(9.22784, i, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
-        Spline_int_conv_exp_cos[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(9.22784, i, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-        Spline_int_conv_exp_sin[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(9.22784, i, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+        Spline_int_conv_exp_cosh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, 1);
+        Spline_int_conv_exp_sinh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, -1);
+        Spline_int_conv_exp_cos[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, 1);
+        Spline_int_conv_exp_sin[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, -1);
 
         std::cout << "int_conv_cosh [" << i << "] = " << Spline_int_conv_exp_cosh[i] << std::endl;
         std::cout << "int_conv_sinh [" << i << "] = " << Spline_int_conv_exp_sinh[i] << std::endl;
@@ -245,15 +245,27 @@ int main(int argv, char** argc)
         std::cout << "int_conv_sin [" << i << "] = " << Spline_int_conv_exp_sin[i] << std::endl;
     }
 /*
-    double int_conv_exp_cosh = medusa::functions::Integrate_convolved_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-    double int_conv_exp_sinh = medusa::functions::Integrate_convolved_exp_sinhcosh(9.22784, Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
-    double int_conv_exp_cos = medusa::functions::Integrate_convolved_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-    double int_conv_exp_sin = medusa::functions::Integrate_convolved_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+    double x1 = (LowerLimit - 1)/(2*M_Sqrt2);
+    double x2 = (UpperLimit - 1)/(2*M_Sqrt2);
+
+    double z1 = (Gamma - HalfDeltaGamma)*2/M_Sqrt2;
+    double z2 = (Gamma + HalfDeltaGamma)*2/M_Sqrt2;
+    hydra::complex<double> z3( Gamma*2/M_Sqrt2, -deltams_dataset*2/M_Sqrt2 );
+    hydra::complex<double> z4( Gamma*2/M_Sqrt2,  deltams_dataset*2/M_Sqrt2 );
+
+    double int_conv_exp_cosh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+    double int_conv_exp_sinh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+    double int_conv_exp_cos = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
+    double int_conv_exp_sin = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
+    double conv_exp_cos = medusa::functions::Convolve_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, 1);
+    double conv_exp_sin = medusa::functions::Convolve_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, -1);
 
     const double f = 0.2387324146378430; // 3./(4.*PI)
 
     double NormFactor = f * ( int_conv_exp_cosh + int_conv_exp_sinh + int_conv_exp_cos + int_conv_exp_sin );
 
+    std::cout << conv_exp_cos << std::endl;
+    std::cout << conv_exp_sin << std::endl;
     std::cout << int_conv_exp_cosh << std::endl;
     std::cout << int_conv_exp_sinh << std::endl;
     std::cout << int_conv_exp_cos << std::endl;

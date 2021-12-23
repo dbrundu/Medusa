@@ -291,10 +291,10 @@ namespace medusa {
             double conv_exp_cos = functions::Convolve_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, 1);
             double conv_exp_sin = functions::Convolve_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, -1);
 
-            double int_conv_exp_cosh = functions::Integrate_convolved_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
-            double int_conv_exp_sinh = functions::Integrate_convolved_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
-            double int_conv_exp_cos = functions::Integrate_convolved_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
-            double int_conv_exp_sin = functions::Integrate_convolved_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
+            double int_conv_exp_cosh = functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
+            double int_conv_exp_sinh = functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
+            double int_conv_exp_cos = functions::Integrate_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, 1);
+            double int_conv_exp_sin = functions::Integrate_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, -1);
 
             #pragma unroll 10
             for(size_t i=0; i<10; i++)
