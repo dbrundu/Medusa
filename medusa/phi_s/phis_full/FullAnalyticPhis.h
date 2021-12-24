@@ -182,7 +182,7 @@ namespace medusa {
         FullAnalyticPhis(FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                         ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
         ThisBaseFunctor(other),
-        CSpline(other, 1)
+        CSpline(other)
         {
             fLowerLimit = other.GetLowerLimit();
             fUpperLimit = other.GetUpperLimit();

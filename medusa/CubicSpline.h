@@ -177,7 +177,7 @@ namespace medusa {
 
         // ctor with other CubicSpline instance (copy ctor)
         __hydra_dual__
-        CubicSpline(CubicSpline<ArgTypeTime, nKnots> const& other, int tag):
+        CubicSpline(CubicSpline<ArgTypeTime, nKnots> const& other):
         CSplineBaseFunctor(other)
         {
             u[0] = other.GetKnots()[0];
@@ -196,17 +196,14 @@ namespace medusa {
             u[nKnots+4] = other.GetKnots()[nKnots+4];
             u[nKnots+5] = other.GetKnots()[nKnots+5];
 
-            if(tag < 0)
+            for (size_t i=0; i<4; i++)
             {
-                for (size_t i=0; i<4; i++)
+                for(size_t j=0; j<nKnots-1; j++)
                 {
-                    for(size_t j=0; j<nKnots-1; j++)
-                    {
-                        a0[i][j] = other.GetCoeffO0(i,j);
-                        a1[i][j] = other.GetCoeffO1(i,j);
-                        a2[i][j] = other.GetCoeffO2(i,j);
-                        a3[i][j] = other.GetCoeffO3(i,j);
-                    }
+                    a0[i][j] = other.GetCoeffO0(i,j);
+                    a1[i][j] = other.GetCoeffO1(i,j);
+                    a2[i][j] = other.GetCoeffO2(i,j);
+                    a3[i][j] = other.GetCoeffO3(i,j);
                 }
             }
 
