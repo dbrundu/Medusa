@@ -40,7 +40,7 @@
 // Medusa
 #include <medusa/Constants.h>
 
-
+// default namespaces
 using namespace hydra::arguments;
 
 
@@ -153,6 +153,9 @@ hydra::Parameter ExpParams[22] = {b0_p, b1_p,
                         		  Omega_1_p, Omega_2_p, Omega_3_p, Omega_4_p, Omega_5_p,
                          		  Omega_6_p, Omega_7_p, Omega_8_p, Omega_9_p, Omega_10_p};
 
+std::array<hydra::Parameter, 9> SplineParams = {Spline_c0_p, Spline_c1_p, Spline_c2_p,
+								        		Spline_c3_p, Spline_c4_p, Spline_c5_p,
+												Spline_c6_p, Spline_c7_p, Spline_c8_p};
 
 
 namespace medusa {

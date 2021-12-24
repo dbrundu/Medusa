@@ -84,11 +84,13 @@ namespace medusa {
              typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta) >
     class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 40>
+                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 40>,
+                            public CubicSpline<ArgTypeTime, 7>
     {
 
         using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                                 ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 40 >;
+        using CSpline = CubicSpline<ArgTypeTime, 7>;
 
         using hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 40 >::_par;
@@ -117,7 +119,8 @@ namespace medusa {
                          hydra::Parameter const& Omega_1,         hydra::Parameter const& Omega_2,     hydra::Parameter const& Omega_3,
                          hydra::Parameter const& Omega_4,         hydra::Parameter const& Omega_5,     hydra::Parameter const& Omega_6,
                          hydra::Parameter const& Omega_7,         hydra::Parameter const& Omega_8,     hydra::Parameter const& Omega_9,
-                         hydra::Parameter const& Omega_10,        ArgTypeTime const& LowerLimit,       ArgTypeTime const& UpperLimit,       double const& Weight):
+                         hydra::Parameter const& Omega_10,        double const (&SplineKnots)[7],      std::array<hydra::Parameter, 9> const& SplineCoeffs,
+                         ArgTypeTime const& LowerLimit,           ArgTypeTime const& UpperLimit,       double const& Weight):
         ThisBaseFunctor({A_0, A_perp, A_S,
                          DeltaGamma_sd, DeltaGamma, DeltaM,
                          phi_0, phi_par, phi_perp, phi_S, 
@@ -127,7 +130,8 @@ namespace medusa {
                          p0_OS, p1_OS, DeltaP0_OS, DeltaP1_OS, AvgEta_OS,
                          p0_SS, p1_SS, DeltaP0_SS, DeltaP1_SS, AvgEta_SS,
                          Omega_1, Omega_2, Omega_3, Omega_4, Omega_5,
-                         Omega_6, Omega_7, Omega_8, Omega_9, Omega_10 })
+                         Omega_6, Omega_7, Omega_8, Omega_9, Omega_10 }),
+        CSpline(SplineKnots, SplineCoeffs)
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
@@ -139,12 +143,14 @@ namespace medusa {
         // ctor with array of hydra::Parameter
         // the user has to respect the parameter order as the main ctor
         FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const hydra::Parameter (&Ps)[22],
-                            const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit, const double &Weight ):
-        ThisBaseFunctor{ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
+                          const double (&SplineKnots)[7], const std::array<hydra::Parameter, 9> SplineCoeffs,
+                          const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit, const double &Weight ):
+        ThisBaseFunctor({ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
                          Ps[0],  Ps[1],  Ps[2],  Ps[3],  Ps[4],  Ps[5],  Ps[6],  Ps[7],
                          Ps[8],  Ps[9],  Ps[10], Ps[11], Ps[12], Ps[13], Ps[14], Ps[15], Ps[16], Ps[17],
-                         Ps[18], Ps[19], Ps[20], Ps[21] }
+                         Ps[18], Ps[19], Ps[20], Ps[21] }),
+        CSpline(SplineKnots, SplineCoeffs)
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
@@ -155,12 +161,14 @@ namespace medusa {
 
         // ctor with array of double
         // the user has to respect the parameter order as the main ctor
-        explicit FullAnalyticPhis( const double (&Hs)[43] ):
-        ThisBaseFunctor{ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
+        explicit FullAnalyticPhis( const double (&Hs)[43], const double (&SplineKnots)[7],
+                                                           const std::array<hydra::Parameter, 9> SplineCoeffs ):
+        ThisBaseFunctor({ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
                          Hs[18], Hs[19], Hs[20], Hs[21], Hs[22], Hs[23], Hs[24], Hs[25],
                          Hs[26], Hs[27], Hs[28], Hs[29], Hs[30], Hs[31], Hs[32], Hs[33], Hs[34], Hs[35],
-                         Hs[36], Hs[37], Hs[38], Hs[39] }
+                         Hs[36], Hs[37], Hs[38], Hs[39] }),
+        CSpline(SplineKnots, SplineCoeffs)
         {
             fLowerLimit = Hs[40];
             fUpperLimit = Hs[41];
@@ -173,7 +181,8 @@ namespace medusa {
         __hydra_dual__
         FullAnalyticPhis(FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                         ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
-        ThisBaseFunctor(other)
+        ThisBaseFunctor(other),
+        CSpline(other, 1)
         {
             fLowerLimit = other.GetLowerLimit();
             fUpperLimit = other.GetUpperLimit();
@@ -205,6 +214,7 @@ namespace medusa {
         {
             if(this == &other) return *this;
             ThisBaseFunctor::operator=(other);
+            CSpline::operator=(other);
 
             fLowerLimit = other.GetLowerLimit();
             fUpperLimit = other.GetUpperLimit();

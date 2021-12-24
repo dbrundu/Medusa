@@ -34,6 +34,7 @@
 // Hydra
 #include <hydra/detail/Config.h>
 #include <hydra/Complex.h>
+#include <hydra/Function.h>
 
 // Medusa
 #include <medusa/Constants.h>
@@ -57,9 +58,16 @@
 
 namespace medusa {
 
-    template<size_t nKnots>
-    class CubicSpline
+    template<typename ArgTypeTime,
+             size_t nKnots,
+             typename Signature=double(ArgTypeTime)>
+    class CubicSpline: public hydra::BaseFunctor< CubicSpline <ArgTypeTime, nKnots>, Signature, nKnots+2 >
     {
+        using CSplineBaseFunctor = hydra::BaseFunctor<CubicSpline <ArgTypeTime, nKnots>, Signature, nKnots+2 >;
+
+        using hydra::BaseFunctor< CubicSpline <ArgTypeTime, nKnots>, Signature, nKnots+2 >::_par;
+
+
         public:
 
         //-------------------------------------
@@ -68,7 +76,8 @@ namespace medusa {
 
         CubicSpline() = delete;
 
-        CubicSpline(const double *knots, const double *coeffs)
+        CubicSpline(const double (&knots)[nKnots], const std::array<hydra::Parameter, nKnots+2> &coeffs):
+        CSplineBaseFunctor(coeffs)
         {
             // set knot vector
             u[0] = knots[0];
@@ -77,10 +86,7 @@ namespace medusa {
             for(size_t i=0; i<nKnots; i++)
             {
                 u[3+i] = knots[i];
-                b[i] = coeffs[i];
             }
-            b[nKnots] = coeffs[nKnots];
-            b[nKnots+1] = coeffs[nKnots+1];
             u[nKnots+3] = knots[nKnots-1];
             u[nKnots+4] = knots[nKnots-1];
             u[nKnots+5] = knots[nKnots-1];
@@ -171,7 +177,8 @@ namespace medusa {
 
         // ctor with other CubicSpline instance (copy ctor)
         __hydra_dual__
-        CubicSpline(CubicSpline<nKnots> const& other)
+        CubicSpline(CubicSpline<ArgTypeTime, nKnots> const& other, int tag):
+        CSplineBaseFunctor(other)
         {
             u[0] = other.GetKnots()[0];
             u[1] = other.GetKnots()[1];
@@ -179,15 +186,66 @@ namespace medusa {
             for(size_t i=0; i<nKnots; i++)
             {
                 u[3+i] = other.GetKnots()[3+i];
-                b[i] = other.GetSplineCoeff()[i];
 
                 A0[i] = other.GetOverCoeffO0()[i];
                 A1[i] = other.GetOverCoeffO1()[i];
                 A2[i] = other.GetOverCoeffO2()[i];
                 A3[i] = other.GetOverCoeffO3()[i];
             }
-            b[nKnots] = other.GetSplineCoeff()[nKnots];
-            b[nKnots+1] = other.GetSplineCoeff()[nKnots+1];
+            u[nKnots+3] = other.GetKnots()[nKnots+3];
+            u[nKnots+4] = other.GetKnots()[nKnots+4];
+            u[nKnots+5] = other.GetKnots()[nKnots+5];
+
+            if(tag < 0)
+            {
+                for (size_t i=0; i<4; i++)
+                {
+                    for(size_t j=0; j<nKnots-1; j++)
+                    {
+                        a0[i][j] = other.GetCoeffO0(i,j);
+                        a1[i][j] = other.GetCoeffO1(i,j);
+                        a2[i][j] = other.GetCoeffO2(i,j);
+                        a3[i][j] = other.GetCoeffO3(i,j);
+                    }
+                }
+            }
+
+            NegativePart = other.GetNegativePart();
+            xNegative = other.GetxNegative();
+
+            for(size_t i=0; i<4; i++)
+            {
+                kfactorial[i] = other.GetKFactorial()[i];
+                jfactorial[i] = other.GetJFactorial()[i];
+
+                knfactorial[i] = other.GetKNFactorial()[i];
+                njfactorial[i] = other.GetNJFactorial()[i];
+            }
+        }
+
+
+        //-------------------------------------
+        //       Operator= overloading
+        //-------------------------------------
+
+        __hydra_dual__
+        CubicSpline<ArgTypeTime, nKnots>& operator=(CubicSpline<ArgTypeTime, nKnots> const& other)
+        {
+            if(this == &other) return *this;
+            CSplineBaseFunctor::operator=(other);
+
+            u[0] = other.GetKnots()[0];
+            u[1] = other.GetKnots()[1];
+            u[2] = other.GetKnots()[2];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                u[3+i] = other.GetKnots()[3+i];
+
+                A0[i] = other.GetOverCoeffO0()[i];
+                A1[i] = other.GetOverCoeffO1()[i];
+                A2[i] = other.GetOverCoeffO2()[i];
+                A3[i] = other.GetOverCoeffO3()[i];
+            }
             u[nKnots+3] = other.GetKnots()[nKnots+3];
             u[nKnots+4] = other.GetKnots()[nKnots+4];
             u[nKnots+5] = other.GetKnots()[nKnots+5];
@@ -214,25 +272,14 @@ namespace medusa {
                 knfactorial[i] = other.GetKNFactorial()[i];
                 njfactorial[i] = other.GetNJFactorial()[i];
             }
+
+            return *this;
         }
 
 
         //-------------------------------------
         //           Service functions
         //-------------------------------------
-
-        // Update the spline with new coefficients
-        void updateCoefficients(double *coeffs)
-        {
-            for(size_t i=0; i<nKnots+2; i++)
-            {
-                b[i]=coeffs[i];
-            }
-        
-            // calculate overall polynomial coefficients for current set of spline coefficients
-            updatePolynomial();
-        }
-
 
         // Find the respective knot number
         __hydra_dual__
@@ -286,13 +333,6 @@ namespace medusa {
         const double* GetKnots() const
         {
             return u;
-        }
-
-        // get cubic spline coefficients
-        __hydra_dual__
-        const double* GetSplineCoeff() const
-        {
-            return b;
         }
 
         // get k!
@@ -401,7 +441,7 @@ namespace medusa {
         // with the Gaussian [tag >= 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
         inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double a, double b, double mu, double sigma,
-                                                                                        double LowerLimit, double UpperLimit, int tag)
+                                                                            ArgTypeTime LowerLimit, ArgTypeTime UpperLimit, int tag)
         {
             double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
             double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
@@ -465,7 +505,7 @@ namespace medusa {
         // with the Gaussian [tag >= 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
         inline double Integrate_t_to_k_times_convolved_exp_sincos(size_t k, double a, double b, double mu, double sigma,
-                                                                                        double LowerLimit, double UpperLimit, int tag)
+                                                                            ArgTypeTime LowerLimit, ArgTypeTime UpperLimit, int tag)
         {
             double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
             double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
@@ -533,16 +573,18 @@ namespace medusa {
         private:
 
 
-        // calculate overall polynomial coefficients for current set of spline coefficients
+        // Calculate overall polynomial coefficients for current set of spline coefficients.
+        // This method must be included in the method Update() if you change the spline coefficients,
+        // using the method SetParameters() of the class Parameters (See Parameters.h).
         void updatePolynomial()
         {
             for(size_t i=0; i<nKnots-1; i++)
             {
                 // calculate polynomial coefficients for the current set of spline coefficients
-                A0[i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
-                A1[i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
-                A2[i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
-                A3[i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
+                A0[i] = _par[i]*a0[0][i] + _par[i+1]*a0[1][i] + _par[i+2]*a0[2][i] + _par[i+3]*a0[3][i];
+                A1[i] = _par[i]*a1[0][i] + _par[i+1]*a1[1][i] + _par[i+2]*a1[2][i] + _par[i+3]*a1[3][i];
+                A2[i] = _par[i]*a2[0][i] + _par[i+1]*a2[1][i] + _par[i+2]*a2[2][i] + _par[i+3]*a2[3][i];
+                A3[i] = _par[i]*a3[0][i] + _par[i+1]*a3[1][i] + _par[i+2]*a3[2][i] + _par[i+3]*a3[3][i];
                 if(std::fabs(A0[i])<1e-9) A0[i]=0;
                 if(std::fabs(A1[i])<1e-9) A1[i]=0;
                 if(std::fabs(A2[i])<1e-9) A2[i]=0;
@@ -805,9 +847,6 @@ namespace medusa {
 
         // knots
         double u[nKnots+6];
-
-        // spline coefficients
-        double b[nKnots+2];
 
         // factorials
         double kfactorial[4];    // k!

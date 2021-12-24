@@ -85,7 +85,6 @@
 #include <medusa/phi_s/phis_full/FullAnalyticPhis.h>
 #include <medusa/phi_s/phis_full/GenerateDataset.h>
 
-
 //default namespaces
 using namespace ROOT::Minuit2;
 
@@ -213,16 +212,16 @@ int main(int argv, char** argc)
                                                 delta_0_pd,        delta_par_pd,   delta_perp_pd,   delta_S_pd};
 
     auto Model = medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t,
-                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams, LowerLimit, UpperLimit, Weight);
+                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams,
+                                                                                                Spline_Knots, SplineParams,
+                                                                                                    LowerLimit, UpperLimit, Weight);
 
 //    Model(2.54933, 1, 1, 1, 1, 1, 1, 1, 0.01);
 
-    auto Spline = medusa::CubicSpline<7>(Spline_Knots, Spline_coeffs);
-
-    std::cout << Spline.eval(0.4) << std::endl;
-    std::cout << Spline.eval(1.0) << std::endl;
-    std::cout << Spline.eval(6.99) << std::endl;
-    std::cout << Spline.eval(8.0) << std::endl;
+    std::cout << Model.eval(0.4) << std::endl;
+    std::cout << Model.eval(1.0) << std::endl;
+    std::cout << Model.eval(6.99) << std::endl;
+    std::cout << Model.eval(8.0) << std::endl;
 
     double Gamma = deltagammasd_dataset + 0.65789;
     double HalfDeltaGamma = 0.5*deltagammas_dataset;
@@ -234,16 +233,17 @@ int main(int argv, char** argc)
 
     for(size_t i=0; i<4; i++)
     {
-        Spline_int_conv_exp_cosh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, 1);
-        Spline_int_conv_exp_sinh[i] = Spline.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, -1);
-        Spline_int_conv_exp_cos[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, 1);
-        Spline_int_conv_exp_sin[i] = Spline.Integrate_t_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, -1);
+        Spline_int_conv_exp_cosh[i] = Model.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, 1);
+        Spline_int_conv_exp_sinh[i] = Model.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, -1);
+        Spline_int_conv_exp_cos[i] = Model.Integrate_t_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, 1);
+        Spline_int_conv_exp_sin[i] = Model.Integrate_t_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, -1);
 
         std::cout << "int_conv_cosh [" << i << "] = " << Spline_int_conv_exp_cosh[i] << std::endl;
         std::cout << "int_conv_sinh [" << i << "] = " << Spline_int_conv_exp_sinh[i] << std::endl;
         std::cout << "int_conv_cos [" << i << "] = " << Spline_int_conv_exp_cos[i] << std::endl;
         std::cout << "int_conv_sin [" << i << "] = " << Spline_int_conv_exp_sin[i] << std::endl;
     }
+
 /*
     double x1 = (LowerLimit - 1)/(2*M_Sqrt2);
     double x2 = (UpperLimit - 1)/(2*M_Sqrt2);
