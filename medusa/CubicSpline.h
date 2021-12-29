@@ -31,10 +31,13 @@
 #ifndef MEDUSA_CUBIC_SPLINE_H
 #define MEDUSA_CUBIC_SPLINE_H
 
+// std
+#include <initializer_list>
+
 // Hydra
 #include <hydra/detail/Config.h>
 #include <hydra/Complex.h>
-#include <hydra/Function.h>
+#include <hydra/Parameter.h>
 
 // Medusa
 #include <medusa/Constants.h>
@@ -58,16 +61,9 @@
 
 namespace medusa {
 
-    template<typename ArgTypeTime,
-             size_t nKnots,
-             typename Signature=double(ArgTypeTime)>
-    class CubicSpline: public hydra::BaseFunctor< CubicSpline <ArgTypeTime, nKnots>, Signature, nKnots+2 >
+    template<bool Reduce, size_t nKnots>
+    class CubicSpline
     {
-        using CSplineBaseFunctor = hydra::BaseFunctor<CubicSpline <ArgTypeTime, nKnots>, Signature, nKnots+2 >;
-
-        using hydra::BaseFunctor< CubicSpline <ArgTypeTime, nKnots>, Signature, nKnots+2 >::_par;
-
-
         public:
 
         //-------------------------------------
@@ -76,83 +72,48 @@ namespace medusa {
 
         CubicSpline() = delete;
 
-        CubicSpline(const double (&knots)[nKnots], const std::array<hydra::Parameter, nKnots+2> &coeffs):
-        CSplineBaseFunctor(coeffs)
+        CubicSpline(const double (&knots)[nKnots], const std::initializer_list<double> SplineCoefficients)
         {
-            // set knot vector
-            u[0] = knots[0];
-            u[1] = knots[0];
-            u[2] = knots[0];
-            for(size_t i=0; i<nKnots; i++)
-            {
-                u[3+i] = knots[i];
-            }
-            u[nKnots+3] = knots[nKnots-1];
-            u[nKnots+4] = knots[nKnots-1];
-            u[nKnots+5] = knots[nKnots-1];
+            // Update the knot vector and calculate the polynomial coefficients
+            UpdateCoefficients(knots);
 
-            // calculate prefactors
-            double P[nKnots], Q[nKnots], R[nKnots], S[nKnots];
-            for(size_t i=0; i<nKnots; i++)
-            {
-                P[i] = (u[i+4]-u[i+1])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
-                Q[i] = (u[i+5]-u[i+2])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
-                R[i] = (u[i+5]-u[i+3])*(u[i+5]-u[i+2])*(u[i+4]-u[i+3]);
-                S[i] = (u[i+6]-u[i+3])*(u[i+5]-u[i+3])*(u[i+4]-u[i+3]);
-            }
+            // Update the spline coefficients and calculate the overall polynomial
+            // coefficients for the current set of spline coefficients
+            UpdateOverallCoefficients(SplineCoefficients);
 
-            // calculate coefficients of normal polynomial
-            for(size_t i=0; i<nKnots-1; i++)
-            {
-                // Constant
-                a0[0][i] = u[i+4]*u[i+4]*u[i+4]/P[i];
+            // Calculate the factorials
+            kfactorial[0] = 1.0;  // k!
+            kfactorial[1] = 1.0;
+            kfactorial[2] = 2.0;
+            kfactorial[3] = 6.0;
 
-                a0[1][i] = -u[i+1]*u[i+4]*u[i+4]/P[i] - u[i+2]*u[i+4]*u[i+5]/Q[i] - u[i+3]*u[i+5]*u[i+5]/R[i];
+            jfactorial[0] = 1.0;  // j!
+            jfactorial[1] = 1.0;
+            jfactorial[2] = 2.0;
+            jfactorial[3] = 6.0;
 
-                a0[2][i] = u[i+2]*u[i+2]*u[i+4]/Q[i] + u[i+2]*u[i+3]*u[i+5]/R[i] + u[i+3]*u[i+3]*u[i+6]/S[i];
+            knfactorial[0] = 1.0;  // (k-n)!
+            knfactorial[1] = 1.0;
+            knfactorial[2] = 2.0;
+            knfactorial[3] = 6.0;
 
-                a0[3][i] = -u[i+3]*u[i+3]*u[i+3]/S[i];
-    
-                // Linear
-                a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
+            njfactorial[0] = 1.0;  // (n-j)!
+            njfactorial[1] = 1.0;
+            njfactorial[2] = 2.0;
+            njfactorial[3] = 6.0;
+        }
 
-                a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
-                        + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
-                        + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
 
-                a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
-                        -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
-                        -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
+        CubicSpline(const double (&knots)[nKnots], const double (&SplineCoefficients)[nKnots+2])
+        {
+            // Update the knot vector and calculate the polynomial coefficients
+            UpdateCoefficients(knots);
 
-                a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
-    
-                // Quadratic
-                a2[0][i] = 3*u[i+4]/P[i];
+            // Update the spline coefficients and calculate the overall polynomial
+            // coefficients for the current set of spline coefficients
+            UpdateOverallCoefficients(SplineCoefficients);
 
-                a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
-                        -(u[i+2]+u[i+4]+u[i+5])/Q[i]
-                        -(2*u[i+5]+u[i+3])/R[i];
-
-                a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
-                        +(u[i+2]+u[i+5]+u[i+3])/R[i]
-                        +(2*u[i+3]+u[i+6])/S[i];
-
-                a2[3][i] = -3*u[i+3]/S[i];
-    
-                // Cubic
-                a3[0][i] = -1./P[i];
-
-                a3[1][i] = 1./P[i] + 1./Q[i] + 1./R[i];
-
-                a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
-
-                a3[3][i] = 1./S[i];
-            }
-
-            // calculate polynomial coefficients for the current set of spline coefficients
-            updatePolynomial();
-
-            // calculate the factorials
+            // Calculate the factorials
             kfactorial[0] = 1.0;  // k!
             kfactorial[1] = 1.0;
             kfactorial[2] = 2.0;
@@ -177,8 +138,7 @@ namespace medusa {
 
         // ctor with other CubicSpline instance (copy ctor)
         __hydra_dual__
-        CubicSpline(CubicSpline<ArgTypeTime, nKnots> const& other):
-        CSplineBaseFunctor(other)
+        CubicSpline(CubicSpline<Reduce, nKnots> const& other)
         {
             u[0] = other.GetKnots()[0];
             u[1] = other.GetKnots()[1];
@@ -196,17 +156,6 @@ namespace medusa {
             u[nKnots+4] = other.GetKnots()[nKnots+4];
             u[nKnots+5] = other.GetKnots()[nKnots+5];
 
-            for (size_t i=0; i<4; i++)
-            {
-                for(size_t j=0; j<nKnots-1; j++)
-                {
-                    a0[i][j] = other.GetCoeffO0(i,j);
-                    a1[i][j] = other.GetCoeffO1(i,j);
-                    a2[i][j] = other.GetCoeffO2(i,j);
-                    a3[i][j] = other.GetCoeffO3(i,j);
-                }
-            }
-
             NegativePart = other.GetNegativePart();
             xNegative = other.GetxNegative();
 
@@ -217,6 +166,26 @@ namespace medusa {
 
                 knfactorial[i] = other.GetKNFactorial()[i];
                 njfactorial[i] = other.GetNJFactorial()[i];
+            }
+
+            // optional part
+            if(!Reduce)
+            {
+                for (size_t i=0; i<nKnots+2; i++)
+                {
+                    b[i] = other.GetSplineCoeffs()[i];
+                }
+                
+                for (size_t i=0; i<4; i++)
+                {
+                    for(size_t j=0; j<nKnots-1; j++)
+                    {
+                        a0[i][j] = other.GetCoeffO0(i,j);
+                        a1[i][j] = other.GetCoeffO1(i,j);
+                        a2[i][j] = other.GetCoeffO2(i,j);
+                        a3[i][j] = other.GetCoeffO3(i,j);
+                    }
+                }
             }
         }
 
@@ -226,10 +195,9 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        CubicSpline<ArgTypeTime, nKnots>& operator=(CubicSpline<ArgTypeTime, nKnots> const& other)
+        CubicSpline<Reduce, nKnots>& operator=(CubicSpline<Reduce, nKnots> const& other)
         {
             if(this == &other) return *this;
-            CSplineBaseFunctor::operator=(other);
 
             u[0] = other.GetKnots()[0];
             u[1] = other.GetKnots()[1];
@@ -247,17 +215,6 @@ namespace medusa {
             u[nKnots+4] = other.GetKnots()[nKnots+4];
             u[nKnots+5] = other.GetKnots()[nKnots+5];
 
-            for (size_t i=0; i<4; i++)
-            {
-                for(size_t j=0; j<nKnots-1; j++)
-                {
-                    a0[i][j] = other.GetCoeffO0(i,j);
-                    a1[i][j] = other.GetCoeffO1(i,j);
-                    a2[i][j] = other.GetCoeffO2(i,j);
-                    a3[i][j] = other.GetCoeffO3(i,j);
-                }
-            }
-
             NegativePart = other.GetNegativePart();
             xNegative = other.GetxNegative();
 
@@ -268,6 +225,26 @@ namespace medusa {
 
                 knfactorial[i] = other.GetKNFactorial()[i];
                 njfactorial[i] = other.GetNJFactorial()[i];
+            }
+
+            // optional part
+            if(!Reduce)
+            {
+                for (size_t i=0; i<nKnots+2; i++)
+                {
+                    b[i] = other.GetSplineCoeffs()[i];
+                }
+                
+                for (size_t i=0; i<4; i++)
+                {
+                    for(size_t j=0; j<nKnots-1; j++)
+                    {
+                        a0[i][j] = other.GetCoeffO0(i,j);
+                        a1[i][j] = other.GetCoeffO1(i,j);
+                        a2[i][j] = other.GetCoeffO2(i,j);
+                        a3[i][j] = other.GetCoeffO3(i,j);
+                    }
+                }
             }
 
             return *this;
@@ -278,9 +255,34 @@ namespace medusa {
         //           Service functions
         //-------------------------------------
 
+        // Update the overall polynomial coefficients with new spline coefficients
+        void UpdateOverallCoefficients(std::initializer_list<double> SplineCoefficients)
+        {
+            for(size_t i=0; i<nKnots+2; i++)
+            {
+                b[i] = *(SplineCoefficients.begin() + i);
+            }
+
+            // Calculate overall polynomial coefficients for current set of spline coefficients
+            UpdatePolynomial();
+        }
+
+        // Update the overall polynomial coefficients with new spline coefficients
+        void UpdateOverallCoefficients(double (&SplineCoefficients)[nKnots+2])
+        {
+            for(size_t i=0; i<nKnots+2; i++)
+            {
+                b[i] = SplineCoefficients[i];
+            }
+
+            // Calculate overall polynomial coefficients for current set of spline coefficients
+            UpdatePolynomial();
+        }
+
+
         // Find the respective knot number
         __hydra_dual__
-        int findKnot(double x)
+        inline int findKnot(double x) const
         {
             double j = 0;
             for(size_t i=0; i<nKnots; i++)
@@ -291,9 +293,9 @@ namespace medusa {
         }
 
 
-        // Evaluate the spline
+        // Evaluate the cubic spline
         __hydra_dual__
-        double eval(double x)
+        inline double CSplineEval(double x) const
         {
             // Should return 0 here. But small positive number is better for the fitter
             // Change this for your purpose 
@@ -313,7 +315,7 @@ namespace medusa {
 
             for(size_t i=0; i<nBins; i++)
             {
-                h->SetBinContent(i+1,eval(from+(i+0.5)*(to-from)/nBins));
+                h->SetBinContent(i+1,CSplineEval(from+(i+0.5)*(to-from)/nBins));
             }
             return h;
         }
@@ -330,6 +332,13 @@ namespace medusa {
         const double* GetKnots() const
         {
             return u;
+        }
+
+        // get spline coefficients
+        __hydra_dual__
+        const double* GetSplineCoeffs() const
+        {
+            return b;
         }
 
         // get k!
@@ -431,14 +440,14 @@ namespace medusa {
 
 
         //-------------------------------------
-        //        methods to integrate
+        //        Methods to integrate
         //-------------------------------------
 
-        // Integrate in the time the convolution of t^k*exp( -a*t )*cosh( b*t ) or t^k*exp( -a*t )*sinh( b*t )
-        // with the Gaussian [tag >= 0 -> cosh | tag < 0 -> sinh] (Reference: arXiv:1407.0748v1)
+        // Integrate in x the convolution of x^k*exp( -a*t )*cosh( b*t ) or x^k*exp( -a*t )*sinh( b*t )
+        // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double a, double b, double mu, double sigma,
-                                                                            ArgTypeTime LowerLimit, ArgTypeTime UpperLimit, int tag)
+        inline double Integrate_x_to_k_times_convolved_exp_sinhcosh(size_t k, double a, double b, double mu, double sigma,
+                                                                                double LowerLimit, double UpperLimit, bool tag) const
         {
             double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
             double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
@@ -451,7 +460,7 @@ namespace medusa {
 
             if(mu == 0)
             {
-                if(tag >= 0)
+                if(tag)
                 {
                     for(size_t j=0; j<k+1; j++)
                     {
@@ -469,7 +478,7 @@ namespace medusa {
             }
             else
             {
-                if(tag >= 0)
+                if(tag)
                 {
                     for(size_t n=0; n<k+1; n++)
                     {
@@ -498,11 +507,11 @@ namespace medusa {
         }
 
 
-        // Integrate in the time the convolution of t^k*exp( -a*t )*cos( b*t ) or t^k*exp( -a*t )*sin( b*t )
-        // with the Gaussian [tag >= 0 -> cos | tag < 0 -> sin] (Reference: arXiv:1407.0748v1)
+        // Integrate in x the convolution of x^k*exp( -a*t )*cos( b*t ) or x^k*exp( -a*t )*sin( b*t )
+        // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_t_to_k_times_convolved_exp_sincos(size_t k, double a, double b, double mu, double sigma,
-                                                                            ArgTypeTime LowerLimit, ArgTypeTime UpperLimit, int tag)
+        inline double Integrate_x_to_k_times_convolved_exp_sincos(size_t k, double a, double b, double mu, double sigma,
+                                                                                double LowerLimit, double UpperLimit, bool tag) const
         {
             double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
             double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
@@ -515,7 +524,7 @@ namespace medusa {
             
             if(mu == 0)
             {
-                if(tag >= 0)
+                if(tag)
                 {
                     sum2 = 0.0;
                     for(size_t j=0; j<k+1; j++)
@@ -537,7 +546,7 @@ namespace medusa {
             }
             else
             {
-                if(tag >= 0)
+                if(tag)
                 {
                     for(size_t n=0; n<k+1; n++)
                     {
@@ -570,18 +579,93 @@ namespace medusa {
         private:
 
 
+        // Calculate the polynomial coefficients
+        void UpdateCoefficients(const double (&knots)[nKnots])
+        {
+            // set knot vector
+            u[0] = knots[0];
+            u[1] = knots[0];
+            u[2] = knots[0];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                u[3+i] = knots[i];
+            }
+            u[nKnots+3] = knots[nKnots-1];
+            u[nKnots+4] = knots[nKnots-1];
+            u[nKnots+5] = knots[nKnots-1];
+
+            // calculate prefactors
+            double P[nKnots], Q[nKnots], R[nKnots], S[nKnots];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                P[i] = (u[i+4]-u[i+1])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
+                Q[i] = (u[i+5]-u[i+2])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
+                R[i] = (u[i+5]-u[i+3])*(u[i+5]-u[i+2])*(u[i+4]-u[i+3]);
+                S[i] = (u[i+6]-u[i+3])*(u[i+5]-u[i+3])*(u[i+4]-u[i+3]);
+            }
+
+            // calculate coefficients of normal polynomial
+            for(size_t i=0; i<nKnots-1; i++)
+            {
+                // Constant
+                a0[0][i] = u[i+4]*u[i+4]*u[i+4]/P[i];
+
+                a0[1][i] = -u[i+1]*u[i+4]*u[i+4]/P[i] - u[i+2]*u[i+4]*u[i+5]/Q[i] - u[i+3]*u[i+5]*u[i+5]/R[i];
+
+                a0[2][i] = u[i+2]*u[i+2]*u[i+4]/Q[i] + u[i+2]*u[i+3]*u[i+5]/R[i] + u[i+3]*u[i+3]*u[i+6]/S[i];
+
+                a0[3][i] = -u[i+3]*u[i+3]*u[i+3]/S[i];
+    
+                // Linear
+                a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
+
+                a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
+                        + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
+                        + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
+
+                a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
+                        -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
+                        -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
+
+                a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
+    
+                // Quadratic
+                a2[0][i] = 3*u[i+4]/P[i];
+
+                a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
+                        -(u[i+2]+u[i+4]+u[i+5])/Q[i]
+                        -(2*u[i+5]+u[i+3])/R[i];
+
+                a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
+                        +(u[i+2]+u[i+5]+u[i+3])/R[i]
+                        +(2*u[i+3]+u[i+6])/S[i];
+
+                a2[3][i] = -3*u[i+3]/S[i];
+    
+                // Cubic
+                a3[0][i] = -1./P[i];
+
+                a3[1][i] = 1./P[i] + 1./Q[i] + 1./R[i];
+
+                a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
+
+                a3[3][i] = 1./S[i];
+            }
+        }
+        
+
         // Calculate overall polynomial coefficients for current set of spline coefficients.
         // This method must be included in the method Update() if you change the spline coefficients,
         // using the method SetParameters() of the class Parameters (See Parameters.h).
-        void updatePolynomial()
+        void UpdatePolynomial()
         {
             for(size_t i=0; i<nKnots-1; i++)
             {
                 // calculate polynomial coefficients for the current set of spline coefficients
-                A0[i] = _par[i]*a0[0][i] + _par[i+1]*a0[1][i] + _par[i+2]*a0[2][i] + _par[i+3]*a0[3][i];
-                A1[i] = _par[i]*a1[0][i] + _par[i+1]*a1[1][i] + _par[i+2]*a1[2][i] + _par[i+3]*a1[3][i];
-                A2[i] = _par[i]*a2[0][i] + _par[i+1]*a2[1][i] + _par[i+2]*a2[2][i] + _par[i+3]*a2[3][i];
-                A3[i] = _par[i]*a3[0][i] + _par[i+1]*a3[1][i] + _par[i+2]*a3[2][i] + _par[i+3]*a3[3][i];
+                A0[i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
+                A1[i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
+                A2[i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
+                A3[i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
                 if(std::fabs(A0[i])<1e-9) A0[i]=0;
                 if(std::fabs(A1[i])<1e-9) A1[i]=0;
                 if(std::fabs(A2[i])<1e-9) A2[i]=0;
@@ -615,9 +699,13 @@ namespace medusa {
         }
 
 
+        //-------------------------------------
+        //        Intermediate functions
+        //-------------------------------------
+        
         // K_n(z) for z as double (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double K(double z, size_t n)
+        inline double K(double z, size_t n) const
         {
             switch (n)
             {
@@ -665,7 +753,7 @@ namespace medusa {
 
         // K_n(z) for z as complex (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline hydra::complex<double> K(hydra::complex<double> z, size_t n)
+        inline hydra::complex<double> K(hydra::complex<double> z, size_t n) const
         {
             switch (n)
             {
@@ -713,7 +801,7 @@ namespace medusa {
 
         // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double M(double x1, double x2, double z, size_t n)
+        inline double M(double x1, double x2, double z, size_t n) const
         {
             switch (n)
             {
@@ -778,7 +866,7 @@ namespace medusa {
 
         // M_n(x1, x2; z) for z as complex (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline hydra::complex<double> M(double x1, double x2, hydra::complex<double> z, size_t n)
+        inline hydra::complex<double> M(double x1, double x2, hydra::complex<double> z, size_t n) const
         {
             switch (n)
             {
@@ -841,9 +929,15 @@ namespace medusa {
         }
 
 
+        //-------------------------
+        //        Variables
+        //-------------------------
 
         // knots
         double u[nKnots+6];
+
+        // spline coefficients
+        double b[nKnots+2];
 
         // factorials
         double kfactorial[4];    // k!

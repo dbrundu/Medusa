@@ -147,15 +147,14 @@ auto Omega_8_p = hydra::Parameter::Create("Omega_8").Value(Omega[7]).Error(Omega
 auto Omega_9_p = hydra::Parameter::Create("Omega_9").Value(Omega[8]).Error(OmegaErr[8]).Fixed();
 auto Omega_10_p = hydra::Parameter::Create("Omega_10").Value(Omega[9]).Error(OmegaErr[9]).Fixed();
 
-hydra::Parameter ExpParams[22] = {b0_p, b1_p,
+hydra::Parameter ExpParams[31] = {b0_p, b1_p,
                          		  p0_OS_p, p1_OS_p, DeltaP0_OS_p, DeltaP1_OS_p, AgvEta_OS_p,
                          		  p0_SS_p, p1_SS_p, DeltaP0_SS_p, DeltaP1_SS_p, AgvEta_SS_p,
                         		  Omega_1_p, Omega_2_p, Omega_3_p, Omega_4_p, Omega_5_p,
-                         		  Omega_6_p, Omega_7_p, Omega_8_p, Omega_9_p, Omega_10_p};
-
-std::array<hydra::Parameter, 9> SplineParams = {Spline_c0_p, Spline_c1_p, Spline_c2_p,
-								        		Spline_c3_p, Spline_c4_p, Spline_c5_p,
-												Spline_c6_p, Spline_c7_p, Spline_c8_p};
+                         		  Omega_6_p, Omega_7_p, Omega_8_p, Omega_9_p, Omega_10_p,
+								  Spline_c0_p, Spline_c1_p, Spline_c2_p,
+								  Spline_c3_p, Spline_c4_p, Spline_c5_p,
+								  Spline_c6_p, Spline_c7_p, Spline_c8_p};
 
 
 namespace medusa {
