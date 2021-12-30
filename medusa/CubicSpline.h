@@ -37,7 +37,6 @@
 // Hydra
 #include <hydra/detail/Config.h>
 #include <hydra/Complex.h>
-#include <hydra/Parameter.h>
 
 // Medusa
 #include <medusa/Constants.h>
@@ -75,7 +74,7 @@ namespace medusa {
         CubicSpline(const double (&knots)[nKnots], const std::initializer_list<double> SplineCoefficients)
         {
             // Update the knot vector and calculate the polynomial coefficients
-            UpdateCoefficients(knots);
+            UpdateKnots(knots);
 
             // Update the spline coefficients and calculate the overall polynomial
             // coefficients for the current set of spline coefficients
@@ -147,10 +146,10 @@ namespace medusa {
             {
                 u[3+i] = other.GetKnots()[3+i];
 
-                A0[i] = other.GetOverCoeffO0()[i];
-                A1[i] = other.GetOverCoeffO1()[i];
-                A2[i] = other.GetOverCoeffO2()[i];
-                A3[i] = other.GetOverCoeffO3()[i];
+                A[0][i] = other.GetOverCoeff(0,i);
+                A[1][i] = other.GetOverCoeff(1,i);
+                A[2][i] = other.GetOverCoeff(2,i);
+                A[3][i] = other.GetOverCoeff(3,i);
             }
             u[nKnots+3] = other.GetKnots()[nKnots+3];
             u[nKnots+4] = other.GetKnots()[nKnots+4];
@@ -206,10 +205,10 @@ namespace medusa {
             {
                 u[3+i] = other.GetKnots()[3+i];
 
-                A0[i] = other.GetOverCoeffO0()[i];
-                A1[i] = other.GetOverCoeffO1()[i];
-                A2[i] = other.GetOverCoeffO2()[i];
-                A3[i] = other.GetOverCoeffO3()[i];
+                A[0][i] = other.GetOverCoeff(0,i);
+                A[1][i] = other.GetOverCoeff(1,i);
+                A[2][i] = other.GetOverCoeff(2,i);
+                A[3][i] = other.GetOverCoeff(3,i);
             }
             u[nKnots+3] = other.GetKnots()[nKnots+3];
             u[nKnots+4] = other.GetKnots()[nKnots+4];
@@ -251,11 +250,12 @@ namespace medusa {
         }
 
 
-        //-------------------------------------
-        //           Service functions
-        //-------------------------------------
+        //-------------------------------------------------------
+        //      Methods to update the overall coefficients
+        //-------------------------------------------------------
 
-        // Update the overall polynomial coefficients with new spline coefficients
+        // Update the spline coefficients and calculate the overall polynomial
+        // coefficients for the current set of spline coefficients
         void UpdateOverallCoefficients(std::initializer_list<double> SplineCoefficients)
         {
             for(size_t i=0; i<nKnots+2; i++)
@@ -267,7 +267,8 @@ namespace medusa {
             UpdatePolynomial();
         }
 
-        // Update the overall polynomial coefficients with new spline coefficients
+        // Update the spline coefficients and calculate the overall polynomial
+        // coefficients for the current set of spline coefficients
         void UpdateOverallCoefficients(double (&SplineCoefficients)[nKnots+2])
         {
             for(size_t i=0; i<nKnots+2; i++)
@@ -280,11 +281,15 @@ namespace medusa {
         }
 
 
+        //-----------------------------------------------
+        //      Methods to compute the cubic spline
+        //-----------------------------------------------
+
         // Find the respective knot number
         __hydra_dual__
-        inline int findKnot(double x) const
+        inline size_t findKnot(double x) const
         {
-            double j = 0;
+            size_t j = 0;
             for(size_t i=0; i<nKnots; i++)
             {
                 if(x>=u[3+i]) j=i;
@@ -301,10 +306,32 @@ namespace medusa {
             // Change this for your purpose 
             if(x>xNegative && NegativePart) return 1e-3;
 
-            int j = findKnot(x);
-            return A0[j]+A1[j]*x+A2[j]*x*x+A3[j]*x*x*x;
+            size_t j = findKnot(x);
+            return A[0][j]+A[1][j]*x+A[2][j]*x*x+A[3][j]*x*x*x;
         }
 
+
+        //-------------------------------
+        //      Methods to integrate
+        //-------------------------------
+
+        // Integrate in t the cubic spline times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+        // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_cspline_times_convolved_exp_sinhcosh(double a, double b, double mu, double sigma,
+                                                                            double LowerLimit, double UpperLimit, bool tag) const;
+
+
+        // Integrate in t the cubic spline times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+        // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_cspline_times_convolved_exp_sincos(double a, double b, double mu, double sigma,
+                                                                        double LowerLimit, double UpperLimit, bool tag) const;
+
+
+        //-----------------------------------------
+        //      Methods to generate plots
+        //-----------------------------------------
 
         #ifdef _ROOT_AVAILABLE_
 
@@ -329,258 +356,66 @@ namespace medusa {
           
         // get the knot vector
         __hydra_dual__
-        const double* GetKnots() const
-        {
-            return u;
-        }
+        const double* GetKnots() const {return u;}
 
         // get spline coefficients
         __hydra_dual__
-        const double* GetSplineCoeffs() const
-        {
-            return b;
-        }
+        const double* GetSplineCoeffs() const {return b;}
 
         // get k!
         __hydra_dual__
-        const double* GetKFactorial() const
-        {
-            return kfactorial;
-        }
+        const double* GetKFactorial() const {return kfactorial;}
 
         // get (k-n)!
         __hydra_dual__
-        const double* GetKNFactorial() const
-        {
-            return knfactorial;
-        }
+        const double* GetKNFactorial() const {return knfactorial;}
 
         // get j!
         __hydra_dual__
-        const double* GetJFactorial() const
-        {
-            return jfactorial;
-        }
+        const double* GetJFactorial() const {return jfactorial;} 
 
         // get (n-j)!
         __hydra_dual__
-        const double* GetNJFactorial() const
-        {
-            return njfactorial;
-        }
+        const double* GetNJFactorial() const {return njfactorial;}
 
         // get the order 0 polynomial coefficients
         __hydra_dual__
-        double GetCoeffO0(size_t i, size_t j) const
-        {
-            return a0[i][j];
-        }
+        double GetCoeffO0(size_t i, size_t j) const {return a0[i][j];}
 
         // get the order 1 polynomial coefficients
         __hydra_dual__
-        double GetCoeffO1(size_t i, size_t j) const
-        {
-            return a1[i][j];
-        }
+        double GetCoeffO1(size_t i, size_t j) const {return a1[i][j];}
 
         // get the order 2 polynomial coefficients
         __hydra_dual__
-        double GetCoeffO2(size_t i, size_t j) const
-        {
-            return a2[i][j];
-        }
+        double GetCoeffO2(size_t i, size_t j) const {return a2[i][j];}
 
         // get the order 3 polynomial coefficients
         __hydra_dual__
-        double GetCoeffO3(size_t i, size_t j) const
-        {
-            return a3[i][j];
-        }
+        double GetCoeffO3(size_t i, size_t j) const {return a3[i][j];}
   
-        // get the order 0 overall polynomial coefficients
+        // get the overall polynomial coefficients
         __hydra_dual__
-        const double* GetOverCoeffO0() const
-        {
-            return A0;
-        }
-
-        // get the order 1 overall polynomial coefficients
-        __hydra_dual__
-        const double* GetOverCoeffO1() const
-        {
-            return A1;
-        }
-        
-        // get the order 2 overall polynomial coefficients
-        __hydra_dual__
-        const double* GetOverCoeffO2() const
-        {
-            return A2;
-        }
-        
-        // get the order 3 overall polynomial coefficients
-        __hydra_dual__
-        const double* GetOverCoeffO3() const
-        {
-            return A3;
-        }
+        double GetOverCoeff(size_t i, size_t j) const {return A[i][j];}
 
         // get the info wether this spline will get negative at some point
         __hydra_dual__
-        bool GetNegativePart() const
-        {
-            return NegativePart;
-        }
+        bool GetNegativePart() const {return NegativePart;}
         
         __hydra_dual__
-        double GetxNegative() const
-        {
-            return xNegative;
-        }
-
-
-        //-------------------------------------
-        //        Methods to integrate
-        //-------------------------------------
-
-        // Integrate in x the convolution of x^k*exp( -a*t )*cosh( b*t ) or x^k*exp( -a*t )*sinh( b*t )
-        // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
-        __hydra_dual__
-        inline double Integrate_x_to_k_times_convolved_exp_sinhcosh(size_t k, double a, double b, double mu, double sigma,
-                                                                                double LowerLimit, double UpperLimit, bool tag) const
-        {
-            double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
-            double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
-
-            double z1 = (a - b)*sigma/M_Sqrt2;
-            double z2 = (a + b)*sigma/M_Sqrt2;
-
-            double sum1 = 0.0;
-            double sum2;
-
-            if(mu == 0)
-            {
-                if(tag)
-                {
-                    for(size_t j=0; j<k+1; j++)
-                    {
-                        sum1 = sum1 + ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
-                    }
-                }
-                else
-                {
-                    for(size_t j=0; j<k+1; j++)
-                    {
-                        sum1 = sum1 + ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
-                    }
-                }
-                return M_1_Sqrt8*sigma*kfactorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
-            }
-            else
-            {
-                if(tag)
-                {
-                    for(size_t n=0; n<k+1; n++)
-                    {
-                        sum2 = 0.0;
-                        for(size_t j=0; j<n+1; j++)
-                        {
-                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
-                        }
-                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2;
-                    }
-                }
-                else
-                {
-                    for(size_t n=0; n<k+1; n++)
-                    {
-                        sum2 = 0.0;
-                        for(size_t j=0; j<n+1; j++)
-                        {
-                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
-                        }
-                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2;
-                    }
-                }
-                return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
-            }
-        }
-
-
-        // Integrate in x the convolution of x^k*exp( -a*t )*cos( b*t ) or x^k*exp( -a*t )*sin( b*t )
-        // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
-        __hydra_dual__
-        inline double Integrate_x_to_k_times_convolved_exp_sincos(size_t k, double a, double b, double mu, double sigma,
-                                                                                double LowerLimit, double UpperLimit, bool tag) const
-        {
-            double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
-            double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
-
-            hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
-            hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
-
-            double sum1 = 0.0;
-            hydra::complex<double> sum2;
-            
-            if(mu == 0)
-            {
-                if(tag)
-                {
-                    sum2 = 0.0;
-                    for(size_t j=0; j<k+1; j++)
-                    {
-                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
-                    }
-                    sum1 = sum2.real();
-                }
-                else
-                {
-                    sum2 = 0.0;
-                    for(size_t j=0; j<k+1; j++)
-                    {
-                        sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
-                    }
-                    sum1 = sum2.imag();
-                }
-                return M_1_Sqrt8*sigma*kfactorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
-            }
-            else
-            {
-                if(tag)
-                {
-                    for(size_t n=0; n<k+1; n++)
-                    {
-                        sum2 = 0.0;
-                        for(size_t j=0; j<n+1; j++)
-                        {
-                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
-                        }
-                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2.real();
-                    }
-                }
-                else
-                {
-                    for(size_t n=0; n<k+1; n++)
-                    {
-                        sum2 = 0.0;
-                        for(size_t j=0; j<n+1; j++)
-                        {
-                            sum2 = sum2 + ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
-                        }
-                        sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2.imag();
-                    }
-                }
-                return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
-            }
-        }
+        double GetxNegative() const {return xNegative;}
 
 
 
-        private:
+        //private:
 
 
-        // Calculate the polynomial coefficients
-        void UpdateCoefficients(const double (&knots)[nKnots])
+        //-------------------------------------------------------
+        //        Methods to update knots and coefficients
+        //-------------------------------------------------------
+
+        // Update the knot vector and calculate the polynomial coefficients
+        void UpdateKnots(const double (&knots)[nKnots])
         {
             // set knot vector
             u[0] = knots[0];
@@ -662,35 +497,35 @@ namespace medusa {
             for(size_t i=0; i<nKnots-1; i++)
             {
                 // calculate polynomial coefficients for the current set of spline coefficients
-                A0[i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
-                A1[i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
-                A2[i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
-                A3[i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
-                if(std::fabs(A0[i])<1e-9) A0[i]=0;
-                if(std::fabs(A1[i])<1e-9) A1[i]=0;
-                if(std::fabs(A2[i])<1e-9) A2[i]=0;
-                if(std::fabs(A3[i])<1e-9) A3[i]=0;
+                A[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
+                A[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
+                A[2][i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
+                A[3][i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
+                if(std::fabs(A[0][i])<1e-9) A[0][i]=0;
+                if(std::fabs(A[1][i])<1e-9) A[1][i]=0;
+                if(std::fabs(A[2][i])<1e-9) A[2][i]=0;
+                if(std::fabs(A[3][i])<1e-9) A[3][i]=0;
             }
 
             // After last knot: Linear extrapolation
             // value of 2nd last spline at last knot
             double v=u[nKnots+2];
-            A3[nKnots-1] = 0;
-            A2[nKnots-1] = 0;
+            A[3][nKnots-1] = 0;
+            A[2][nKnots-1] = 0;
 
             // In case it should be constant:
-            // A1[nKnots-1] = 0;
-            // A0[nKnots-1] = A0[nKnots-2] + A1[nKnots-2]*v + A2[nKnots-2]*v*v + A3[nKnots-2]*v*v*v;
+            // A[1][nKnots-1] = 0;
+            // A[0][nKnots-1] = A[0][nKnots-2] + A[1][nKnots-2]*v + A[2][nKnots-2]*v*v + A[3][nKnots-2]*v*v*v;
 
             // In case it should be linear:
-            A1[nKnots-1] = A1[nKnots-2] + 2*A2[nKnots-2]*v + 3*A3[nKnots-2]*v*v;
-            A0[nKnots-1] = A0[nKnots-2] + A1[nKnots-2]*v + A2[nKnots-2]*v*v + A3[nKnots-2]*v*v*v - A1[nKnots-1]*v;
+            A[1][nKnots-1] = A[1][nKnots-2] + 2*A[2][nKnots-2]*v + 3*A[3][nKnots-2]*v*v;
+            A[0][nKnots-1] = A[0][nKnots-2] + A[1][nKnots-2]*v + A[2][nKnots-2]*v*v + A[3][nKnots-2]*v*v*v - A[1][nKnots-1]*v;
 
             // determine if and where this linear part gets negative
-            if(A1[nKnots-1]<0)
+            if(A[1][nKnots-1]<0)
             {
                 NegativePart = true;
-                xNegative = -A0[nKnots-1]/A1[nKnots-1];
+                xNegative = -A[0][nKnots-1]/A[1][nKnots-1];
             }
             else
             {
@@ -699,234 +534,48 @@ namespace medusa {
         }
 
 
-        //-------------------------------------
-        //        Intermediate functions
-        //-------------------------------------
+        //-------------------------------------------------
+        //        Methods to help the integratation
+        //-------------------------------------------------
+
+        // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+        // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(size_t k, int iFrom, int iTo,
+                                                                            double a, double b, double mu, double sigma,
+                                                                                double LowerLimit, double UpperLimit, bool tag) const;
+
+
+        // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+        // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_Ak_t_to_k_times_convolved_exp_sincos(size_t k, int iFrom, int iTo,
+                                                                        double a, double b, double mu, double sigma,
+                                                                            double LowerLimit, double UpperLimit, bool tag) const;
+
+
+        //------------------------------------------------------------
+        //       Intermediate functions used in the integration
+        //------------------------------------------------------------
         
         // K_n(z) for z as double (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double K(double z, size_t n) const
-        {
-            switch (n)
-            {
-                case 0:
-                {
-                    return 1 /(2*z);
-                }
-                case 1:
-                {
-                    return 1/(2*z*z);
-                }
-                case 2:
-                {
-                    return 1/z*( 1 + 1/(z*z) );
-                }
-                case 3:
-                {
-                    return 3/(z*z) * ( 1 + 1/(z*z) );
-                }
-                case 4:
-                {
-                    return 6/(z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
-                }
-                case 5:
-                {
-                    return 30/(z*z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
-                }
-                case 6:
-                {
-                    return 60/(z*z*z*z*z*z*z) * (6 + 6*z*z + 3*z*z*z*z + z*z*z*z*z*z);
-                }
-                default:
-                {
-                    // This macro controls if the first argument is NaN. If yes, it prints
-                    // a warning with the parameter value for whom we obtain a NaN.
-                    // In this case, the first argument is always NaN and the macro prints
-                    // the n-value for whom we obtain NaN.
-                    hydra::CHECK_VALUE(NaN, "n=%d", n);
-
-                    return NaN;
-                }
-            }
-        }
+        inline double K(double z, size_t n) const;
 
 
         // K_n(z) for z as complex (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline hydra::complex<double> K(hydra::complex<double> z, size_t n) const
-        {
-            switch (n)
-            {
-                case 0:
-                {
-                    return 1 /(2*z);
-                }
-                case 1:
-                {
-                    return 1/(2*z*z);
-                }
-                case 2:
-                {
-                    return 1/z*( 1 + 1/(z*z) );
-                }
-                case 3:
-                {
-                    return 3/(z*z) * ( 1 + 1/(z*z) );
-                }
-                case 4:
-                {
-                    return 6/(z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
-                }
-                case 5:
-                {
-                    return 30/(z*z*z*z*z*z) * (2 + 2*z*z + z*z*z*z);
-                }
-                case 6:
-                {
-                    return 60/(z*z*z*z*z*z*z) * (6 + 6*z*z + 3*z*z*z*z + z*z*z*z*z*z);
-                }
-                default:
-                {
-                    // This macro controls if the first argument is NaN. If yes, it prints
-                    // a warning with the parameter value for whom we obtain a NaN.
-                    // In this case, the first argument is always NaN and the macro prints
-                    // the n-value for whom we obtain NaN.
-                    hydra::CHECK_VALUE(NaN, "n=%d", n);
-
-                    return NaN;
-                }
-            }
-        }
+        inline hydra::complex<double> K(hydra::complex<double> z, size_t n) const;
 
 
         // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double M(double x1, double x2, double z, size_t n) const
-        {
-            switch (n)
-            {
-                case 0:
-                {
-                    return faddeeva::erf(x2) - ::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2) -
-                                ( faddeeva::erf(x1) - ::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1) );
-                }
-                case 1:
-                {
-                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 2:
-                {
-                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 3:
-                {
-                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) *
-                                                                    ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) *
-                                                                    ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 4:
-                {
-                    return -4*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
-                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
-                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 5:
-                {
-                    return -8*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 6:
-                {
-                    return -8*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) *
-                                                                    ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
-                                                                    ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                default:
-                {
-                    // This macro controls if the first argument is NaN. If yes, it prints
-                    // a warning with the parameter value for whom we obtain a NaN.
-                    // In this case, the first argument is always NaN and the macro prints
-                    // the n-value for whom we obtain NaN.
-                    hydra::CHECK_VALUE(NaN, "n=%d", n);
-
-                    return NaN;
-                }
-            }
-        }
+        inline double M(size_t k, int iFrom, int iTo, double x1, double x2, double z, size_t n) const;
 
 
         // M_n(x1, x2; z) for z as complex (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline hydra::complex<double> M(double x1, double x2, hydra::complex<double> z, size_t n) const
-        {
-            switch (n)
-            {
-                case 0:
-                {
-                    return faddeeva::erf(x2) - hydra::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2) -
-                                ( faddeeva::erf(x1) - hydra::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1) );
-                }
-                case 1:
-                {
-                    return 2*( -M_1_SqrtPi*::exp(-x2*x2) - x2*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( -M_1_SqrtPi*::exp(-x1*x1) - x1*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 2:
-                {
-                    return 2*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 3:
-                {
-                    return 4*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) *
-                                                            hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) *
-                                                            hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 4:
-                {
-                    return -4*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
-                                        (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
-                                        (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 5:
-                {
-                    return -8*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                        x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                        x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                case 6:
-                {
-                    return -8*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                    (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) * 
-                                                            hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) -
-                                ( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                    (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
-                                                            hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) ) );
-                }
-                default:
-                {
-                    // This macro controls if the first argument is NaN. If yes, it prints
-                    // a warning with the parameter value for whom we obtain a NaN.
-                    // In this case, the first argument is always NaN and the macro prints
-                    // the n-value for whom we obtain NaN.
-                    hydra::CHECK_VALUE(NaN, "n=%d", n);
-
-                    return NaN;
-                }
-            }
-        }
+        inline hydra::complex<double> M(size_t k, int iFrom, int iTo, double x1, double x2, hydra::complex<double> z, size_t n) const;
 
 
         //-------------------------
@@ -957,7 +606,7 @@ namespace medusa {
 
         // Overall coefficients of the polynomials. For the range x>=Knot[i] && x<Knot[i+1]
         // the spline is then given by: y=A0[i]+A1[i]*x+A2[i]*x*x+A3[i]*x*x*x
-        double A0[nKnots], A1[nKnots], A2[nKnots], A3[nKnots];
+        double A[4][nKnots];
 
         // The spline might get negative values due to the linear extrapolation in/after the last sector
         // Avoid this by checking if we are there and setting the spline to 0
@@ -966,5 +615,7 @@ namespace medusa {
     };
 
 } // namespace medusa
+
+#include <medusa/CubicSpline.inl>
 
 #endif // MEDUSA_CUBIC_SPLINE_H

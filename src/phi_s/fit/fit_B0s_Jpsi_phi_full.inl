@@ -238,10 +238,10 @@ int main(int argv, char** argc)
 
     for(size_t i=0; i<4; i++)
     {
-        Spline_int_conv_exp_cosh[i] = Model.Integrate_x_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, true);
-        Spline_int_conv_exp_sinh[i] = Model.Integrate_x_to_k_times_convolved_exp_sinhcosh(i, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, false);
-        Spline_int_conv_exp_cos[i] = Model.Integrate_x_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, true);
-        Spline_int_conv_exp_sin[i] = Model.Integrate_x_to_k_times_convolved_exp_sincos(i, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, false);
+        Spline_int_conv_exp_cosh[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(i, 0, 3, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, true);
+        Spline_int_conv_exp_sinh[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(i, 0, 3, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, false);
+        Spline_int_conv_exp_cos[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sincos(i, 0, 3, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, true);
+        Spline_int_conv_exp_sin[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sincos(i, 0, 3, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, false);
 
         std::cout << "int_conv_cosh [" << i << "] = " << Spline_int_conv_exp_cosh[i] << std::endl;
         std::cout << "int_conv_sinh [" << i << "] = " << Spline_int_conv_exp_sinh[i] << std::endl;
