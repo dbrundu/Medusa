@@ -37,6 +37,7 @@
 // Hydra
 #include <hydra/detail/Config.h>
 #include <hydra/Complex.h>
+#include <hydra/detail/utility/CheckValue.h>
 
 // Medusa
 #include <medusa/Constants.h>
@@ -69,7 +70,7 @@ namespace medusa {
         //           Constructors
         //-------------------------------------
 
-        CubicSpline() = delete;
+        CubicSpline() = default;
 
         CubicSpline(const double (&knots)[nKnots], const std::initializer_list<double> SplineCoefficients)
         {
@@ -103,10 +104,10 @@ namespace medusa {
         }
 
 
-        CubicSpline(const double (&knots)[nKnots], const double (&SplineCoefficients)[nKnots+2])
+        CubicSpline(const double (&knots)[nKnots], double (&SplineCoefficients)[nKnots+2])
         {
             // Update the knot vector and calculate the polynomial coefficients
-            UpdateCoefficients(knots);
+            UpdateKnots(knots);
 
             // Update the spline coefficients and calculate the overall polynomial
             // coefficients for the current set of spline coefficients
@@ -146,10 +147,10 @@ namespace medusa {
             {
                 u[3+i] = other.GetKnots()[3+i];
 
-                A[0][i] = other.GetOverCoeff(0,i);
-                A[1][i] = other.GetOverCoeff(1,i);
-                A[2][i] = other.GetOverCoeff(2,i);
-                A[3][i] = other.GetOverCoeff(3,i);
+                AS[0][i] = other.GetOverCoeff(0,i);
+                AS[1][i] = other.GetOverCoeff(1,i);
+                AS[2][i] = other.GetOverCoeff(2,i);
+                AS[3][i] = other.GetOverCoeff(3,i);
             }
             u[nKnots+3] = other.GetKnots()[nKnots+3];
             u[nKnots+4] = other.GetKnots()[nKnots+4];
@@ -205,10 +206,10 @@ namespace medusa {
             {
                 u[3+i] = other.GetKnots()[3+i];
 
-                A[0][i] = other.GetOverCoeff(0,i);
-                A[1][i] = other.GetOverCoeff(1,i);
-                A[2][i] = other.GetOverCoeff(2,i);
-                A[3][i] = other.GetOverCoeff(3,i);
+                AS[0][i] = other.GetOverCoeff(0,i);
+                AS[1][i] = other.GetOverCoeff(1,i);
+                AS[2][i] = other.GetOverCoeff(2,i);
+                AS[3][i] = other.GetOverCoeff(3,i);
             }
             u[nKnots+3] = other.GetKnots()[nKnots+3];
             u[nKnots+4] = other.GetKnots()[nKnots+4];
@@ -307,7 +308,7 @@ namespace medusa {
             if(x>xNegative && NegativePart) return 1e-3;
 
             size_t j = findKnot(x);
-            return A[0][j]+A[1][j]*x+A[2][j]*x*x+A[3][j]*x*x*x;
+            return AS[0][j] + AS[1][j]*x + AS[2][j]*x*x + AS[3][j]*x*x*x;
         }
 
 
@@ -396,7 +397,7 @@ namespace medusa {
   
         // get the overall polynomial coefficients
         __hydra_dual__
-        double GetOverCoeff(size_t i, size_t j) const {return A[i][j];}
+        double GetOverCoeff(size_t i, size_t j) const {return AS[i][j];}
 
         // get the info wether this spline will get negative at some point
         __hydra_dual__
@@ -407,7 +408,7 @@ namespace medusa {
 
 
 
-        //private:
+        private:
 
 
         //-------------------------------------------------------
@@ -497,35 +498,35 @@ namespace medusa {
             for(size_t i=0; i<nKnots-1; i++)
             {
                 // calculate polynomial coefficients for the current set of spline coefficients
-                A[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
-                A[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
-                A[2][i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
-                A[3][i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
-                if(std::fabs(A[0][i])<1e-9) A[0][i]=0;
-                if(std::fabs(A[1][i])<1e-9) A[1][i]=0;
-                if(std::fabs(A[2][i])<1e-9) A[2][i]=0;
-                if(std::fabs(A[3][i])<1e-9) A[3][i]=0;
+                AS[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
+                AS[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
+                AS[2][i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
+                AS[3][i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
+                if(std::fabs(AS[0][i])<1e-9) AS[0][i]=0;
+                if(std::fabs(AS[1][i])<1e-9) AS[1][i]=0;
+                if(std::fabs(AS[2][i])<1e-9) AS[2][i]=0;
+                if(std::fabs(AS[3][i])<1e-9) AS[3][i]=0;
             }
 
             // After last knot: Linear extrapolation
             // value of 2nd last spline at last knot
             double v=u[nKnots+2];
-            A[3][nKnots-1] = 0;
-            A[2][nKnots-1] = 0;
+            AS[3][nKnots-1] = 0;
+            AS[2][nKnots-1] = 0;
 
             // In case it should be constant:
-            // A[1][nKnots-1] = 0;
-            // A[0][nKnots-1] = A[0][nKnots-2] + A[1][nKnots-2]*v + A[2][nKnots-2]*v*v + A[3][nKnots-2]*v*v*v;
+            // AS[1][nKnots-1] = 0;
+            // AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v;
 
             // In case it should be linear:
-            A[1][nKnots-1] = A[1][nKnots-2] + 2*A[2][nKnots-2]*v + 3*A[3][nKnots-2]*v*v;
-            A[0][nKnots-1] = A[0][nKnots-2] + A[1][nKnots-2]*v + A[2][nKnots-2]*v*v + A[3][nKnots-2]*v*v*v - A[1][nKnots-1]*v;
+            AS[1][nKnots-1] = AS[1][nKnots-2] + 2*AS[2][nKnots-2]*v + 3*AS[3][nKnots-2]*v*v;
+            AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v - AS[1][nKnots-1]*v;
 
             // determine if and where this linear part gets negative
-            if(A[1][nKnots-1]<0)
+            if(AS[1][nKnots-1]<0)
             {
                 NegativePart = true;
-                xNegative = -A[0][nKnots-1]/A[1][nKnots-1];
+                xNegative = -AS[0][nKnots-1]/AS[1][nKnots-1];
             }
             else
             {
@@ -605,8 +606,8 @@ namespace medusa {
         // Constants depending on the current spline coefficients
 
         // Overall coefficients of the polynomials. For the range x>=Knot[i] && x<Knot[i+1]
-        // the spline is then given by: y=A0[i]+A1[i]*x+A2[i]*x*x+A3[i]*x*x*x
-        double A[4][nKnots];
+        // the spline is then given by: y=AS0[i]+AS1[i]*x+AS2[i]*x*x+AS3[i]*x*x*x
+        double AS[4][nKnots];
 
         // The spline might get negative values due to the linear extrapolation in/after the last sector
         // Avoid this by checking if we are there and setting the spline to 0

@@ -146,8 +146,11 @@ int main(int argv, char** argc)
     //---------------------------------
 
     // temporal integration limits (ps)
-    const dtime_t LowerLimit = 0;
+    const dtime_t LowerLimit = 0.3;
     const dtime_t UpperLimit = 20.0;
+
+    // activate the cubic spline
+    const bool CubicSpline = true;
 
     // weight to improve the numerical fit
     const double Weight = 0.25;
@@ -211,10 +214,10 @@ int main(int argv, char** argc)
                                                 lambda_0_pd,       lambda_par_pd,  lambda_perp_pd,  lambda_S_pd,
                                                 delta_0_pd,        delta_par_pd,   delta_perp_pd,   delta_S_pd};
 
-    auto Model = medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t,
+    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
                                             qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams, Spline_Knots,
                                                                                                         LowerLimit, UpperLimit, Weight);
-
+/*
     Model(2.54933, 1., 1., 1., 1., 1., 1., 1., 0.01);
 
     std::cout << Model.CSplineEval(0.4) << std::endl;
@@ -222,32 +225,26 @@ int main(int argv, char** argc)
     std::cout << Model.CSplineEval(6.99) << std::endl;
     std::cout << Model.CSplineEval(8.0) << std::endl;
 
-    for (size_t i=0; i<9; i++)
-    {
-        std::cout << "b[" << i << "] = " << Model.GetSplineCoeffs()[i] << std::endl;
-    }
-    
+    std::cout << "LLknot = " << Model.findKnot(LowerLimit) << std::endl;
+    std::cout << "ULknot = " << Model.findKnot(UpperLimit) << std::endl;
 
     double Gamma = deltagammasd_dataset + 0.65789;
     double HalfDeltaGamma = 0.5*deltagammas_dataset;
 
-    double Spline_int_conv_exp_cosh[4];
-    double Spline_int_conv_exp_sinh[4];
-    double Spline_int_conv_exp_cos[4];
-    double Spline_int_conv_exp_sin[4];
+    double Spline_int_conv_exp_cosh;
+    double Spline_int_conv_exp_sinh;
+    double Spline_int_conv_exp_cos;
+    double Spline_int_conv_exp_sin;
 
-    for(size_t i=0; i<4; i++)
-    {
-        Spline_int_conv_exp_cosh[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(i, 0, 3, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, true);
-        Spline_int_conv_exp_sinh[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(i, 0, 3, Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, false);
-        Spline_int_conv_exp_cos[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sincos(i, 0, 3, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, true);
-        Spline_int_conv_exp_sin[i] = Model.Integrate_Ak_t_to_k_times_convolved_exp_sincos(i, 0, 3, Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, false);
+    Spline_int_conv_exp_cosh = Model.Integrate_cspline_times_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, true);
+    Spline_int_conv_exp_sinh = Model.Integrate_cspline_times_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, false);
+    Spline_int_conv_exp_cos = Model.Integrate_cspline_times_convolved_exp_sincos(Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, true);
+    Spline_int_conv_exp_sin = Model.Integrate_cspline_times_convolved_exp_sincos(Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, false);
 
-        std::cout << "int_conv_cosh [" << i << "] = " << Spline_int_conv_exp_cosh[i] << std::endl;
-        std::cout << "int_conv_sinh [" << i << "] = " << Spline_int_conv_exp_sinh[i] << std::endl;
-        std::cout << "int_conv_cos [" << i << "] = " << Spline_int_conv_exp_cos[i] << std::endl;
-        std::cout << "int_conv_sin [" << i << "] = " << Spline_int_conv_exp_sin[i] << std::endl;
-    }
+    std::cout << "int_conv_cosh = " << Spline_int_conv_exp_cosh << std::endl;
+    std::cout << "int_conv_sinh = " << Spline_int_conv_exp_sinh << std::endl;
+    std::cout << "int_conv_cos = " << Spline_int_conv_exp_cos << std::endl;
+    std::cout << "int_conv_sin = " << Spline_int_conv_exp_sin << std::endl;
 
 /*
     double x1 = (LowerLimit - 1)/(2*M_Sqrt2);
@@ -280,7 +277,7 @@ int main(int argv, char** argc)
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
-/*
+
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
@@ -337,7 +334,7 @@ int main(int argv, char** argc)
     //---------------------------------------------
     //   Set the starting values for the fit
     //---------------------------------------------
-
+/*
     // model parameters
     const double A0         = ::sqrt(0.542)*distortion;
     const double Aperp      = ::sqrt(0.206)*distortion;

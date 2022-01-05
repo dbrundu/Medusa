@@ -72,7 +72,8 @@ namespace medusa {
     *
     *  ArgTypes = argument types of the functor
     */
-    template<typename ArgTypeTime,
+    template<bool Spline,
+             typename ArgTypeTime,
              typename ArgTypeThetah,
              typename ArgTypeThetal,
              typename ArgTypePhi,
@@ -83,16 +84,16 @@ namespace medusa {
              typename ArgTypeDelta,
              typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta) >
-    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                             ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 49>,
-                            public CubicSpline<true, 7>
+                            public CubicSpline<Spline, 7>
     {
 
-        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                                 ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 49 >;
-        using CSpline = CubicSpline<true, 7>;
+        //using CSpline = CubicSpline<true, 7>;
 
-        using hydra::BaseFunctor< FullAnalyticPhis< ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        using hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 49 >::_par;
 
 
@@ -136,9 +137,9 @@ namespace medusa {
                          Omega_6, Omega_7, Omega_8, Omega_9, Omega_10,
                          Spline_c0, Spline_c1, Spline_c2,
                          Spline_c3, Spline_c4, Spline_c5,
-                         Spline_c6, Spline_c7, Spline_c8 }),
-        CSpline(SplineKnots, {_par[40], _par[41], _par[42], _par[43],
-                              _par[44], _par[45], _par[46], _par[47], _par[48] })
+                         Spline_c6, Spline_c7, Spline_c8 })
+        //CSpline(SplineKnots, {_par[40], _par[41], _par[42], _par[43],
+        //                      _par[44], _par[45], _par[46], _par[47], _par[48] })
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
@@ -157,9 +158,9 @@ namespace medusa {
                          Ps[0],  Ps[1],  Ps[2],  Ps[3],  Ps[4],  Ps[5],  Ps[6],  Ps[7],
                          Ps[8],  Ps[9],  Ps[10], Ps[11], Ps[12], Ps[13], Ps[14], Ps[15], Ps[16], Ps[17],
                          Ps[18], Ps[19], Ps[20], Ps[21], Ps[22], Ps[23], Ps[24], Ps[25],
-                                                                 Ps[26], Ps[27], Ps[28], Ps[29], Ps[30] }),
-        CSpline(SplineKnots, {_par[40], _par[41], _par[42], _par[43],
-                              _par[44], _par[45], _par[46], _par[47], _par[48] })
+                                                                 Ps[26], Ps[27], Ps[28], Ps[29], Ps[30] })
+        //CSpline(SplineKnots, {_par[40], _par[41], _par[42], _par[43],
+        //                      _par[44], _par[45], _par[46], _par[47], _par[48] })
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
@@ -176,9 +177,9 @@ namespace medusa {
                          Hs[18], Hs[19], Hs[20], Hs[21], Hs[22], Hs[23], Hs[24], Hs[25],
                          Hs[26], Hs[27], Hs[28], Hs[29], Hs[30], Hs[31], Hs[32], Hs[33], Hs[34], Hs[35],
                          Hs[36], Hs[37], Hs[38], Hs[39], Hs[40], Hs[41], Hs[42], Hs[43],
-                                                                 Hs[44], Hs[45], Hs[46], Hs[47], Hs[48] }),
-        CSpline(SplineKnots, {_par[40], _par[41], _par[42], _par[43],
-                              _par[44], _par[45], _par[46], _par[47], _par[48] })
+                                                                 Hs[44], Hs[45], Hs[46], Hs[47], Hs[48] })
+        //CSpline(SplineKnots, {_par[40], _par[41], _par[42], _par[43],
+        //                      _par[44], _par[45], _par[46], _par[47], _par[48] })
         {
             fLowerLimit = Hs[49];
             fUpperLimit = Hs[50];
@@ -189,10 +190,10 @@ namespace medusa {
 
         // ctor with other FullAnalyticPhis instance (copy ctor)
         __hydra_dual__
-        FullAnalyticPhis(FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        FullAnalyticPhis(FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
                                         ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
-        ThisBaseFunctor(other),
-        CSpline(other)
+        ThisBaseFunctor(other)
+        //CSpline(other)
         {
             fLowerLimit = other.GetLowerLimit();
             fUpperLimit = other.GetUpperLimit();
@@ -217,14 +218,14 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta>& 
-        operator=( FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other)
+        FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta>& 
+        operator=( FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+                                        ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other)
         {
             if(this == &other) return *this;
             ThisBaseFunctor::operator=(other);
-            CSpline::operator=(other);
+            //CSpline::operator=(other);
 
             fLowerLimit = other.GetLowerLimit();
             fUpperLimit = other.GetUpperLimit();
@@ -310,22 +311,43 @@ namespace medusa {
             double conv_exp_sinh = functions::Convolve_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, false);
             double conv_exp_cos = functions::Convolve_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, true);
             double conv_exp_sin = functions::Convolve_exp_sincos(time, Gamma, _par[5], 0, sigma_eff, false);
-
-            double int_conv_exp_cosh = functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, true);
-            double int_conv_exp_sinh = functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, false);
-            double int_conv_exp_cos = functions::Integrate_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, true);
-            double int_conv_exp_sin = functions::Integrate_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, false);
-
-            #pragma unroll 10
-            for(size_t i=0; i<10; i++)
+/*
+            if(Spline)
             {
-            	UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
-                                                TagB0sbar*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
+                double int_conv_exp_cosh = Integrate_cspline_times_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, true);
+                double int_conv_exp_sinh = Integrate_cspline_times_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, false);
+                double int_conv_exp_cos = Integrate_cspline_times_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, true);
+                double int_conv_exp_sin = Integrate_cspline_times_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, false);
+            
+                #pragma unroll 10
+                for(size_t i=0; i<10; i++)
+                {
+            	    UnnormPDF += F.fk[i]*N.k[i]*CSplineEval(time)*( TagB0s*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
+                                                                        TagB0sbar*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
                 
-                NormFactor +=  _par[30+i]*N.k[i]*
-                                ( TagB0s*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
-                                    TagB0sbar*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
+                    NormFactor +=  _par[30+i]*N.k[i]*
+                                    ( TagB0s*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
+                                        TagB0sbar*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
+                }
             }
+            else
+            { */
+                double int_conv_exp_cosh = functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, true);
+                double int_conv_exp_sinh = functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, false);
+                double int_conv_exp_cos = functions::Integrate_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, true);
+                double int_conv_exp_sin = functions::Integrate_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, false);
+
+                #pragma unroll 10
+                for(size_t i=0; i<10; i++)
+                {
+            	    UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
+                                                    TagB0sbar*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
+                
+                    NormFactor +=  _par[30+i]*N.k[i]*
+                                    ( TagB0s*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
+                                        TagB0sbar*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
+                }
+            //}
 
             wPDF = fweight*UnnormPDF/NormFactor;
 
@@ -357,52 +379,28 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetA() const
-        {
-		    return A;
-	    }
+	    const parameters::AngularTimeCoefficients& GetA() const {return A;}
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetB() const
-        {
-		    return B;
-	    }
+	    const parameters::AngularTimeCoefficients& GetB() const {return B;}
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetC() const
-        {
-		    return C;
-	    }
+	    const parameters::AngularTimeCoefficients& GetC() const {return C;}
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetD() const
-        {
-		    return D;
-	    }
+	    const parameters::AngularTimeCoefficients& GetD() const {return D;}
 
         __hydra_dual__
-	    const parameters::NFactors& GetN() const
-        {
-		    return N;
-	    }
+	    const parameters::NFactors& GetN() const {return N;}
 
         __hydra_dual__
-        const ArgTypeTime GetLowerLimit() const
-        {
-            return fLowerLimit;
-        }
+        const ArgTypeTime GetLowerLimit() const {return fLowerLimit;}
 
         __hydra_dual__
-        const ArgTypeTime GetUpperLimit() const
-        {
-            return fUpperLimit;
-        }
+        const ArgTypeTime GetUpperLimit() const {return fUpperLimit;}
 
         __hydra_dual__
-        double GetWeight() const
-        {
-            return fweight;
-        }
+        double GetWeight() const {return fweight;}
 
 
         //-------------------------------------
@@ -410,22 +408,13 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        void SetLowerLimit(ArgTypeTime LowerLimit)
-        {
-            fLowerLimit = LowerLimit;
-        }
+        void SetLowerLimit(ArgTypeTime LowerLimit) {fLowerLimit = LowerLimit;}
 
         __hydra_dual__
-        void SetUpperLimit(ArgTypeTime UpperLimit)
-        {
-            fUpperLimit = UpperLimit;
-        }
+        void SetUpperLimit(ArgTypeTime UpperLimit) {fUpperLimit = UpperLimit;}
 
         __hydra_dual__
-        void SetWeight(double Weight)
-        {
-            fweight = Weight;
-        }
+        void SetWeight(double Weight) {fweight = Weight;}
 
 
 

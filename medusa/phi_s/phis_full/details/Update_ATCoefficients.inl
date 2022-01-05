@@ -36,7 +36,8 @@
 
 namespace medusa {
 
-template<typename ArgTypeTime,
+template<bool Spline,
+		 typename ArgTypeTime,
 		 typename ArgTypeThetah,
 		 typename ArgTypeThetal,
 		 typename ArgTypePhi,
@@ -46,7 +47,7 @@ template<typename ArgTypeTime,
          typename ArgTypeEtaSS,
 		 typename ArgTypeDelta,
 		 typename Signature >
-void FullAnalyticPhis<ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+void FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
 						ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta, Signature>::Update_ATCoefficients()
 {
 	/*
