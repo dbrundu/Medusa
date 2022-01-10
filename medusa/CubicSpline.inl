@@ -40,8 +40,8 @@ namespace medusa {
     
     // Integrate in t the cubic spline times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
     // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline double CubicSpline<Reduce, nKnots>::
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::
                     Integrate_cspline_times_convolved_exp_sinhcosh(double a, double b, double mu, double sigma,
                                                                             double LowerLimit, double UpperLimit, bool tag) const
     {
@@ -93,8 +93,8 @@ namespace medusa {
 
     // Integrate in t the cubic spline times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
     // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline double CubicSpline<Reduce, nKnots>::
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::
                     Integrate_cspline_times_convolved_exp_sincos(double a, double b, double mu, double sigma,
                                                                         double LowerLimit, double UpperLimit, bool tag) const
     {
@@ -150,8 +150,8 @@ namespace medusa {
 
     // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
     // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline double CubicSpline<Reduce, nKnots>::
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::
                     Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(size_t k, int iFrom, int iTo,
                                                                         double a, double b, double mu, double sigma,
                                                                             double LowerLimit, double UpperLimit, bool tag) const
@@ -172,7 +172,7 @@ namespace medusa {
                 for(size_t j=0; j<k+1; j++)
                 {
                     sum1 = sum1 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) +
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
+                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
             }
             else
@@ -180,10 +180,10 @@ namespace medusa {
                 for(size_t j=0; j<k+1; j++)
                 {
                     sum1 = sum1 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) -
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
+                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
             }
-            return M_1_Sqrt8*sigma*kfactorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
+            return M_1_Sqrt8*sigma*factorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
         }
         else
         {
@@ -195,9 +195,9 @@ namespace medusa {
                     for(size_t j=0; j<n+1; j++)
                     {
                         sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) +
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2;
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
                 }
             }
             else
@@ -208,20 +208,20 @@ namespace medusa {
                     for(size_t j=0; j<n+1; j++)
                     {
                         sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) -
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2;
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
                 }
             }
-            return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
+            return M_1_Sqrt8*sigma*factorial[k]*sum1;
         }
     }
 
 
     // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
     // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline double CubicSpline<Reduce, nKnots>::
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::
                     Integrate_Ak_t_to_k_times_convolved_exp_sincos(size_t k, int iFrom, int iTo,
                                                                         double a, double b, double mu, double sigma,
                                                                             double LowerLimit, double UpperLimit, bool tag) const
@@ -243,7 +243,7 @@ namespace medusa {
                 for(size_t j=0; j<k+1; j++)
                 {
                     sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) +
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
+                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
                 sum1 = sum2.real();
             }
@@ -253,11 +253,11 @@ namespace medusa {
                 for(size_t j=0; j<k+1; j++)
                 {
                     sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) -
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (jfactorial[j]*knfactorial[k-j]);
+                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
                 sum1 = sum2.imag();
             }
-            return M_1_Sqrt8*sigma*kfactorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
+            return M_1_Sqrt8*sigma*factorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
         }
         else
         {
@@ -269,9 +269,9 @@ namespace medusa {
                     for(size_t j=0; j<n+1; j++)
                     {
                         sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) +
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2.real();
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.real();
                 }
             }
             else
@@ -282,12 +282,12 @@ namespace medusa {
                     for(size_t j=0; j<n+1; j++)
                     {
                         sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) -
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (jfactorial[j]*njfactorial[n-j]);
+                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/knfactorial[k-n] * sum2.imag();
+                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.imag();
                 }
             }
-            return M_1_Sqrt8*sigma*kfactorial[k]*sum1;
+            return M_1_Sqrt8*sigma*factorial[k]*sum1;
         }
     }
 
@@ -297,8 +297,8 @@ namespace medusa {
     //------------------------------------------------------------
 
     // K_n(z) for z as double (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline double CubicSpline<Reduce, nKnots>::K(double z, size_t n) const
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::K(double z, size_t n) const
     {
         switch (n)
         {
@@ -345,8 +345,8 @@ namespace medusa {
 
 
     // K_n(z) for z as complex (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline hydra::complex<double> CubicSpline<Reduce, nKnots>::K(hydra::complex<double> z, size_t n) const
+    template<size_t nKnots>
+    inline hydra::complex<double> CubicSpline<nKnots>::K(hydra::complex<double> z, size_t n) const
     {
         switch (n)
         {
@@ -393,8 +393,8 @@ namespace medusa {
 
 
     // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline double CubicSpline<Reduce, nKnots>::M(size_t k, int iFrom, int iTo, double x1, double x2, double z, size_t n) const
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::M(size_t k, int iFrom, int iTo, double x1, double x2, double z, size_t n) const
     {
         double From = 0.;
         double To = 0.;
@@ -469,8 +469,8 @@ namespace medusa {
 
 
     // M_n(x1, x2; z) for z as complex (Reference: arXiv:1407.0748v1)
-    template<bool Reduce, size_t nKnots>
-    inline hydra::complex<double> CubicSpline<Reduce, nKnots>::M(size_t k, int iFrom, int iTo, double x1, double x2,
+    template<size_t nKnots>
+    inline hydra::complex<double> CubicSpline<nKnots>::M(size_t k, int iFrom, int iTo, double x1, double x2,
                                                                                         hydra::complex<double> z, size_t n) const
     {
         hydra::complex<double> From = 0.;

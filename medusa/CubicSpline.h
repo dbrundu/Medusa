@@ -61,7 +61,7 @@
 
 namespace medusa {
 
-    template<bool Reduce, size_t nKnots>
+    template<size_t nKnots>
     class CubicSpline
     {
         public:
@@ -70,75 +70,257 @@ namespace medusa {
         //           Constructors
         //-------------------------------------
 
-        CubicSpline() = default;
+        CubicSpline() = delete;
 
         CubicSpline(const double (&knots)[nKnots], const std::initializer_list<double> SplineCoefficients)
         {
-            // Update the knot vector and calculate the polynomial coefficients
-            UpdateKnots(knots);
+            // set knot vector and spline coefficients
+            double b[nKnots+2];
+            u[0] = knots[0];
+            u[1] = knots[0];
+            u[2] = knots[0];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                u[3+i] = knots[i];
+                b[i] = *(SplineCoefficients.begin() + i);
+            }
+            b[nKnots] = *(SplineCoefficients.begin() + nKnots);
+            b[nKnots+1] = *(SplineCoefficients.begin() + nKnots + 1);
+            u[nKnots+3] = knots[nKnots-1];
+            u[nKnots+4] = knots[nKnots-1];
+            u[nKnots+5] = knots[nKnots-1];
 
-            // Update the spline coefficients and calculate the overall polynomial
-            // coefficients for the current set of spline coefficients
-            UpdateOverallCoefficients(SplineCoefficients);
+            // calculate prefactors
+            double P[nKnots], Q[nKnots], R[nKnots], S[nKnots];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                P[i] = (u[i+4]-u[i+1])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
+                Q[i] = (u[i+5]-u[i+2])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
+                R[i] = (u[i+5]-u[i+3])*(u[i+5]-u[i+2])*(u[i+4]-u[i+3]);
+                S[i] = (u[i+6]-u[i+3])*(u[i+5]-u[i+3])*(u[i+4]-u[i+3]);
+            }
 
-            // Calculate the factorials
-            kfactorial[0] = 1.0;  // k!
-            kfactorial[1] = 1.0;
-            kfactorial[2] = 2.0;
-            kfactorial[3] = 6.0;
+            // calculate coefficients of normal polynomial
+            double a0[4][nKnots], a1[4][nKnots], a2[4][nKnots], a3[4][nKnots];
+            for(size_t i=0; i<nKnots-1; i++)
+            {
+                // Constant
+                a0[0][i] = u[i+4]*u[i+4]*u[i+4]/P[i];
 
-            jfactorial[0] = 1.0;  // j!
-            jfactorial[1] = 1.0;
-            jfactorial[2] = 2.0;
-            jfactorial[3] = 6.0;
+                a0[1][i] = -u[i+1]*u[i+4]*u[i+4]/P[i] - u[i+2]*u[i+4]*u[i+5]/Q[i] - u[i+3]*u[i+5]*u[i+5]/R[i];
 
-            knfactorial[0] = 1.0;  // (k-n)!
-            knfactorial[1] = 1.0;
-            knfactorial[2] = 2.0;
-            knfactorial[3] = 6.0;
+                a0[2][i] = u[i+2]*u[i+2]*u[i+4]/Q[i] + u[i+2]*u[i+3]*u[i+5]/R[i] + u[i+3]*u[i+3]*u[i+6]/S[i];
 
-            njfactorial[0] = 1.0;  // (n-j)!
-            njfactorial[1] = 1.0;
-            njfactorial[2] = 2.0;
-            njfactorial[3] = 6.0;
+                a0[3][i] = -u[i+3]*u[i+3]*u[i+3]/S[i];
+    
+                // Linear
+                a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
+
+                a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
+                        + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
+                        + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
+
+                a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
+                        -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
+                        -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
+
+                a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
+    
+                // Quadratic
+                a2[0][i] = 3*u[i+4]/P[i];
+
+                a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
+                        -(u[i+2]+u[i+4]+u[i+5])/Q[i]
+                        -(2*u[i+5]+u[i+3])/R[i];
+
+                a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
+                        +(u[i+2]+u[i+5]+u[i+3])/R[i]
+                        +(2*u[i+3]+u[i+6])/S[i];
+
+                a2[3][i] = -3*u[i+3]/S[i];
+    
+                // Cubic
+                a3[0][i] = -1./P[i];
+
+                a3[1][i] = 1./P[i] + 1./Q[i] + 1./R[i];
+
+                a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
+
+                a3[3][i] = 1./S[i];
+            }
+
+            for(size_t i=0; i<nKnots-1; i++)
+            {
+                // calculate polynomial coefficients for the current set of spline coefficients
+                AS[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
+                AS[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
+                AS[2][i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
+                AS[3][i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
+                if(std::fabs(AS[0][i])<1e-9) AS[0][i]=0;
+                if(std::fabs(AS[1][i])<1e-9) AS[1][i]=0;
+                if(std::fabs(AS[2][i])<1e-9) AS[2][i]=0;
+                if(std::fabs(AS[3][i])<1e-9) AS[3][i]=0;
+            }
+
+            // After last knot: Linear extrapolation
+            // value of 2nd last spline at last knot
+            double v=u[nKnots+2];
+            AS[3][nKnots-1] = 0;
+            AS[2][nKnots-1] = 0;
+
+            // In case it should be constant:
+            // AS[1][nKnots-1] = 0;
+            // AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v;
+
+            // In case it should be linear:
+            AS[1][nKnots-1] = AS[1][nKnots-2] + 2*AS[2][nKnots-2]*v + 3*AS[3][nKnots-2]*v*v;
+            AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v - AS[1][nKnots-1]*v;
+
+            // determine if and where this linear part gets negative
+            if(AS[1][nKnots-1]<0)
+            {
+                NegativePart = true;
+                xNegative = -AS[0][nKnots-1]/AS[1][nKnots-1];
+            }
+            else
+            {
+                NegativePart = false;
+            }
+
+            // Calculate the factorials: k!, j!, (k-n)! and (n-j)!
+            factorial[0] = 1;
+            factorial[1] = 1;
+            factorial[2] = 2;
+            factorial[3] = 6;
         }
 
 
         CubicSpline(const double (&knots)[nKnots], double (&SplineCoefficients)[nKnots+2])
         {
-            // Update the knot vector and calculate the polynomial coefficients
-            UpdateKnots(knots);
+            // set knot vector and spline coefficients
+            double b[nKnots+2];
+            u[0] = knots[0];
+            u[1] = knots[0];
+            u[2] = knots[0];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                u[3+i] = knots[i];
+                b[i] = SplineCoefficients[i];
+            }
+            b[nKnots] = SplineCoefficients[nKnots];
+            b[nKnots+1] = SplineCoefficients[nKnots+1];
+            u[nKnots+3] = knots[nKnots-1];
+            u[nKnots+4] = knots[nKnots-1];
+            u[nKnots+5] = knots[nKnots-1];
 
-            // Update the spline coefficients and calculate the overall polynomial
-            // coefficients for the current set of spline coefficients
-            UpdateOverallCoefficients(SplineCoefficients);
+            // calculate prefactors
+            double P[nKnots], Q[nKnots], R[nKnots], S[nKnots];
+            for(size_t i=0; i<nKnots; i++)
+            {
+                P[i] = (u[i+4]-u[i+1])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
+                Q[i] = (u[i+5]-u[i+2])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
+                R[i] = (u[i+5]-u[i+3])*(u[i+5]-u[i+2])*(u[i+4]-u[i+3]);
+                S[i] = (u[i+6]-u[i+3])*(u[i+5]-u[i+3])*(u[i+4]-u[i+3]);
+            }
 
-            // Calculate the factorials
-            kfactorial[0] = 1.0;  // k!
-            kfactorial[1] = 1.0;
-            kfactorial[2] = 2.0;
-            kfactorial[3] = 6.0;
+            // calculate coefficients of normal polynomial
+            double a0[4][nKnots], a1[4][nKnots], a2[4][nKnots], a3[4][nKnots];
+            for(size_t i=0; i<nKnots-1; i++)
+            {
+                // Constant
+                a0[0][i] = u[i+4]*u[i+4]*u[i+4]/P[i];
 
-            jfactorial[0] = 1.0;  // j!
-            jfactorial[1] = 1.0;
-            jfactorial[2] = 2.0;
-            jfactorial[3] = 6.0;
+                a0[1][i] = -u[i+1]*u[i+4]*u[i+4]/P[i] - u[i+2]*u[i+4]*u[i+5]/Q[i] - u[i+3]*u[i+5]*u[i+5]/R[i];
 
-            knfactorial[0] = 1.0;  // (k-n)!
-            knfactorial[1] = 1.0;
-            knfactorial[2] = 2.0;
-            knfactorial[3] = 6.0;
+                a0[2][i] = u[i+2]*u[i+2]*u[i+4]/Q[i] + u[i+2]*u[i+3]*u[i+5]/R[i] + u[i+3]*u[i+3]*u[i+6]/S[i];
 
-            njfactorial[0] = 1.0;  // (n-j)!
-            njfactorial[1] = 1.0;
-            njfactorial[2] = 2.0;
-            njfactorial[3] = 6.0;
+                a0[3][i] = -u[i+3]*u[i+3]*u[i+3]/S[i];
+    
+                // Linear
+                a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
+
+                a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
+                        + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
+                        + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
+
+                a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
+                        -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
+                        -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
+
+                a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
+    
+                // Quadratic
+                a2[0][i] = 3*u[i+4]/P[i];
+
+                a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
+                        -(u[i+2]+u[i+4]+u[i+5])/Q[i]
+                        -(2*u[i+5]+u[i+3])/R[i];
+
+                a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
+                        +(u[i+2]+u[i+5]+u[i+3])/R[i]
+                        +(2*u[i+3]+u[i+6])/S[i];
+
+                a2[3][i] = -3*u[i+3]/S[i];
+    
+                // Cubic
+                a3[0][i] = -1./P[i];
+
+                a3[1][i] = 1./P[i] + 1./Q[i] + 1./R[i];
+
+                a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
+
+                a3[3][i] = 1./S[i];
+            }
+
+            for(size_t i=0; i<nKnots-1; i++)
+            {
+                // calculate polynomial coefficients for the current set of spline coefficients
+                AS[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
+                AS[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
+                AS[2][i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
+                AS[3][i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
+                if(std::fabs(AS[0][i])<1e-9) AS[0][i]=0;
+                if(std::fabs(AS[1][i])<1e-9) AS[1][i]=0;
+                if(std::fabs(AS[2][i])<1e-9) AS[2][i]=0;
+                if(std::fabs(AS[3][i])<1e-9) AS[3][i]=0;
+            }
+
+            // After last knot: Linear extrapolation
+            // value of 2nd last spline at last knot
+            double v=u[nKnots+2];
+            AS[3][nKnots-1] = 0;
+            AS[2][nKnots-1] = 0;
+
+            // In case it should be constant:
+            // AS[1][nKnots-1] = 0;
+            // AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v;
+
+            // In case it should be linear:
+            AS[1][nKnots-1] = AS[1][nKnots-2] + 2*AS[2][nKnots-2]*v + 3*AS[3][nKnots-2]*v*v;
+            AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v - AS[1][nKnots-1]*v;
+
+            // determine if and where this linear part gets negative
+            if(AS[1][nKnots-1]<0)
+            {
+                NegativePart = true;
+                xNegative = -AS[0][nKnots-1]/AS[1][nKnots-1];
+            }
+            else
+            {
+                NegativePart = false;
+            }
+
+            // Calculate the factorials: k!, j!, (k-n)! and (n-j)!
+            factorial[0] = 1;
+            factorial[1] = 1;
+            factorial[2] = 2;
+            factorial[3] = 6;
         }
 
 
         // ctor with other CubicSpline instance (copy ctor)
         __hydra_dual__
-        CubicSpline(CubicSpline<Reduce, nKnots> const& other)
+        CubicSpline(CubicSpline<nKnots> const& other)
         {
             u[0] = other.GetKnots()[0];
             u[1] = other.GetKnots()[1];
@@ -161,31 +343,7 @@ namespace medusa {
 
             for(size_t i=0; i<4; i++)
             {
-                kfactorial[i] = other.GetKFactorial()[i];
-                jfactorial[i] = other.GetJFactorial()[i];
-
-                knfactorial[i] = other.GetKNFactorial()[i];
-                njfactorial[i] = other.GetNJFactorial()[i];
-            }
-
-            // optional part
-            if(!Reduce)
-            {
-                for (size_t i=0; i<nKnots+2; i++)
-                {
-                    b[i] = other.GetSplineCoeffs()[i];
-                }
-                
-                for (size_t i=0; i<4; i++)
-                {
-                    for(size_t j=0; j<nKnots-1; j++)
-                    {
-                        a0[i][j] = other.GetCoeffO0(i,j);
-                        a1[i][j] = other.GetCoeffO1(i,j);
-                        a2[i][j] = other.GetCoeffO2(i,j);
-                        a3[i][j] = other.GetCoeffO3(i,j);
-                    }
-                }
+                factorial[i] = other.GetFactorial()[i];
             }
         }
 
@@ -195,7 +353,7 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        CubicSpline<Reduce, nKnots>& operator=(CubicSpline<Reduce, nKnots> const& other)
+        CubicSpline<nKnots>& operator=(CubicSpline<nKnots> const& other)
         {
             if(this == &other) return *this;
 
@@ -220,65 +378,10 @@ namespace medusa {
 
             for(size_t i=0; i<4; i++)
             {
-                kfactorial[i] = other.GetKFactorial()[i];
-                jfactorial[i] = other.GetJFactorial()[i];
-
-                knfactorial[i] = other.GetKNFactorial()[i];
-                njfactorial[i] = other.GetNJFactorial()[i];
-            }
-
-            // optional part
-            if(!Reduce)
-            {
-                for (size_t i=0; i<nKnots+2; i++)
-                {
-                    b[i] = other.GetSplineCoeffs()[i];
-                }
-                
-                for (size_t i=0; i<4; i++)
-                {
-                    for(size_t j=0; j<nKnots-1; j++)
-                    {
-                        a0[i][j] = other.GetCoeffO0(i,j);
-                        a1[i][j] = other.GetCoeffO1(i,j);
-                        a2[i][j] = other.GetCoeffO2(i,j);
-                        a3[i][j] = other.GetCoeffO3(i,j);
-                    }
-                }
+                factorial[i] = other.GetFactorial()[i];
             }
 
             return *this;
-        }
-
-
-        //-------------------------------------------------------
-        //      Methods to update the overall coefficients
-        //-------------------------------------------------------
-
-        // Update the spline coefficients and calculate the overall polynomial
-        // coefficients for the current set of spline coefficients
-        void UpdateOverallCoefficients(std::initializer_list<double> SplineCoefficients)
-        {
-            for(size_t i=0; i<nKnots+2; i++)
-            {
-                b[i] = *(SplineCoefficients.begin() + i);
-            }
-
-            // Calculate overall polynomial coefficients for current set of spline coefficients
-            UpdatePolynomial();
-        }
-
-        // Update the spline coefficients and calculate the overall polynomial
-        // coefficients for the current set of spline coefficients
-        void UpdateOverallCoefficients(double (&SplineCoefficients)[nKnots+2])
-        {
-            for(size_t i=0; i<nKnots+2; i++)
-            {
-                b[i] = SplineCoefficients[i];
-            }
-
-            // Calculate overall polynomial coefficients for current set of spline coefficients
-            UpdatePolynomial();
         }
 
 
@@ -354,46 +457,14 @@ namespace medusa {
         //-------------------------------------
         //           Selectors
         //-------------------------------------
-          
-        // get the knot vector
+
+        // get factorials: k!, j!, (k-n)! and (n-j)!
+        __hydra_dual__
+        const int* GetFactorial() const {return factorial;}
+
+        // get knots
         __hydra_dual__
         const double* GetKnots() const {return u;}
-
-        // get spline coefficients
-        __hydra_dual__
-        const double* GetSplineCoeffs() const {return b;}
-
-        // get k!
-        __hydra_dual__
-        const double* GetKFactorial() const {return kfactorial;}
-
-        // get (k-n)!
-        __hydra_dual__
-        const double* GetKNFactorial() const {return knfactorial;}
-
-        // get j!
-        __hydra_dual__
-        const double* GetJFactorial() const {return jfactorial;} 
-
-        // get (n-j)!
-        __hydra_dual__
-        const double* GetNJFactorial() const {return njfactorial;}
-
-        // get the order 0 polynomial coefficients
-        __hydra_dual__
-        double GetCoeffO0(size_t i, size_t j) const {return a0[i][j];}
-
-        // get the order 1 polynomial coefficients
-        __hydra_dual__
-        double GetCoeffO1(size_t i, size_t j) const {return a1[i][j];}
-
-        // get the order 2 polynomial coefficients
-        __hydra_dual__
-        double GetCoeffO2(size_t i, size_t j) const {return a2[i][j];}
-
-        // get the order 3 polynomial coefficients
-        __hydra_dual__
-        double GetCoeffO3(size_t i, size_t j) const {return a3[i][j];}
   
         // get the overall polynomial coefficients
         __hydra_dual__
@@ -409,130 +480,6 @@ namespace medusa {
 
 
         private:
-
-
-        //-------------------------------------------------------
-        //        Methods to update knots and coefficients
-        //-------------------------------------------------------
-
-        // Update the knot vector and calculate the polynomial coefficients
-        void UpdateKnots(const double (&knots)[nKnots])
-        {
-            // set knot vector
-            u[0] = knots[0];
-            u[1] = knots[0];
-            u[2] = knots[0];
-            for(size_t i=0; i<nKnots; i++)
-            {
-                u[3+i] = knots[i];
-            }
-            u[nKnots+3] = knots[nKnots-1];
-            u[nKnots+4] = knots[nKnots-1];
-            u[nKnots+5] = knots[nKnots-1];
-
-            // calculate prefactors
-            double P[nKnots], Q[nKnots], R[nKnots], S[nKnots];
-            for(size_t i=0; i<nKnots; i++)
-            {
-                P[i] = (u[i+4]-u[i+1])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
-                Q[i] = (u[i+5]-u[i+2])*(u[i+4]-u[i+2])*(u[i+4]-u[i+3]);
-                R[i] = (u[i+5]-u[i+3])*(u[i+5]-u[i+2])*(u[i+4]-u[i+3]);
-                S[i] = (u[i+6]-u[i+3])*(u[i+5]-u[i+3])*(u[i+4]-u[i+3]);
-            }
-
-            // calculate coefficients of normal polynomial
-            for(size_t i=0; i<nKnots-1; i++)
-            {
-                // Constant
-                a0[0][i] = u[i+4]*u[i+4]*u[i+4]/P[i];
-
-                a0[1][i] = -u[i+1]*u[i+4]*u[i+4]/P[i] - u[i+2]*u[i+4]*u[i+5]/Q[i] - u[i+3]*u[i+5]*u[i+5]/R[i];
-
-                a0[2][i] = u[i+2]*u[i+2]*u[i+4]/Q[i] + u[i+2]*u[i+3]*u[i+5]/R[i] + u[i+3]*u[i+3]*u[i+6]/S[i];
-
-                a0[3][i] = -u[i+3]*u[i+3]*u[i+3]/S[i];
-    
-                // Linear
-                a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
-
-                a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
-                        + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
-                        + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
-
-                a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
-                        -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
-                        -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
-
-                a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
-    
-                // Quadratic
-                a2[0][i] = 3*u[i+4]/P[i];
-
-                a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
-                        -(u[i+2]+u[i+4]+u[i+5])/Q[i]
-                        -(2*u[i+5]+u[i+3])/R[i];
-
-                a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
-                        +(u[i+2]+u[i+5]+u[i+3])/R[i]
-                        +(2*u[i+3]+u[i+6])/S[i];
-
-                a2[3][i] = -3*u[i+3]/S[i];
-    
-                // Cubic
-                a3[0][i] = -1./P[i];
-
-                a3[1][i] = 1./P[i] + 1./Q[i] + 1./R[i];
-
-                a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
-
-                a3[3][i] = 1./S[i];
-            }
-        }
-        
-
-        // Calculate overall polynomial coefficients for current set of spline coefficients.
-        // This method must be included in the method Update() if you change the spline coefficients,
-        // using the method SetParameters() of the class Parameters (See Parameters.h).
-        void UpdatePolynomial()
-        {
-            for(size_t i=0; i<nKnots-1; i++)
-            {
-                // calculate polynomial coefficients for the current set of spline coefficients
-                AS[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
-                AS[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
-                AS[2][i] = b[i]*a2[0][i] + b[i+1]*a2[1][i] + b[i+2]*a2[2][i] + b[i+3]*a2[3][i];
-                AS[3][i] = b[i]*a3[0][i] + b[i+1]*a3[1][i] + b[i+2]*a3[2][i] + b[i+3]*a3[3][i];
-                if(std::fabs(AS[0][i])<1e-9) AS[0][i]=0;
-                if(std::fabs(AS[1][i])<1e-9) AS[1][i]=0;
-                if(std::fabs(AS[2][i])<1e-9) AS[2][i]=0;
-                if(std::fabs(AS[3][i])<1e-9) AS[3][i]=0;
-            }
-
-            // After last knot: Linear extrapolation
-            // value of 2nd last spline at last knot
-            double v=u[nKnots+2];
-            AS[3][nKnots-1] = 0;
-            AS[2][nKnots-1] = 0;
-
-            // In case it should be constant:
-            // AS[1][nKnots-1] = 0;
-            // AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v;
-
-            // In case it should be linear:
-            AS[1][nKnots-1] = AS[1][nKnots-2] + 2*AS[2][nKnots-2]*v + 3*AS[3][nKnots-2]*v*v;
-            AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v - AS[1][nKnots-1]*v;
-
-            // determine if and where this linear part gets negative
-            if(AS[1][nKnots-1]<0)
-            {
-                NegativePart = true;
-                xNegative = -AS[0][nKnots-1]/AS[1][nKnots-1];
-            }
-            else
-            {
-                NegativePart = false;
-            }
-        }
 
 
         //-------------------------------------------------
@@ -583,27 +530,11 @@ namespace medusa {
         //        Variables
         //-------------------------
 
+        // factorials: k!, j!, (k-n)! and (n-j)!
+        int factorial[4];
+
         // knots
         double u[nKnots+6];
-
-        // spline coefficients
-        double b[nKnots+2];
-
-        // factorials
-        double kfactorial[4];    // k!
-        double knfactorial[4];  // (k-n)!
-        double jfactorial[4];    // j!
-        double njfactorial[4];  // (n-j)!
-  
-        // Constants depending only on knot vector
-
-        // coefficients of polynomial
-        double a0[4][nKnots];
-        double a1[4][nKnots];
-        double a2[4][nKnots];
-        double a3[4][nKnots];
-
-        // Constants depending on the current spline coefficients
 
         // Overall coefficients of the polynomials. For the range x>=Knot[i] && x<Knot[i+1]
         // the spline is then given by: y=AS0[i]+AS1[i]*x+AS2[i]*x*x+AS3[i]*x*x*x
