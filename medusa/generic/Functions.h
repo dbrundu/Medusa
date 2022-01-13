@@ -47,8 +47,8 @@
 #include <hydra/Vector4R.h>
 
 // Medusa
-#include <medusa/Constants.h>
-#include <medusa/Faddeeva.h>
+#include <medusa/generic/Constants.h>
+#include <medusa/generic/Faddeeva.h>
 
 
 namespace medusa {

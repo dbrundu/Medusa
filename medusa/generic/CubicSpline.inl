@@ -20,13 +20,14 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*----------------------------------------
+/*---------------------------------------------------------------------------
  *  Created on: 30/12/2021
  *
  *  Author: Alessandro Maria Ricci
  *
- *  CubicSpline.inl
- *----------------------------------------*/
+ *  This file contains the implementation of some methods
+ *  of the CubicSpline class defined in CubicSpline.h file.
+ *---------------------------------------------------------------------------*/
 
 #ifndef MEDUSA_CUBIC_SPLINE_INL
 #define MEDUSA_CUBIC_SPLINE_INL
@@ -85,7 +86,7 @@ namespace medusa {
         // a warning with the parameter value for whom we obtain a NaN.
         // In this case, the first argument is always NaN and the macro prints
         // the values for whom we obtain NaN.
-        hydra::CHECK_VALUE(sum, "a=%f, b=%f, mu=%f, sigma=%f, LowerLimit=%f, UpperLimit=%f, tag=%f",
+        hydra::CHECK_VALUE(sum, "a=%f, b=%f, mu=%f, sigma=%f, LowerLimit=%f, UpperLimit=%f, tag=%d",
                                                                         a, b, mu, sigma, LowerLimit, UpperLimit, tag);
         return sum;
     }
@@ -138,7 +139,7 @@ namespace medusa {
         // a warning with the parameter value for whom we obtain a NaN.
         // In this case, the first argument is always NaN and the macro prints
         // the values for whom we obtain NaN.
-        hydra::CHECK_VALUE(sum, "a=%f, b=%f, mu=%f, sigma=%f, LowerLimit=%f, UpperLimit=%f, tag=%f",
+        hydra::CHECK_VALUE(sum, "a=%f, b=%f, mu=%f, sigma=%f, LowerLimit=%f, UpperLimit=%f, tag=%d",
                                                                         a, b, mu, sigma, LowerLimit, UpperLimit, tag);
         return sum;
     }

@@ -56,8 +56,8 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/Functions.h>
-#include <medusa/CubicSpline.h>
+#include <medusa/generic/Functions.h>
+#include <medusa/generic/CubicSpline.h>
 
 
 namespace medusa {
@@ -123,8 +123,8 @@ namespace medusa {
                          hydra::Parameter const& Omega_10,        hydra::Parameter const& Spline_c0,   hydra::Parameter const& Spline_c1,
                          hydra::Parameter const& Spline_c2,       hydra::Parameter const& Spline_c3,   hydra::Parameter const& Spline_c4,
                          hydra::Parameter const& Spline_c5,       hydra::Parameter const& Spline_c6,   hydra::Parameter const& Spline_c7,
-                         hydra::Parameter const& Spline_c8,       double const (&SplineKnots)[7],
-                         ArgTypeTime const& LowerLimit,           ArgTypeTime const& UpperLimit,       double const& Weight):
+                         hydra::Parameter const& Spline_c8,       double const (&SplineKnots)[7],      ArgTypeTime const& LowerLimit,
+                                                                                                                    ArgTypeTime const& UpperLimit):
         ThisBaseFunctor({A_0, A_perp, A_S,
                          DeltaGamma_sd, DeltaGamma, DeltaM,
                          phi_0, phi_par, phi_perp, phi_S, 
@@ -143,7 +143,7 @@ namespace medusa {
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
-            fweight = Weight;
+            fweight = 1.;
             Update();
         }
 
@@ -151,8 +151,7 @@ namespace medusa {
         // ctor with array of hydra::Parameter
         // the user has to respect the parameter order as the main ctor
         FullAnalyticPhis( const hydra::Parameter (&Hs)[18], const hydra::Parameter (&Ps)[31],
-                          const double (&SplineKnots)[7], const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit,
-                                                                                                        const double &Weight ):
+                          const double (&SplineKnots)[7], const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit ):
         ThisBaseFunctor({ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
                          Ps[0],  Ps[1],  Ps[2],  Ps[3],  Ps[4],  Ps[5],  Ps[6],  Ps[7],
@@ -164,14 +163,14 @@ namespace medusa {
         {
             fLowerLimit = LowerLimit;
             fUpperLimit = UpperLimit;
-            fweight = Weight;
+            fweight = 1.;
             Update();
         }
 
 
         // ctor with array of double
         // the user has to respect the parameter order as the main ctor
-       FullAnalyticPhis( const double (&Hs)[52], const double (&SplineKnots)[7] ):
+       FullAnalyticPhis( const double (&Hs)[51], const double (&SplineKnots)[7] ):
         ThisBaseFunctor({ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
                          Hs[18], Hs[19], Hs[20], Hs[21], Hs[22], Hs[23], Hs[24], Hs[25],
@@ -183,7 +182,7 @@ namespace medusa {
         {
             fLowerLimit = Hs[49];
             fUpperLimit = Hs[50];
-            fweight = Hs[51];
+            fweight = 1.;
             Update();
         }
 
@@ -286,9 +285,9 @@ namespace medusa {
 
             double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
 
-            double UnnormPDF = 0;
-            double NormFactor = 0;
-            double wPDF = 0;
+            double UnnormPDF = 0.;
+            double NormFactor = 0.;
+            double wPDF = 0.;
 
             // This is a safety mechanism that is necessary when A_par2 takes negative values (see Update_NFactors()).
             // PDF = 0 activates the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).

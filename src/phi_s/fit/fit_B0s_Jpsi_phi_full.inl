@@ -102,8 +102,9 @@ int main(int argv, char** argc)
     //------------------------------------------------------
 
     size_t nentries = 0;
-    double distortion = 0;
-    double edm = 0;
+    double distortion = 0.;
+    double edm = 0.;
+    double weight = 0.;
 
 	try {
 
@@ -118,6 +119,9 @@ int main(int argv, char** argc)
         TCLAP::ValueArg<double> EdmArg("e", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
 		cmd.add(EdmArg);
 
+        TCLAP::ValueArg<double> WeightArg("w", "weight", "PDF weight to improve the numerical fit", false, 1., "double");
+		cmd.add(WeightArg);
+
 		// Parse the argv array.
 		cmd.parse(argv, argc);
 
@@ -125,6 +129,7 @@ int main(int argv, char** argc)
         nentries = EArg.getValue();
         distortion = DistortionArg.getValue();
         edm = EdmArg.getValue();
+        weight = WeightArg.getValue();
 
 	}
 	catch (TCLAP::ArgException &e)  {
@@ -149,11 +154,8 @@ int main(int argv, char** argc)
     const dtime_t LowerLimit = 0.3;
     const dtime_t UpperLimit = 20.0;
 
-    // activate the cubic spline
+    // enable the cubic spline
     const bool CubicSpline = true;
-
-    // weight to improve the numerical fit
-    const double Weight = 0.25;
 
     // model parameters
     const double A0_dataset         = ::sqrt(0.542);
@@ -216,64 +218,9 @@ int main(int argv, char** argc)
 
     auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
                                             qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams, Spline_Knots,
-                                                                                                        LowerLimit, UpperLimit, Weight);
-/*
-    Model(2.54933, 1., 1., 1., 1., 1., 1., 1., 0.01);
+                                                                                                                    LowerLimit, UpperLimit);
 
-    std::cout << Model.CSplineEval(0.4) << std::endl;
-    std::cout << Model.CSplineEval(1.0) << std::endl;
-    std::cout << Model.CSplineEval(6.99) << std::endl;
-    std::cout << Model.CSplineEval(8.0) << std::endl;
 
-    std::cout << "LLknot = " << Model.findKnot(LowerLimit) << std::endl;
-    std::cout << "ULknot = " << Model.findKnot(UpperLimit) << std::endl;
-
-    double Gamma = deltagammasd_dataset + 0.65789;
-    double HalfDeltaGamma = 0.5*deltagammas_dataset;
-
-    double Spline_int_conv_exp_cosh;
-    double Spline_int_conv_exp_sinh;
-    double Spline_int_conv_exp_cos;
-    double Spline_int_conv_exp_sin;
-
-    Spline_int_conv_exp_cosh = Model.Integrate_cspline_times_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, true);
-    Spline_int_conv_exp_sinh = Model.Integrate_cspline_times_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 2, LowerLimit, UpperLimit, false);
-    Spline_int_conv_exp_cos = Model.Integrate_cspline_times_convolved_exp_sincos(Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, true);
-    Spline_int_conv_exp_sin = Model.Integrate_cspline_times_convolved_exp_sincos(Gamma, deltams_dataset, 0, 2, LowerLimit, UpperLimit, false);
-
-    std::cout << "int_conv_cosh = " << Spline_int_conv_exp_cosh << std::endl;
-    std::cout << "int_conv_sinh = " << Spline_int_conv_exp_sinh << std::endl;
-    std::cout << "int_conv_cos = " << Spline_int_conv_exp_cos << std::endl;
-    std::cout << "int_conv_sin = " << Spline_int_conv_exp_sin << std::endl;
-
-/*
-    double x1 = (LowerLimit - 1)/(2*M_Sqrt2);
-    double x2 = (UpperLimit - 1)/(2*M_Sqrt2);
-
-    double z1 = (Gamma - HalfDeltaGamma)*2/M_Sqrt2;
-    double z2 = (Gamma + HalfDeltaGamma)*2/M_Sqrt2;
-    hydra::complex<double> z3( Gamma*2/M_Sqrt2, -deltams_dataset*2/M_Sqrt2 );
-    hydra::complex<double> z4( Gamma*2/M_Sqrt2,  deltams_dataset*2/M_Sqrt2 );
-
-    double int_conv_exp_cosh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-    double int_conv_exp_sinh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, 0.0250024, LowerLimit, UpperLimit, -1);
-    double int_conv_exp_cos = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, 1);
-    double int_conv_exp_sin = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams_dataset, 0, 0.0250024, LowerLimit, UpperLimit, -1);
-    double conv_exp_cos = medusa::functions::Convolve_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, 1);
-    double conv_exp_sin = medusa::functions::Convolve_exp_sincos(9.22784, Gamma, deltams_dataset, 0, 0.0250024, -1);
-
-    const double f = 0.2387324146378430; // 3./(4.*PI)
-
-    double NormFactor = f * ( int_conv_exp_cosh + int_conv_exp_sinh + int_conv_exp_cos + int_conv_exp_sin );
-
-    std::cout << conv_exp_cos << std::endl;
-    std::cout << conv_exp_sin << std::endl;
-    std::cout << int_conv_exp_cosh << std::endl;
-    std::cout << int_conv_exp_sinh << std::endl;
-    std::cout << int_conv_exp_cos << std::endl;
-    std::cout << int_conv_exp_sin << std::endl;
-    std::cout << NormFactor << std::endl;
-*/
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
@@ -281,7 +228,7 @@ int main(int argv, char** argc)
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
-    GenerateDataset_FullAnalyticPhis(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
+    GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
     
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
@@ -334,7 +281,7 @@ int main(int argv, char** argc)
     //---------------------------------------------
     //   Set the starting values for the fit
     //---------------------------------------------
-/*
+
     // model parameters
     const double A0         = ::sqrt(0.542)*distortion;
     const double Aperp      = ::sqrt(0.206)*distortion;
@@ -394,8 +341,11 @@ int main(int argv, char** argc)
                                         lambda_0_p,      lambda_par_p, lambda_perp_p, lambda_S_p,
                                         delta_0_p,       delta_par_p,  delta_perp_p,  delta_S_p};
 
-    auto model = medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t,
-                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, LowerLimit, UpperLimit, Weight);
+    auto model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
+                                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots, LowerLimit, UpperLimit);
+
+    // set the weight in front of the PDF to improve the numerical fit
+    model.SetWeight(weight);
 
     //---------------------------------
     //          PDF generation
@@ -404,8 +354,8 @@ int main(int argv, char** argc)
     // integrator (it always returns the value 1.0, because the normalization is computed
     // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
     // a normalization factor which depends from the experimental variables)
-    auto integrator = hydra::AnalyticalIntegral<
-                        medusa::FullAnalyticPhis<dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
+    auto integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline,
+                                                            dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
 
     // make PDF
     auto model_PDF = hydra::make_pdf(model, integrator);
@@ -452,7 +402,7 @@ int main(int argv, char** argc)
 	std::cout << "-----------------------------------------"<< std::endl;
 	std::cout << "| Time (ms) ="<< elapsed.count()          << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
-*/
+
     return 0;
 
 } // main

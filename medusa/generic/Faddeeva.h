@@ -25,7 +25,8 @@
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  This header file is a version of Faddeeva.hh of the Faddeeva package.
+ *  This header file is a version of Faddeeva.hh of the Faddeeva package
+ *  adapted to work in Medusa.
  * 
  *  The original version is available at: http://ab-initio.mit.edu/Faddeeva
  *
@@ -66,7 +67,7 @@
 #include <hydra/Complex.h>
 
 // Medusa
-#include <medusa/Constants.h>
+#include <medusa/generic/Constants.h>
 
 typedef hydra::complex<double> cmplx;
 
@@ -159,6 +160,6 @@ namespace medusa {
     } // namespace faddeeva
 } // namespace medusa
 
-#include <medusa/Faddeeva.inl>
+#include <medusa/generic/Faddeeva.inl>
 
 #endif // MEDUSA_FADDEEVA_H

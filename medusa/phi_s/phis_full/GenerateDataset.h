@@ -21,15 +21,15 @@
  *
  *---------------------------------------------------------------------------*/
 /*------------------------------------------
- *  GenerateDataset_FullAnalyticPhis.h
+ *  GenerateDataset_Full.h
  *
  *  Created: 29/10/2021
  *
  *  Author: Alessandro Maria Ricci
  *------------------------------------------*/
 
-#ifndef GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_
-#define GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_
+#ifndef GENERATE_DATASET_FULL_H_
+#define GENERATE_DATASET_FULL_H_
 
 
 // std
@@ -50,7 +50,7 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/Functions.h>
+#include <medusa/generic/Functions.h>
 
 
 namespace medusa {
@@ -69,7 +69,7 @@ namespace medusa {
      */
 
     template<typename Model, typename Container>
-    size_t GenerateDataset_FullAnalyticPhis(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size, dtime_t LowerLimit, dtime_t UpperLimit)
+    size_t GenerateDataset_Full(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size, dtime_t LowerLimit, dtime_t UpperLimit)
     {
 
         // default namespaces
@@ -221,8 +221,8 @@ namespace medusa {
         return final_dataset.size();
 
 
-    } // generate_dataset()
+    } // GenerateDataset_Full()
 
 } // namespace medusa
 
-#endif // GENERATE_DATASET_FULL_ANALYTIC_PHIS_H_
+#endif // GENERATE_DATASET_FULL_H_

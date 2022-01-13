@@ -25,7 +25,8 @@
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  This file is a version of Faddeeva.cc of the Faddeeva package.
+ *  This file is a version of Faddeeva.cc of the Faddeeva package adapted
+ *  to work in Medusa.
  * 
  *  The original version is available at: http://ab-initio.mit.edu/Faddeeva
  *----------------------------------------------------------------------------*/

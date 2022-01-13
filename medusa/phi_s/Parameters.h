@@ -26,7 +26,8 @@
  *  Created on: 04/06/2021
  *      Author: Alessandro Maria Ricci
  * 
- * 	This library contains all parameters used by PhisSignal.h amd PhisComplete.h.
+ * 	This library contains all parameters used by PhisSignal.h
+ *  and FullAnalyticPhis.h.
  *---------------------------------------------------------------------------*/
 
 #ifndef PHIS_PARAMETERS_H_
@@ -38,7 +39,7 @@
 #include <hydra/Parameter.h>
 
 // Medusa
-#include <medusa/Constants.h>
+#include <medusa/generic/Constants.h>
 
 // default namespaces
 using namespace hydra::arguments;
@@ -110,6 +111,8 @@ const double OmegaErr[10] = {0.0, 0.0015, 0.0015,
 							 0.0013, 0.00074, 0.00072,
 							 0.0011, 0.00094, 0.00094,
 							 						0.0019};
+
+const double Csp[6] = {0.8463, 0.8756, 0.8478, 0.8833, 0.9415, 0.9756};
 
 auto b0_p = hydra::Parameter::Create("b0").Value(b0).Error(0.00022).Fixed();
 auto b1_p = hydra::Parameter::Create("b1").Value(b1).Error(0.0057).Fixed();

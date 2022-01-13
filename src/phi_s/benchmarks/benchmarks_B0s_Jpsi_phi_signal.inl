@@ -187,7 +187,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
 
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::host::sys_t> dataset_h;
 
-    GenerateDataset_PhisSignal(MODEL, dataset_h, nentries, nentries);
+    GenerateDataset_SignalOnly(MODEL, dataset_h, nentries, nentries);
     
     hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);

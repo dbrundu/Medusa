@@ -20,18 +20,18 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*----------------------------------------------
+/*---------------------------------------------------------------------------
  * benchmarks2_B0s_Jpsi_phi.inl
  *
  *  Created: 18/08/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  Other benchmarks for fit_B0s_Jpsi_phi.inl
- *----------------------------------------------*/
+ *  Other benchmarks for fit_B0s_Jpsi_phi_full.inl
+ *---------------------------------------------------------------------------*/
 
-#ifndef BENCHMARKS2_B0S_JPSI_PHI_INL_
-#define BENCHMARKS2_B0S_JPSI_PHI_INL_
+#ifndef BENCHMARKS2_B0S_JPSI_PHI_FULL_INL_
+#define BENCHMARKS2_B0S_JPSI_PHI_FULL_INL_
 
 
 //---------------------------------
@@ -54,7 +54,6 @@
 #include <hydra/Lambda.h>
 #include <hydra/Pdf.h>
 #include <hydra/LogLikelihoodFCN.h>
-#include <hydra/Vegas.h>
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
@@ -73,8 +72,8 @@
 #endif //_ROOT_AVAILABLE_
 
 // Medusa
-#include <medusa/phi_s/PhisSignal.h>
-#include <medusa/phi_s/GenerateDataset.h>
+#include <medusa/phi_s/phis_full/FullAnalyticPhis.h>
+#include <medusa/phi_s/phis_full/GenerateDataset.h>
 
 
 
@@ -91,10 +90,7 @@ int main(int argv, char** argc)
     //------------------------------------------------------
 
     size_t nentries = 0;
-    size_t calls = 0;
-	size_t iterations = 0;
-	double max_error = 0;
-    double edm = 0;
+    double distortion = 0;
 
 	try {
 
@@ -103,27 +99,15 @@ int main(int argv, char** argc)
         TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events", false, 5e5, "size_t");
         cmd.add(EArg);
 
-		TCLAP::ValueArg<size_t> NCallsArg("c", "number-of-calls", "Number of call", false, 1e4, "size_t");
-		cmd.add(NCallsArg);
-
-		TCLAP::ValueArg<double> MaxErrorArg("e", "max-error", "Maximum error", false, 1.0e-5, "double");
-		cmd.add(MaxErrorArg);
-
-		TCLAP::ValueArg<size_t> IterationsArg("i", "max-iterations", "Maximum number of iterations",false, 150, "size_t");
-		cmd.add(IterationsArg);
-
-        TCLAP::ValueArg<double> EdmArg("d", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
-		cmd.add(EdmArg);
+        TCLAP::ValueArg<double> DistortionArg("d", "distortion-factor", "Distortion factor with respect to the dataset", false, 1.01, "double");
+        cmd.add(DistortionArg);
 
 		// Parse the argv array.
 		cmd.parse(argv, argc);
 
 		// Get the value parsed by each arg.
         nentries = EArg.getValue();
-        calls = NCallsArg.getValue();
-		iterations = IterationsArg.getValue();
-		max_error  = MaxErrorArg.getValue();
-        edm = EdmArg.getValue();
+        distortion = DistortionArg.getValue();
 
 	}
 	catch (TCLAP::ArgException &e)  {
@@ -144,79 +128,88 @@ int main(int argv, char** argc)
     //      Model generation
     //---------------------------------
 
+    // temporal integration limits (ps)
+    const dtime_t LowerLimit = 0.3;
+    const dtime_t UpperLimit = 20.0;
+
+    // enable the cubic spline
+    const bool CubicSpline = true;
+
     // model parameters
-    const bool   B0sbar     = false;    // boolean to specify wether B0s is B0sbar or not
+    const double A0_dataset         = ::sqrt(0.542);
+    const double Aperp_dataset      = ::sqrt(0.206);
+    const double AS_dataset         = ::sqrt(0.0037);
 
-    const double A0         = ::sqrt(0.542);
-    const double Aperp      = ::sqrt(0.206);
-    const double AS         = ::sqrt(0.0037);
+    const double phi0_dataset       = -0.082;
+    const double phipar_dataset     = -0.125;            // -0.043 + phi0
+    const double phiperp_dataset    = -0.156;            // -0.074 + phi0
+    const double phiS_dataset       = -0.061;            //  0.021 + phi0
 
-    const double phi0       = -0.082;
-    const double phipar     = -0.125;            // -0.043 + phi0
-    const double phiperp    = -0.156;            // -0.074 + phi0
-    const double phiS       = -0.061;            //  0.021 + phi0
+    const double lambda0_dataset    = 0.955; 
+    const double lambdapar_dataset  = 0.93399;           // 0.978*lambda0
+    const double lambdaperp_dataset = 1.17465;           // 1.23*lambda0
+    const double lambdaS_dataset    = 1.2224;            // 1.28*lambda0
 
-    const double lambda0    = 0.955; 
-    const double lambdapar  = 0.93399;           // 0.978*lambda0
-    const double lambdaperp = 1.17465;           // 1.23*lambda0
-    const double lambdaS    = 1.2224;            // 1.28*lambda0
+    const double delta0_dataset     = 0.0;
+    const double deltapar_dataset   = 3.030;            // + delta0
+    const double deltaperp_dataset  = 2.60;             // + delta0
+    const double deltaS_dataset     = -0.30;            // + delta0
 
-    const double delta0     = 0.0;
-    const double deltapar   = 3.030;            // + delta0
-    const double deltaperp  = 2.60;             // + delta0
-    const double deltaS     = -0.30;            // + delta0
+    const double deltagammasd_dataset = -0.0044;
+    const double deltagammas_dataset  = 0.0782;
+    const double deltams_dataset      = 17.713;
 
-    const double deltagammasd = -0.0044;
-    const double deltagammas  = 0.0782;
-    const double deltams      = 17.713;
+    std::vector<double> parameters_dataset = {A0_dataset, Aperp_dataset, AS_dataset, 
+                                              deltagammasd_dataset, deltagammas_dataset, deltams_dataset,
+                                              phi0_dataset,    phipar_dataset,    phiperp_dataset,    phiS_dataset,
+                                              lambda0_dataset, lambdapar_dataset, lambdaperp_dataset, lambdaS_dataset,
+                                              delta0_dataset,  deltapar_dataset,  deltaperp_dataset,  deltaS_dataset};
 
-    std::vector<double> parameters = {A0, Aperp, AS, 
-                                      deltagammasd, deltagammas, deltams,
-                                      phi0,    phipar,    phiperp,    phiS,
-                                      lambda0, lambdapar, lambdaperp, lambdaS,
-                                      delta0,  deltapar,  deltaperp,  deltaS};
+    auto A0_pd             = hydra::Parameter::Create("A0" ).Value(A0_dataset).Error(0.0001);
+    auto Aperp_pd          = hydra::Parameter::Create("Aperp").Value(Aperp_dataset).Error(0.0001);
+    auto AS_pd             = hydra::Parameter::Create("AS" ).Value(AS_dataset).Error(0.0001);
 
-    auto A0_p             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001);
-    auto Aperp_p          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001);
-    auto AS_p             = hydra::Parameter::Create("AS" ).Value(AS).Error(0.0001);
+    auto DeltaGamma_sd_pd  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd_dataset).Error(0.0001);
+    auto DeltaGamma_pd     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas_dataset).Error(0.0001);
+    auto DeltaM_pd         = hydra::Parameter::Create("DeltaM" ).Value(deltams_dataset).Error(0.0001);
 
-    auto DeltaGamma_sd_p  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd).Error(0.0001);
-    auto DeltaGamma_p     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas).Error(0.0001);
-    auto DeltaM_p         = hydra::Parameter::Create("DeltaM" ).Value(deltams).Error(0.0001);
+    auto phi_0_pd          = hydra::Parameter::Create("phi_0").Value(phi0_dataset).Error(0.0001);
+    auto phi_par_pd        = hydra::Parameter::Create("phi_par" ).Value(phipar_dataset).Error(0.0001);
+    auto phi_perp_pd       = hydra::Parameter::Create("phi_perp").Value(phiperp_dataset).Error(0.0001);
+    auto phi_S_pd          = hydra::Parameter::Create("phi_S" ).Value(phiS_dataset).Error(0.0001);
 
-    auto phi_0_p          = hydra::Parameter::Create("phi_0").Value(phi0).Error(0.0001);
-    auto phi_par_p        = hydra::Parameter::Create("phi_par" ).Value(phipar).Error(0.0001);
-    auto phi_perp_p       = hydra::Parameter::Create("phi_perp").Value(phiperp).Error(0.0001);
-    auto phi_S_p          = hydra::Parameter::Create("phi_S" ).Value(phiS).Error(0.0001);
+    auto lambda_0_pd       = hydra::Parameter::Create("lambda_0").Value(lambda0_dataset).Error(0.0001);
+    auto lambda_par_pd     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar_dataset).Error(0.0001);
+    auto lambda_perp_pd    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp_dataset).Error(0.0001);
+    auto lambda_S_pd       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS_dataset).Error(0.0001);
 
-    auto lambda_0_p       = hydra::Parameter::Create("lambda_0").Value(lambda0).Error(0.0001);
-    auto lambda_par_p     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar).Error(0.0001);
-    auto lambda_perp_p    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp).Error(0.0001);
-    auto lambda_S_p       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS).Error(0.0001);
+    auto delta_0_pd        = hydra::Parameter::Create("delta_0").Value(delta0_dataset).Error(0.0001);
+    auto delta_par_pd      = hydra::Parameter::Create("delta_par").Value(deltapar_dataset).Error(0.0001);
+    auto delta_perp_pd     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp_dataset).Error(0.0001);
+    auto delta_S_pd        = hydra::Parameter::Create("delta_S").Value(deltaS_dataset).Error(0.0001);
 
-    auto delta_0_p        = hydra::Parameter::Create("delta_0").Value(delta0).Error(0.0001);
-    auto delta_par_p      = hydra::Parameter::Create("delta_par").Value(deltapar).Error(0.0001);
-    auto delta_perp_p     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp).Error(0.0001);
-    auto delta_S_p        = hydra::Parameter::Create("delta_S").Value(deltaS).Error(0.0001);
+    hydra::Parameter ModelParams_dataset[18] = {A0_pd,             Aperp_pd,       AS_pd,
+                                                DeltaGamma_sd_pd,  DeltaGamma_pd,  DeltaM_pd,
+                                                phi_0_pd,          phi_par_pd,     phi_perp_pd,     phi_S_pd,
+                                                lambda_0_pd,       lambda_par_pd,  lambda_perp_pd,  lambda_S_pd,
+                                                delta_0_pd,        delta_par_pd,   delta_perp_pd,   delta_S_pd};
 
-    hydra::Parameter hydraparams[18] = {A0_p, Aperp_p, AS_p,
-                                        DeltaGamma_sd_p, DeltaGamma_p, DeltaM_p,
-                                        phi_0_p,    phi_par_p,    phi_perp_p,    phi_S_p,
-                                        lambda_0_p, lambda_par_p, lambda_perp_p, lambda_S_p,
-                                        delta_0_p,  delta_par_p,  delta_perp_p,   delta_S_p};
-
-    auto Model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydraparams);
+    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
+                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams, Spline_Knots,
+                                                                                                                    LowerLimit, UpperLimit);
 
 
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::host::sys_t> dataset_h;
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
-    generate_dataset(Model, dataset_h, nentries, nentries);
+    GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
     
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);
 
 
@@ -267,110 +260,81 @@ int main(int argv, char** argc)
     //   Set the starting values for the fit
     //---------------------------------------------
 
-    // distortion factor
-    double factor = 1.01;
-
     // model parameters
-    const double fA0         = ::sqrt(0.542)*factor;
-    const double fAperp      = ::sqrt(0.206)*factor;
-    const double fAS         = ::sqrt(0.0037)*factor;
+    const double A0         = ::sqrt(0.542)*distortion;
+    const double Aperp      = ::sqrt(0.206)*distortion;
+    const double AS         = ::sqrt(0.0037)*distortion;
 
-    const double fphi0       = -0.082*factor;
-    const double fphipar     = -0.125*factor;            // -0.043 + phi0
-    const double fphiperp    = -0.156*factor;            // -0.074 + phi0
-    const double fphiS       = -0.061*factor;            //  0.021 + phi0
+    const double phi0       = -0.082*distortion;
+    const double phipar     = -0.125*distortion;            // -0.043 + phi0
+    const double phiperp    = -0.156*distortion;            // -0.074 + phi0
+    const double phiS       = -0.061*distortion;            //  0.021 + phi0
 
-    const double flambda0    = 0.955*factor; 
-    const double flambdapar  = 0.93399*factor;           // 0.978*lambda0
-    const double flambdaperp = 1.17465*factor;           // 1.23*lambda0
-    const double flambdaS    = 1.2224*factor;            // 1.28*lambda0
+    const double lambda0    = 0.955*distortion; 
+    const double lambdapar  = 0.93399*distortion;           // 0.978*lambda0
+    const double lambdaperp = 1.17465*distortion;           // 1.23*lambda0
+    const double lambdaS    = 1.2224*distortion;            // 1.28*lambda0
 
-    const double fdelta0     = 0.0;
-    const double fdeltapar   = 3.030*factor;            // + delta0
-    const double fdeltaperp  = 2.60*factor;             // + delta0
-    const double fdeltaS     = -0.30*factor;            // + delta0
+    const double delta0     = 0.0;
+    const double deltapar   = 3.030*distortion;            // + delta0
+    const double deltaperp  = 2.60*distortion;             // + delta0
+    const double deltaS     = -0.30*distortion;            // + delta0
 
-    const double fdeltagammasd = -0.0044*factor;
-    const double fdeltagammas  = 0.0782*factor;
-    const double fdeltams      = 17.713*factor;
+    const double deltagammasd = -0.0044*distortion;
+    const double deltagammas  = 0.0782*distortion;
+    const double deltams      = 17.713*distortion;
 
-    std::vector<double> fparameters = {fA0, fAperp, fAS, 
-                                      fdeltagammasd, fdeltagammas, fdeltams,
-                                      fphi0,    fphipar,    fphiperp,    fphiS,
-                                      flambda0, flambdapar, flambdaperp, flambdaS,
-                                      fdelta0,  fdeltapar,  fdeltaperp,  fdeltaS};
+    std::vector<double> parameters = {A0, Aperp, AS,
+                                      deltagammasd, deltagammas, deltams,
+                                      phi0,    phipar,    phiperp,    phiS,
+                                      lambda0, lambdapar, lambdaperp, lambdaS,
+                                      delta0,  deltapar,  deltaperp,  deltaS};
 
-    auto fA0_p             = hydra::Parameter::Create("fA0" ).Value(fA0).Error(0.0001).Limits(fA0-0.6, fA0+0.6);
-    auto fAperp_p          = hydra::Parameter::Create("fAperp").Value(fAperp).Error(0.0001).Limits(fAperp-0.6, fAperp+0.6);
-    auto fAS_p             = hydra::Parameter::Create("fAS" ).Value(fAS).Error(0.0001).Limits(fAS-0.3, fAS+0.3);
+    auto A0_p             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001).Limits(0.1, 0.9);
+    auto Aperp_p          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001).Limits(0.1, 0.9);
+    auto AS_p             = hydra::Parameter::Create("AS" ).Value(AS).Error(0.0001).Limits(-0.1, 0.8);
 
-    auto fDeltaGamma_sd_p  = hydra::Parameter::Create("fDeltaGamma_sd" ).Value(fdeltagammasd).Error(0.0001).Limits(fdeltagammasd-0.3, fdeltagammasd+0.3);
-    auto fDeltaGamma_p     = hydra::Parameter::Create("fDeltaGamma").Value(fdeltagammas).Error(0.0001).Limits(fdeltagammas-0.3, fdeltagammas+0.3);
-    auto fDeltaM_p         = hydra::Parameter::Create("fDeltaM" ).Value(fdeltams).Error(0.0001).Limits(fdeltams-3, fdeltams+3);
+    auto DeltaGamma_sd_p  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd).Error(0.0001).Limits(-0.2, 0.2);
+    auto DeltaGamma_p     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas).Error(0.0001).Limits(0.03, 0.15);
+    auto DeltaM_p         = hydra::Parameter::Create("DeltaM" ).Value(deltams).Error(0.0001).Limits(16.0, 20.0);
 
-    auto fphi_0_p          = hydra::Parameter::Create("fphi_0").Value(fphi0).Error(0.0001).Limits(fphi0-0.3, fphi0+0.3);
-    auto fphi_par_p        = hydra::Parameter::Create("fphi_par" ).Value(fphipar).Error(0.0001).Limits(fphipar-0.3, fphipar+0.3);
-    auto fphi_perp_p       = hydra::Parameter::Create("fphi_perp").Value(fphiperp).Error(0.0001).Limits(fphiperp-0.3, fphiperp+0.3);
-    auto fphi_S_p          = hydra::Parameter::Create("fphi_S" ).Value(fphiS).Error(0.0001).Limits(fphiS-0.3, fphiS+0.3);
+    auto phi_0_p          = hydra::Parameter::Create("phi_0").Value(phi0).Error(0.0001).Limits(-1.0, 1.0);
+    auto phi_par_p        = hydra::Parameter::Create("phi_par" ).Value(phipar).Error(0.0001).Limits(-1.0, 1.0);
+    auto phi_perp_p       = hydra::Parameter::Create("phi_perp").Value(phiperp).Error(0.0001).Limits(-1.0, 1.0);
+    auto phi_S_p          = hydra::Parameter::Create("phi_S" ).Value(phiS).Error(0.0001).Limits(-1.0, 1.0);
 
-    auto flambda_0_p       = hydra::Parameter::Create("flambda_0").Value(flambda0).Error(0.0001).Limits(flambda0-0.5, flambda0+0.5);
-    auto flambda_par_p     = hydra::Parameter::Create("flambda_par" ).Value(flambdapar).Error(0.0001).Limits(flambdapar-0.5,flambdapar+0.5);
-    auto flambda_perp_p    = hydra::Parameter::Create("flambda_perp").Value(flambdaperp).Error(0.0001).Limits(flambdaperp-0.5, flambdaperp+0.5);
-    auto flambda_S_p       = hydra::Parameter::Create("flambda_S" ).Value(flambdaS).Error(0.0001).Limits(flambdaS-0.5, flambdaS+0.5);
+    auto lambda_0_p       = hydra::Parameter::Create("lambda_0").Value(lambda0).Error(0.0001).Limits(0.7, 1.6);
+    auto lambda_par_p     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar).Error(0.0001).Limits(0.7, 1.6);
+    auto lambda_perp_p    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp).Error(0.0001).Limits(0.7, 1.6);
+    auto lambda_S_p       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS).Error(0.0001).Limits(0.7, 1.6);
 
-    auto fdelta_0_p        = hydra::Parameter::Create("fdelta_0").Value(fdelta0).Error(0.0001).Limits(fdelta0-0.5, fdelta0+0.5);
-    auto fdelta_par_p      = hydra::Parameter::Create("fdelta_par").Value(fdeltapar).Error(0.0001).Limits(fdeltapar-2, fdeltapar+2);
-    auto fdelta_perp_p     = hydra::Parameter::Create("fdelta_perp" ).Value(fdeltaperp).Error(0.0001).Limits(fdeltaperp-2, fdeltaperp+2);
-    auto fdelta_S_p        = hydra::Parameter::Create("fdelta_S").Value(fdeltaS).Error(0.0001).Limits(fdeltaS-2, fdeltaS+2);
+    auto delta_0_p        = hydra::Parameter::Create("delta_0").Value(delta0).Error(0.0001).Limits(-6.0, 6.0);
+    auto delta_par_p      = hydra::Parameter::Create("delta_par").Value(deltapar).Error(0.0001).Limits(-6.28, 6.28);
+    auto delta_perp_p     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp).Error(0.0001).Limits(-6.28, 6.28);
+    auto delta_S_p        = hydra::Parameter::Create("delta_S").Value(deltaS).Error(0.0001).Limits(-6.0, 6.0);
 
-    hydra::Parameter hydrafparams[18] = {fA0_p,            fAperp_p,      fAS_p,
-                                         fDeltaGamma_sd_p, fDeltaGamma_p, fDeltaM_p,
-                                         fphi_0_p,         fphi_par_p,    fphi_perp_p,    fphi_S_p,
-                                         flambda_0_p,      flambda_par_p, flambda_perp_p, flambda_S_p,
-                                         fdelta_0_p,       fdelta_par_p,  fdelta_perp_p,  fdelta_S_p};
+    hydra::Parameter ModelParams[18] = {A0_p,            Aperp_p,      AS_p,
+                                        DeltaGamma_sd_p, DeltaGamma_p, DeltaM_p,
+                                        phi_0_p,         phi_par_p,    phi_perp_p,    phi_S_p,
+                                        lambda_0_p,      lambda_par_p, lambda_perp_p, lambda_S_p,
+                                        delta_0_p,       delta_par_p,  delta_perp_p,  delta_S_p};
 
-    auto model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydrafparams);
+    auto model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
+                                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots, LowerLimit, UpperLimit);
 
 
     //---------------------------------
     //          PDF generation
     //---------------------------------
 
-    const dtime_t min_t         = 0.0;
-    const dtime_t max_t         = 20.0;
-    const theta_h_t min_theta_h = 0.0;
-    const theta_h_t max_theta_h = PI;
-    const theta_l_t min_theta_l = 0.0;
-    const theta_l_t max_theta_l = PI;
-    const phi_t min_phi         = 0.0;
-    const phi_t max_phi         = 2*PI;
-    const size_t N              = 4;
-
-    // Vegas State_d holds the resources for performing the integration
-    hydra::VegasState<N, hydra::device::sys_t> State_d({min_t, min_theta_h, min_theta_l, min_phi},
-                                                            {max_t, max_theta_h, max_theta_l, max_phi});
-
-    State_d.SetVerbose(-2);
-    State_d.SetAlpha(1.5);
-    State_d.SetIterations( iterations );
-    State_d.SetUseRelativeError(1);
-    State_d.SetMaxError( max_error );
-    State_d.SetCalls( calls );
-    State_d.SetTrainingCalls( calls/10 );
-    State_d.SetTrainingIterations(2);
-
-    // Vegas integrator
-    hydra::Vegas<N, hydra::device::sys_t> Vegas_d(State_d);
+    // integrator (it always returns the value 1.0, because the normalization is computed
+    // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
+    // a normalization factor which depends from the experimental variables)
+    auto integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline,
+                                                            dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
 
     // make PDF
-    auto model_PDF = hydra::make_pdf(model, Vegas_d);
-
-    // print the normalization factor
-    std::cout << " "                                                            << std::endl;
-    std::cout << "---------------------------------------------"                << std::endl;
-    std::cout << "The norm factor is: " << model_PDF.GetNorm()                  << std::endl;
-    std::cout << "The error in norm factor is: " << model_PDF.GetNormError()    << std::endl;
-    std::cout << "---------------------------------------------"                << std::endl;
+    auto model_PDF = hydra::make_pdf(model, integrator);
 
 
     //---------------------------------
@@ -397,29 +361,18 @@ int main(int argv, char** argc)
     std::cout << "Time (ms) = " << elapsed_functor.count() << std::endl;
 
 
-    // print Vegas integration
-    auto start_vegas = std::chrono::high_resolution_clock::now();
-    Vegas_d.Integrate(model);
-    auto stop_vegas = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double, std::milli> elapsed_vegas = stop_vegas - start_vegas;
-
-    std::cout << "Integral = " << Vegas_d.GetState().GetResult() << " +/- " << Vegas_d.GetState().GetSigma() << std::endl; 
-    std::cout << "Time (ms) = " << elapsed_vegas.count() << std::endl;
-
-
     // print FCN evaluation
     auto start_fcn = std::chrono::high_resolution_clock::now();
-    fcn(parameters);
+    fcn(parameters_dataset);
     auto stop_fcn = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed_fcn = stop_fcn - start_fcn;
 
-    std::cout << "fcn = " << fcn(parameters) << std::endl;
+    std::cout << "fcn = " << fcn(parameters_dataset) << std::endl;
     std::cout << "Time (ms) = " << elapsed_fcn.count() << std::endl;
 
     return 0;
 
 } // main
 
-#endif // BENCHMARKS2_B0S_JPSI_PHI_INL_
+#endif // BENCHMARKS2_B0S_JPSI_PHI_FULL_INL_

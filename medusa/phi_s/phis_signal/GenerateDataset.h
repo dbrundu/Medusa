@@ -21,15 +21,15 @@
  *
  *---------------------------------------------------------------------------*/
 /*----------------------------------------
- *  GenerateDataset_PhisSignal.h
+ *  GenerateDataset_SignalOnly.h
  *
  *  Created: 07/07/2021
  *
  *  Author: Alessandro Maria Ricci
  *----------------------------------------*/
 
-#ifndef GENERATE_DATASET_PHIS_SIGNAL_H_
-#define GENERATE_DATASET_PHIS_SIGNAL_H_
+#ifndef GENERATE_DATASET_SIGNAL_ONLY_H_
+#define GENERATE_DATASET_SIGNAL_ONLY_H_
 
 
 // std
@@ -50,7 +50,7 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/Angles.h>
+#include <medusa/generic/Functions.h>
 
 
 
@@ -69,7 +69,7 @@ namespace medusa {
      */
 
     template<typename Model, typename Container>
-    size_t GenerateDataset_PhisSignal(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
+    size_t GenerateDataset_SignalOnly(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
     {
 
         // default namespaces
@@ -93,9 +93,9 @@ namespace medusa {
             engine.discard(n);
             dtime_t decay_time = uniDist(engine);
 
-            theta_l_t theta_l    = ::acos( medusa::cos_decay_angle(jpsi + phi, phi,  kaonp) );
-            theta_h_t theta_h    = ::acos( medusa::cos_decay_angle(jpsi + phi, jpsi, mup) );
-            phi_t     phiangle   = medusa::phi_plane_angle(kaonm, kaonp, mup, mum);
+            theta_l_t theta_l    = ::acos( medusa::functions::cos_decay_angle(jpsi + phi, phi,  kaonp) );
+            theta_h_t theta_h    = ::acos( medusa::functions::cos_decay_angle(jpsi + phi, jpsi, mup) );
+            phi_t     phiangle   = medusa::functions::phi_plane_angle(kaonm, kaonp, mup, mum);
 
             return hydra::make_tuple(decay_time, theta_h, theta_l, phiangle) ;
 
@@ -204,8 +204,8 @@ namespace medusa {
         return final_dataset.size();
 
 
-    } // generate_dataset_signal()
+    } // GenerateDataset_SignalOnly()
 
 } // namespace medusa
 
-#endif // GENERATE_DATASET_PHIS_SIGNAL_H_
+#endif // GENERATE_DATASET_SIGNAL_ONLY_H_

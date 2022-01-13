@@ -20,13 +20,13 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*----------------------------------------
+/*---------------------------------------------------------------------------
  *  Created on: 09/12/2021
  *
  *  Author: Alessandro Maria Ricci
  *
- *  CubicSpline.h
- *----------------------------------------*/
+ *  This library contains the implementation of the cubic spline.
+ *---------------------------------------------------------------------------*/
 
 #ifndef MEDUSA_CUBIC_SPLINE_H
 #define MEDUSA_CUBIC_SPLINE_H
@@ -40,7 +40,7 @@
 #include <hydra/detail/utility/CheckValue.h>
 
 // Medusa
-#include <medusa/Constants.h>
+#include <medusa/generic/Constants.h>
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
@@ -61,6 +61,15 @@
 
 namespace medusa {
 
+    /*
+    *  @class CubicSpline
+    *  Class that provides the formulas used to implement the cubic spline in the physics analyzes.
+    *  [Reference: "Simon Stemmle, PhD thesis, Heidelberg, Germany" and arXiv:1407.0748v1]
+    * 
+    *  The implementation of some methods is inside the CubicSpline.inl file.
+    *
+    *  nKnots = number of knots
+    */
     template<size_t nKnots>
     class CubicSpline
     {
@@ -72,6 +81,9 @@ namespace medusa {
 
         CubicSpline() = delete;
 
+        // The constructor needs the knot vector and the list of the spline coefficients.
+        // The dimension of the knot vector is given as a class parameter. The list must contain nKnots+2 values.
+        // The user has to respect the parameter order.
         CubicSpline(const double (&knots)[nKnots], const std::initializer_list<double> SplineCoefficients)
         {
             // set knot vector and spline coefficients
@@ -195,6 +207,9 @@ namespace medusa {
         }
 
 
+        // The constructor needs the knot and coefficient vectors.
+        // The dimension of the knot vector is given as a class parameter. The coefficient vector must contain nKnots+2 values.
+        // The user has to respect the parameter order.
         CubicSpline(const double (&knots)[nKnots], double (&SplineCoefficients)[nKnots+2])
         {
             // set knot vector and spline coefficients
@@ -548,6 +563,6 @@ namespace medusa {
 
 } // namespace medusa
 
-#include <medusa/CubicSpline.inl>
+#include <medusa/generic/CubicSpline.inl>
 
 #endif // MEDUSA_CUBIC_SPLINE_H

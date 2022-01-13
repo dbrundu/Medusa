@@ -28,4 +28,4 @@
  *  benchmarks_B0s_Jpsi_phi_signal.cu
  *---------------------------------------------------------------------------*/
 
-#include <src/benchmarks/benchmarks_B0s_Jpsi_phi_signal.inl>
+#include <src/phi_s/benchmarks/benchmarks_B0s_Jpsi_phi_signal.inl>
