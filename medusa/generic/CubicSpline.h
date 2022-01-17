@@ -69,6 +69,9 @@ namespace medusa {
     *  The implementation of some methods is inside the CubicSpline.inl file.
     *
     *  nKnots = number of knots
+    * 
+    *  The intermediate functions K() and M() contain the derivatives
+    *  up to the 6th order.
     */
     template<size_t nKnots>
     class CubicSpline
@@ -542,7 +545,7 @@ namespace medusa {
 
 
         //-------------------------
-        //        Variables
+        //        Attributes
         //-------------------------
 
         // factorials: k!, j!, (k-n)! and (n-j)!

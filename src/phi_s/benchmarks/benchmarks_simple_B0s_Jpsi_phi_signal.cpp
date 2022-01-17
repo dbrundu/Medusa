@@ -25,7 +25,7 @@
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  Other benchmarks_B0s_Jpsi_phi_signal.cu
+ *  benchmarks_simple_B0s_Jpsi_phi_signal.cpp
  *---------------------------------------------------------------------------*/
 
-#include <src/phi_s/benchmarks/benchmarks2_B0s_Jpsi_phi_signal.inl>
+#include <src/phi_s/benchmarks/benchmarks_simple_B0s_Jpsi_phi_signal.inl>

@@ -70,7 +70,11 @@ namespace medusa {
     * 
     *  The implementation of the method Update_ATCoefficients() is inside the detail/ folder
     *
+    *  Spline = enable or disable the cubic spline
     *  ArgTypes = argument types of the functor
+    * 
+    *  WARNING: all attributes of the functor are incapsulated as arguments of the CUDA kernels.
+    *  The maximum dimension of all CUDA kernel arguments is 4 KB.
     */
     template<bool Spline,
              typename ArgTypeTime,
@@ -290,7 +294,7 @@ namespace medusa {
             double wPDF = 0.;
 
             // This is a safety mechanism that is necessary when A_par2 takes negative values (see Update_NFactors()).
-            // PDF = 0 activates the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
+            // PDF = 0 enables the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
             if(A_par2 < 0)
             {
                 return wPDF;
@@ -352,19 +356,29 @@ namespace medusa {
 
             // This macro controls if PDF is NaN. If yes, it prints a warning
             // with the parameter value for whom we obtain a NaN.
-            hydra::CHECK_VALUE(wPDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
-                                     "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
-                                     "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
+            hydra::CHECK_VALUE(wPDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f,"
+                                     "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f,"
+                                     "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f,"
+                                     "par[18]=%f, par[19]=%f, par[20]=%f, par[21]=%f, par[22]=%f, par[23]=%f,"
+                                     "par[24]=%f, par[25]=%f, par[26]=%f, par[27]=%f, par[28]=%f, par[29]=%f,"
+                                     "par[30]=%f, par[31]=%f, par[32]=%f, par[33]=%f, par[34]=%f, par[35]=%f,"
+                                     "par[36]=%f, par[37]=%f, par[38]=%f, par[39]=%f, par[40]=%f, par[41]=%f,"
+                                     "par[42]=%f, par[43]=%f, par[44]=%f, par[45]=%f, par[46]=%f, par[47]=%f, par[48]=%f",
                                      _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
                                      _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
-                                     _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
+                                     _par[12], _par[13], _par[14], _par[15], _par[16], _par[17],
+                                     _par[18], _par[19], _par[20], _par[21], _par[22], _par[23],
+                                     _par[24], _par[25], _par[26], _par[27], _par[28], _par[29],
+                                     _par[30], _par[31], _par[32], _par[33], _par[34], _par[35],
+                                     _par[36], _par[37], _par[38], _par[39], _par[40], _par[41],
+                                     _par[42], _par[43], _par[44], _par[45], _par[46], _par[47], _par[48]);
 
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
             // Don't use the function ::abs(), because it changes the values of about 10^{-03} - 10^{-04} units.
-            // Don't deactivate this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
+            // Don't disable this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
             if(wPDF < 0)
             {
-                return wPDF = 0;
+                return wPDF = 0.;
             }
             else
             {
@@ -556,6 +570,9 @@ namespace medusa {
         }
 
 
+        //-------------------------------------
+        //              Attributes
+        //-------------------------------------
 
         double fweight;                             // weight to improve the numerical fit
         ArgTypeTime fLowerLimit;                    // Lower limit in the time integration

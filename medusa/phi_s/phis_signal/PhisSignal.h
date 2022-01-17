@@ -199,7 +199,7 @@ namespace medusa {
             double UnnormPDF = 0;
 
             // This is a safety mechanism that is necessary when A_par2 takes negative values (see Update_NFactors()).
-            // UnnormPDF = 0 activates the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
+            // UnnormPDF = 0 enables the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
             if(A_par2 < 0)
             {
                 return UnnormPDF;
@@ -232,7 +232,7 @@ namespace medusa {
 
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
             // Don't use the function ::abs(), because it changes the values of about 10^{-03} - 10^{-04} units.
-            // Don't deactivate this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
+            // Don't disable this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
             if(UnnormPDF < 0)
             {
                 return UnnormPDF = 0;

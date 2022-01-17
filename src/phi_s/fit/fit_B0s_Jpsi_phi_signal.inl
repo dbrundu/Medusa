@@ -105,9 +105,9 @@ int main(int argv, char** argc)
     size_t nentries = 0;
     size_t calls = 0;
 	size_t iterations = 0;
-	double max_error = 0;
-    double distortion = 0;
-    double edm = 0;
+	double max_error = 0.;
+    double distortion = 0.;
+    double edm = 0.;
 
 	try {
 

@@ -27,13 +27,13 @@
  *      Author: Davide Brundu
  *      Updated by Alessandro Maria Ricci in 04/07/2021
  * 
- *  Benchmarks for fit_B0s_Jpsi_phi_signal.inl
+ *  Complete benchmarks for fit_B0s_Jpsi_phi_signal.inl
  *----------------------------------------------------------------*/
 
 
 
-#ifndef BENCHMARKS_B0S_JPSI_PHI_SIGNAL_INL_
-#define BENCHMARKS_B0S_JPSI_PHI_SIGNAL_INL_
+#ifndef BENCHMARKS_COMPLETE_B0S_JPSI_PHI_SIGNAL_INL_
+#define BENCHMARKS_COMPLETE_B0S_JPSI_PHI_SIGNAL_INL_
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
@@ -250,7 +250,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     hydra::Plain<N, hydra::device::sys_t> Integrator( {min_t , min_theta, min_theta, min_phi},
                                                            {max_t , max_theta, max_theta, max_phi}, 1000000);
     
-    auto Model_PDF = hydra::make_pdf( MODEL, Integrator);
+    auto Model_PDF = hydra::make_pdf(MODEL, Integrator);
     
     auto fcn0 = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
     fcn0(parameters);
@@ -264,16 +264,16 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     {
         return Integrator(MODEL) ; 
     };
-    
-    
 
-    /*------------------------------------------------------/
+
+
+    /*----------------------------------------------------------/
      * Benchmark for fcn evaluation with cached integration
      *   This can be done because the PDF object is already
-     *   constructed, so it has its cached normalization, while the
-     *   FCN object is recreated each time, 
+     *   constructed, so it has its cached normalization,
+     *   while the FCN object is recreated each time, 
      *   thus with non-cached fcn value.
-     *-----------------------------------------------------*/
+     *---------------------------------------------------------*/
     BENCHMARK_ADVANCED( "Evaluation + cached Integration" )(Catch::Benchmark::Chronometer meter)
     {
         auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
@@ -283,17 +283,18 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
 
 
 
-    /*------------------------------------------------------/
+    /*------------------------------------------------------------/
      * Benchmark for fcn evaluation with non-cached integration
-     *   This can be done because the 
-     *   FCN object is recreated each time and the parameters
-     *   are modified, in order to trigger the normalization
-     *   in the PDF object.
-     *-----------------------------------------------------*/
+     *   This can be done because the FCN object is recreated 
+     *   each time and the parameters are modified,
+     *   in order to trigger the normalization in the PDF object.
+     *-----------------------------------------------------------*/
     BENCHMARK_ADVANCED( "Evaluation + non-cached Integration" )(Catch::Benchmark::Chronometer meter)
     {
         auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-        for(auto& p : parameters ) p *= 1.01;
+        
+        // distortion of the parameters to avoid the cached integration
+        for(size_t i=0; i<parameters.size(); i++) { parameters[i] *= 1.001; }
 
         meter.measure([=] { return fcn(parameters); });
     };
@@ -324,10 +325,11 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     {
         const size_t i = rng(index++);
         auto x = dataset_d[i];
+
         meter.measure( [=] { return MODEL( x ); });
     };
 
 
 } // TEST_CASE
 
-#endif // BENCHMARKS_B0S_JPSI_PHI_SIGNAL_INL_
+#endif // BENCHMARKS_COMPLETE_B0S_JPSI_PHI_SIGNAL_INL_

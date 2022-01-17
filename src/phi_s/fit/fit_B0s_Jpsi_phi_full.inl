@@ -185,7 +185,15 @@ int main(int argv, char** argc)
                                               deltagammasd_dataset, deltagammas_dataset, deltams_dataset,
                                               phi0_dataset,    phipar_dataset,    phiperp_dataset,    phiS_dataset,
                                               lambda0_dataset, lambdapar_dataset, lambdaperp_dataset, lambdaS_dataset,
-                                              delta0_dataset,  deltapar_dataset,  deltaperp_dataset,  deltaS_dataset};
+                                              delta0_dataset,  deltapar_dataset,  deltaperp_dataset,  deltaS_dataset,
+                                              b0, b1,
+                         		              p0_OS, p1_OS, DeltaP0_OS, DeltaP1_OS, AvgEta_OS,
+                         		              p0_SS, p1_SS, DeltaP0_SS, DeltaP1_SS, AvgEta_SS,
+                        		              Omega[0], Omega[1], Omega[2], Omega[3], Omega[4],
+                         		              Omega[5], Omega[6], Omega[7], Omega[8], Omega[9],
+								              Spline_coeffs[0], Spline_coeffs[1], Spline_coeffs[2],
+                                              Spline_coeffs[3], Spline_coeffs[4], Spline_coeffs[5],
+                                              Spline_coeffs[6], Spline_coeffs[7], Spline_coeffs[8]};
 
     auto A0_pd             = hydra::Parameter::Create("A0" ).Value(A0_dataset).Error(0.0001);
     auto Aperp_pd          = hydra::Parameter::Create("Aperp").Value(Aperp_dataset).Error(0.0001);
@@ -310,7 +318,15 @@ int main(int argv, char** argc)
                                       deltagammasd, deltagammas, deltams,
                                       phi0,    phipar,    phiperp,    phiS,
                                       lambda0, lambdapar, lambdaperp, lambdaS,
-                                      delta0,  deltapar,  deltaperp,  deltaS};
+                                      delta0,  deltapar,  deltaperp,  deltaS,
+                                      b0, b1,
+                         		      p0_OS, p1_OS, DeltaP0_OS, DeltaP1_OS, AvgEta_OS,
+                         		      p0_SS, p1_SS, DeltaP0_SS, DeltaP1_SS, AvgEta_SS,
+                        		      Omega[0], Omega[1], Omega[2], Omega[3], Omega[4],
+                         		      Omega[5], Omega[6], Omega[7], Omega[8], Omega[9],
+								      Spline_coeffs[0], Spline_coeffs[1], Spline_coeffs[2],
+                                      Spline_coeffs[3], Spline_coeffs[4], Spline_coeffs[5],
+                                      Spline_coeffs[6], Spline_coeffs[7], Spline_coeffs[8]};
 
     auto A0_p             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001).Limits(0.1, 0.9);
     auto Aperp_p          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001).Limits(0.1, 0.9);
@@ -351,7 +367,7 @@ int main(int argv, char** argc)
     //          PDF generation
     //---------------------------------
 
-    // integrator (it always returns the value 1.0, because the normalization is computed
+    // Integrator (it always returns the value 1.0, because the normalization is computed
     // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
     // a normalization factor which depends from the experimental variables)
     auto integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline,

@@ -27,13 +27,13 @@
  *      Author: Davide Brundu
  *      Updated by Alessandro Maria Ricci in 04/07/2021
  * 
- *  Benchmarks for fit_B0s_Jpsi_phi_full.inl
+ *  Complete benchmarks for fit_B0s_Jpsi_phi_full.inl
  *----------------------------------------------------------------*/
 
 
 
-#ifndef BENCHMARKS_B0S_JPSI_PHI_INL_
-#define BENCHMARKS_B0S_JPSI_PHI_INL_
+#ifndef BENCHMARKS_COMPLETE_B0S_JPSI_PHI_INL_
+#define BENCHMARKS_COMPLETE_B0S_JPSI_PHI_INL_
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
@@ -93,39 +93,6 @@
 #include <medusa/phi_s/phis_full/GenerateDataset.h>
 
 
-
-//---------------------------------
-//          Parameters
-//---------------------------------
-
-// model parameters
-const bool   B0sbar     = false;    // boolean to specify wether B0s is B0sbar or not
-
-const double A0         = ::sqrt(0.542);
-const double Aperp      = ::sqrt(0.206);
-const double AS         = ::sqrt(0.0037);
-
-const double phi0       = -0.082;
-const double phipar     = -0.043 + phi0;
-const double phiperp    = -0.074 + phi0;
-const double phiS       = 0.021 + phi0;
-
-const double lambda0    = 0.955; 
-const double lambdapar  = 0.978*lambda0;
-const double lambdaperp = 1.23*lambda0;
-const double lambdaS    = 1.28*lambda0;
-
-const double delta0     = 0.0;
-const double deltapar   = 3.030 + delta0;
-const double deltaperp  = 2.60  + delta0;
-const double deltaS     = -0.30 + delta0;
-
-const double deltagammasd = -0.0044;
-const double deltagammas  = 0.0782;
-const double deltams      = 17.713;
-
-
-
 //-------------------------------------------
 //              Benchmarks
 //-------------------------------------------
@@ -150,67 +117,75 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     const bool CubicSpline = true;
 
     // model parameters
-    const double A0_dataset         = ::sqrt(0.542);
-    const double Aperp_dataset      = ::sqrt(0.206);
-    const double AS_dataset         = ::sqrt(0.0037);
+    const double A0         = ::sqrt(0.542);
+    const double Aperp      = ::sqrt(0.206);
+    const double AS         = ::sqrt(0.0037);
 
-    const double phi0_dataset       = -0.082;
-    const double phipar_dataset     = -0.125;            // -0.043 + phi0
-    const double phiperp_dataset    = -0.156;            // -0.074 + phi0
-    const double phiS_dataset       = -0.061;            //  0.021 + phi0
+    const double phi0       = -0.082;
+    const double phipar     = -0.125;            // -0.043 + phi0
+    const double phiperp    = -0.156;            // -0.074 + phi0
+    const double phiS       = -0.061;            //  0.021 + phi0
 
-    const double lambda0_dataset    = 0.955; 
-    const double lambdapar_dataset  = 0.93399;           // 0.978*lambda0
-    const double lambdaperp_dataset = 1.17465;           // 1.23*lambda0
-    const double lambdaS_dataset    = 1.2224;            // 1.28*lambda0
+    const double lambda0    = 0.955; 
+    const double lambdapar  = 0.93399;           // 0.978*lambda0
+    const double lambdaperp = 1.17465;           // 1.23*lambda0
+    const double lambdaS    = 1.2224;            // 1.28*lambda0
 
-    const double delta0_dataset     = 0.0;
-    const double deltapar_dataset   = 3.030;            // + delta0
-    const double deltaperp_dataset  = 2.60;             // + delta0
-    const double deltaS_dataset     = -0.30;            // + delta0
+    const double delta0     = 0.0;
+    const double deltapar   = 3.030;            // + delta0
+    const double deltaperp  = 2.60;             // + delta0
+    const double deltaS     = -0.30;            // + delta0
 
-    const double deltagammasd_dataset = -0.0044;
-    const double deltagammas_dataset  = 0.0782;
-    const double deltams_dataset      = 17.713;
+    const double deltagammasd = -0.0044;
+    const double deltagammas  = 0.0782;
+    const double deltams      = 17.713;
 
-    std::vector<double> parameters_dataset = {A0_dataset, Aperp_dataset, AS_dataset, 
-                                              deltagammasd_dataset, deltagammas_dataset, deltams_dataset,
-                                              phi0_dataset,    phipar_dataset,    phiperp_dataset,    phiS_dataset,
-                                              lambda0_dataset, lambdapar_dataset, lambdaperp_dataset, lambdaS_dataset,
-                                              delta0_dataset,  deltapar_dataset,  deltaperp_dataset,  deltaS_dataset};
+    std::vector<double> parameters = {A0, Aperp, AS, 
+                                      deltagammasd, deltagammas, deltams,
+                                      phi0,    phipar,    phiperp,    phiS,
+                                      lambda0, lambdapar, lambdaperp, lambdaS,
+                                      delta0,  deltapar,  deltaperp,  deltaS,
+                                      b0, b1,
+                         		      p0_OS, p1_OS, DeltaP0_OS, DeltaP1_OS, AvgEta_OS,
+                         		      p0_SS, p1_SS, DeltaP0_SS, DeltaP1_SS, AvgEta_SS,
+                        		      Omega[0], Omega[1], Omega[2], Omega[3], Omega[4],
+                         		      Omega[5], Omega[6], Omega[7], Omega[8], Omega[9],
+								      Spline_coeffs[0], Spline_coeffs[1], Spline_coeffs[2],
+                                      Spline_coeffs[3], Spline_coeffs[4], Spline_coeffs[5],
+                                      Spline_coeffs[6], Spline_coeffs[7], Spline_coeffs[8]};
 
-    auto A0_pd             = hydra::Parameter::Create("A0" ).Value(A0_dataset).Error(0.0001);
-    auto Aperp_pd          = hydra::Parameter::Create("Aperp").Value(Aperp_dataset).Error(0.0001);
-    auto AS_pd             = hydra::Parameter::Create("AS" ).Value(AS_dataset).Error(0.0001);
+    auto A0_pd             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001);
+    auto Aperp_pd          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001);
+    auto AS_pd             = hydra::Parameter::Create("AS" ).Value(AS).Error(0.0001);
 
-    auto DeltaGamma_sd_pd  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd_dataset).Error(0.0001);
-    auto DeltaGamma_pd     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas_dataset).Error(0.0001);
-    auto DeltaM_pd         = hydra::Parameter::Create("DeltaM" ).Value(deltams_dataset).Error(0.0001);
+    auto DeltaGamma_sd_pd  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd).Error(0.0001);
+    auto DeltaGamma_pd     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas).Error(0.0001);
+    auto DeltaM_pd         = hydra::Parameter::Create("DeltaM" ).Value(deltams).Error(0.0001);
 
-    auto phi_0_pd          = hydra::Parameter::Create("phi_0").Value(phi0_dataset).Error(0.0001);
-    auto phi_par_pd        = hydra::Parameter::Create("phi_par" ).Value(phipar_dataset).Error(0.0001);
-    auto phi_perp_pd       = hydra::Parameter::Create("phi_perp").Value(phiperp_dataset).Error(0.0001);
-    auto phi_S_pd          = hydra::Parameter::Create("phi_S" ).Value(phiS_dataset).Error(0.0001);
+    auto phi_0_pd          = hydra::Parameter::Create("phi_0").Value(phi0).Error(0.0001);
+    auto phi_par_pd        = hydra::Parameter::Create("phi_par" ).Value(phipar).Error(0.0001);
+    auto phi_perp_pd       = hydra::Parameter::Create("phi_perp").Value(phiperp).Error(0.0001);
+    auto phi_S_pd          = hydra::Parameter::Create("phi_S" ).Value(phiS).Error(0.0001);
 
-    auto lambda_0_pd       = hydra::Parameter::Create("lambda_0").Value(lambda0_dataset).Error(0.0001);
-    auto lambda_par_pd     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar_dataset).Error(0.0001);
-    auto lambda_perp_pd    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp_dataset).Error(0.0001);
-    auto lambda_S_pd       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS_dataset).Error(0.0001);
+    auto lambda_0_pd       = hydra::Parameter::Create("lambda_0").Value(lambda0).Error(0.0001);
+    auto lambda_par_pd     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar).Error(0.0001);
+    auto lambda_perp_pd    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp).Error(0.0001);
+    auto lambda_S_pd       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS).Error(0.0001);
 
-    auto delta_0_pd        = hydra::Parameter::Create("delta_0").Value(delta0_dataset).Error(0.0001);
-    auto delta_par_pd      = hydra::Parameter::Create("delta_par").Value(deltapar_dataset).Error(0.0001);
-    auto delta_perp_pd     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp_dataset).Error(0.0001);
-    auto delta_S_pd        = hydra::Parameter::Create("delta_S").Value(deltaS_dataset).Error(0.0001);
+    auto delta_0_pd        = hydra::Parameter::Create("delta_0").Value(delta0).Error(0.0001);
+    auto delta_par_pd      = hydra::Parameter::Create("delta_par").Value(deltapar).Error(0.0001);
+    auto delta_perp_pd     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp).Error(0.0001);
+    auto delta_S_pd        = hydra::Parameter::Create("delta_S").Value(deltaS).Error(0.0001);
 
-    hydra::Parameter ModelParams_dataset[18] = {A0_pd,             Aperp_pd,       AS_pd,
-                                                DeltaGamma_sd_pd,  DeltaGamma_pd,  DeltaM_pd,
-                                                phi_0_pd,          phi_par_pd,     phi_perp_pd,     phi_S_pd,
-                                                lambda_0_pd,       lambda_par_pd,  lambda_perp_pd,  lambda_S_pd,
-                                                delta_0_pd,        delta_par_pd,   delta_perp_pd,   delta_S_pd};
+    hydra::Parameter ModelParams[18] = {A0_pd,             Aperp_pd,       AS_pd,
+                                        DeltaGamma_sd_pd,  DeltaGamma_pd,  DeltaM_pd,
+                                        phi_0_pd,          phi_par_pd,     phi_perp_pd,     phi_S_pd,
+                                        lambda_0_pd,       lambda_par_pd,  lambda_perp_pd,  lambda_S_pd,
+                                        delta_0_pd,        delta_par_pd,   delta_perp_pd,   delta_S_pd};
 
     auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
-                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_dataset, ExpParams, Spline_Knots,
-                                                                                                                    LowerLimit, UpperLimit);
+                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots,
+                                                                                                            LowerLimit, UpperLimit);
 
 
     //---------------------------------
@@ -273,7 +248,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //      PDF and FCN generation
     //---------------------------------
     
-    // integrator (it always returns the value 1.0, because the normalization is computed
+    // Integrator (it always returns the value 1.0, because the normalization is computed
     // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
     // a normalization factor which depends from the experimental variables)
     auto integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline,
@@ -282,20 +257,42 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     // make PDF
     auto Model_PDF = hydra::make_pdf(Model, integrator);
     
-    auto fcn0 = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
-    fcn0(parameters_dataset);
+    auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
 
 
 
-    /*------------------------------------------------------/
+    /*----------------------------------------------------------/
+     * Benchmark for fcn evaluation with cached integration
+     *---------------------------------------------------------*/
+    BENCHMARK_ADVANCED( "Evaluation + cached Integration" )(Catch::Benchmark::Chronometer meter)
+    {
+        meter.measure([=] { return fcn(parameters); });
+    };
+
+
+
+    /*------------------------------------------------------------/
+     * Benchmark for fcn evaluation with non-cached integration
+     *-----------------------------------------------------------*/
+    BENCHMARK_ADVANCED( "Evaluation + non-cached Integration" )(Catch::Benchmark::Chronometer meter)
+    {
+        // distortion of the parameters to avoid the cached integration
+        for(size_t i=0; i<parameters.size(); i++) { parameters[i] *= 1.001; }
+
+        meter.measure([=] { return fcn(parameters); });
+    };
+
+
+
+    /*--------------------------------------------------------/
      * Benchmark for fcn evaluation with all values cached
-     *   This can be done because the 
-     *   FCN object is already created and evaluated outside,
-     *   thus all the values are cached
-     *-----------------------------------------------------*/
+     *   This can be done because the FCN object is already
+     *   created and evaluated previously, thus
+     *   all the values are cached
+     *--------------------------------------------------------*/
     BENCHMARK( "Cached Evaluation + cached Integration" )
     {    
-        return fcn0(parameters_dataset);
+        return fcn(parameters);
     };
 
 
@@ -311,10 +308,11 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     {
         const size_t i = rng(index++);
         auto x = dataset_d[i];
-        meter.measure( [=] { return Model( x ); });
+
+        meter.measure( [=] { return Model(x); });
     };
 
 
 } // TEST_CASE
 
-#endif // BENCHMARKS_B0S_JPSI_PHI_INL_
+#endif // BENCHMARKS_COMPLETE_B0S_JPSI_PHI_INL_
