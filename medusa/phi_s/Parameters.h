@@ -74,6 +74,73 @@ declarg(delta_t, double)
 
 
 //-------------------------------------
+// Model parameters for:
+//  B0s -> J/psi  (Phi -> K+ K-)
+//          |-> mu+ mu-
+//-------------------------------------
+
+// temporal integration limits (ps)
+const dtime_t LowerLimit = 0.3;
+const dtime_t UpperLimit = 20.0;
+
+// enable the cubic spline
+const bool CubicSpline = true;
+
+// model parameters
+const double A0         = ::sqrt(0.542);
+const double Aperp      = ::sqrt(0.206);
+const double AS         = ::sqrt(0.0037);
+
+const double phi0       = -0.082;
+const double phipar     = -0.125;            // -0.043 + phi0
+const double phiperp    = -0.156;            // -0.074 + phi0
+const double phiS       = -0.061;            //  0.021 + phi0
+
+const double lambda0    = 0.955; 
+const double lambdapar  = 0.93399;           // 0.978*lambda0
+const double lambdaperp = 1.17465;           // 1.23*lambda0
+const double lambdaS    = 1.2224;            // 1.28*lambda0
+
+const double delta0     = 0.0;
+const double deltapar   = 3.030;             // + delta0
+const double deltaperp  = 2.60;              // + delta0
+const double deltaS     = -0.30;             // + delta0
+
+const double deltagammasd = -0.0044;
+const double deltagammas  = 0.0782;
+const double deltams      = 17.713;
+
+auto A0_p             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001).Limits(0.1, 0.9);
+auto Aperp_p          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001).Limits(0.1, 0.9);
+auto AS_p             = hydra::Parameter::Create("AS" ).Value(AS).Error(0.0001).Limits(-0.1, 0.8);
+
+auto DeltaGamma_sd_p  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd).Error(0.0001).Limits(-0.2, 0.2);
+auto DeltaGamma_p     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas).Error(0.0001).Limits(0.03, 0.15);
+auto DeltaM_p         = hydra::Parameter::Create("DeltaM" ).Value(deltams).Error(0.0001).Limits(16.0, 20.0);
+
+auto phi_0_p          = hydra::Parameter::Create("phi_0").Value(phi0).Error(0.0001).Limits(-1.0, 1.0);
+auto phi_par_p        = hydra::Parameter::Create("phi_par" ).Value(phipar).Error(0.0001).Limits(-1.0, 1.0);
+auto phi_perp_p       = hydra::Parameter::Create("phi_perp").Value(phiperp).Error(0.0001).Limits(-1.0, 1.0);
+auto phi_S_p          = hydra::Parameter::Create("phi_S" ).Value(phiS).Error(0.0001).Limits(-1.0, 1.0);
+
+auto lambda_0_p       = hydra::Parameter::Create("lambda_0").Value(lambda0).Error(0.0001).Limits(0.7, 1.6);
+auto lambda_par_p     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar).Error(0.0001).Limits(0.7, 1.6);
+auto lambda_perp_p    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp).Error(0.0001).Limits(0.7, 1.6);
+auto lambda_S_p       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS).Error(0.0001).Limits(0.7, 1.6);
+
+auto delta_0_p        = hydra::Parameter::Create("delta_0").Value(delta0).Error(0.0001).Limits(-6.0, 6.0);
+auto delta_par_p      = hydra::Parameter::Create("delta_par").Value(deltapar).Error(0.0001).Limits(-6.28, 6.28);
+auto delta_perp_p     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp).Error(0.0001).Limits(-6.28, 6.28);
+auto delta_S_p        = hydra::Parameter::Create("delta_S").Value(deltaS).Error(0.0001).Limits(-6.0, 6.0);
+
+hydra::Parameter ModelParams[18] = {A0_p,            Aperp_p,      AS_p,
+                                    DeltaGamma_sd_p, DeltaGamma_p, DeltaM_p,
+                                    phi_0_p,         phi_par_p,    phi_perp_p,    phi_S_p,
+                                    lambda_0_p,      lambda_par_p, lambda_perp_p, lambda_S_p,
+                                    delta_0_p,       delta_par_p,  delta_perp_p,  delta_S_p};
+
+
+//-------------------------------------
 // Experimental parameters for:
 //  B0s -> J/psi  (Phi -> K+ K-)
 //          |-> mu+ mu-
@@ -158,6 +225,20 @@ hydra::Parameter ExpParams[31] = {b0_p, b1_p,
 								  Spline_c0_p, Spline_c1_p, Spline_c2_p,
 								  Spline_c3_p, Spline_c4_p, Spline_c5_p,
 								  Spline_c6_p, Spline_c7_p, Spline_c8_p};
+
+std::vector<double> parameters = {A0, Aperp, AS,
+                                    deltagammasd, deltagammas, deltams,
+                                    phi0,    phipar,    phiperp,    phiS,
+                                    lambda0, lambdapar, lambdaperp, lambdaS,
+                                    delta0,  deltapar,  deltaperp,  deltaS,
+                                    b0, b1,
+                         		    p0_OS, p1_OS, DeltaP0_OS, DeltaP1_OS, AvgEta_OS,
+                         		    p0_SS, p1_SS, DeltaP0_SS, DeltaP1_SS, AvgEta_SS,
+                        		    Omega[0], Omega[1], Omega[2], Omega[3], Omega[4],
+                         		    Omega[5], Omega[6], Omega[7], Omega[8], Omega[9],
+								    Spline_coeffs[0], Spline_coeffs[1], Spline_coeffs[2],
+                                    Spline_coeffs[3], Spline_coeffs[4], Spline_coeffs[5],
+                                    Spline_coeffs[6], Spline_coeffs[7], Spline_coeffs[8]};
 
 
 namespace medusa {
