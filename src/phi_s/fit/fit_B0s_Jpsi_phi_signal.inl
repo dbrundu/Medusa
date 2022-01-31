@@ -156,9 +156,6 @@ int main(int argv, char** argc)
     //      Model generation
     //---------------------------------
 
-    // boolean to specify wether B0s is B0sbar or not
-    const bool B0sbar = false;
-
     auto Model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(ModelParams);
 
 
@@ -201,6 +198,7 @@ int main(int argv, char** argc)
         canvas.Divide(4,1);
 
         canvas.cd(1);
+        gPad->SetLogy(1);
         timedist.Draw();
 
         canvas.cd(2);

@@ -95,38 +95,6 @@
 
 
 
-//---------------------------------
-//          Parameters
-//---------------------------------
-
-// model parameters
-const bool   B0sbar     = false;    // boolean to specify wether B0s is B0sbar or not
-
-const double A0         = ::sqrt(0.542);
-const double Aperp      = ::sqrt(0.206);
-const double AS         = ::sqrt(0.0037);
-
-const double phi0       = -0.082;
-const double phipar     = -0.043 + phi0;
-const double phiperp    = -0.074 + phi0;
-const double phiS       = 0.021 + phi0;
-
-const double lambda0    = 0.955; 
-const double lambdapar  = 0.978*lambda0;
-const double lambdaperp = 1.23*lambda0;
-const double lambdaS    = 1.28*lambda0;
-
-const double delta0     = 0.0;
-const double deltapar   = 3.030 + delta0;
-const double deltaperp  = 2.60  + delta0;
-const double deltaS     = -0.30 + delta0;
-
-const double deltagammasd = -0.0044;
-const double deltagammas  = 0.0782;
-const double deltams      = 17.713;
-
-
-
 //-------------------------------------------
 //              Benchmarks
 //-------------------------------------------
@@ -143,42 +111,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //      model generation
     //---------------------------------
 
-    std::vector<double> parameters = {A0, Aperp, AS, 
-                                      deltagammasd,deltagammas, deltams,
-                                      phi0,    phipar,    phiperp,    phiS,
-                                      lambda0, lambdapar, lambdaperp, lambdaS,
-                                      delta0,  deltapar,  deltaperp,  deltaS};
-
-    auto A0_p             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001);
-    auto Aperp_p          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001);
-    auto AS_p             = hydra::Parameter::Create("AS" ).Value(AS).Error(0.0001);
-
-    auto DeltaGamma_sd_p  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd).Error(0.0001);
-    auto DeltaGamma_p     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas).Error(0.0001);
-    auto DeltaM_p         = hydra::Parameter::Create("DeltaM" ).Value(deltams).Error(0.0001);
-
-    auto phi_0_p          = hydra::Parameter::Create("phi_0").Value(phi0).Error(0.0001);
-    auto phi_par_p        = hydra::Parameter::Create("phi_par" ).Value(phipar).Error(0.0001);
-    auto phi_perp_p       = hydra::Parameter::Create("phi_perp").Value(phiperp).Error(0.0001);
-    auto phi_S_p          = hydra::Parameter::Create("phi_S" ).Value(phiS).Error(0.0001);
-
-    auto lambda_0_p       = hydra::Parameter::Create("lambda_0").Value(lambda0).Error(0.0001);
-    auto lambda_par_p     = hydra::Parameter::Create("lambda_par" ).Value(lambdapar).Error(0.0001);
-    auto lambda_perp_p    = hydra::Parameter::Create("lambda_perp").Value(lambdaperp).Error(0.0001);
-    auto lambda_S_p       = hydra::Parameter::Create("lambda_S" ).Value(lambdaS).Error(0.0001);
-
-    auto delta_0_p        = hydra::Parameter::Create("delta_0").Value(delta0).Error(0.0001);
-    auto delta_par_p      = hydra::Parameter::Create("delta_par").Value(deltapar).Error(0.0001);
-    auto delta_perp_p     = hydra::Parameter::Create("delta_perp" ).Value(deltaperp).Error(0.0001);
-    auto delta_S_p        = hydra::Parameter::Create("delta_S").Value(deltaS).Error(0.0001);
-
-    hydra::Parameter hydraparams[18] = {A0_p, Aperp_p, AS_p,
-                                        DeltaGamma_sd_p, DeltaGamma_p, DeltaM_p,
-                                        phi_0_p,    phi_par_p,    phi_perp_p,    phi_S_p,
-                                        lambda_0_p, lambda_par_p, lambda_perp_p, lambda_S_p,
-                                        delta_0_p,  delta_par_p,  delta_perp_p,   delta_S_p};
-
-    auto MODEL = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(hydraparams);
+    auto MODEL = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(ModelParams);
 
 
     //---------------------------------

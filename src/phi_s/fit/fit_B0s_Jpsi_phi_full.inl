@@ -103,7 +103,6 @@ int main(int argv, char** argc)
 
     size_t nentries = 0;
     double edm = 0.;
-    double weight = 0.;
 
 	try {
 
@@ -115,16 +114,12 @@ int main(int argv, char** argc)
         TCLAP::ValueArg<double> EdmArg("e", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
 		cmd.add(EdmArg);
 
-        TCLAP::ValueArg<double> WeightArg("w", "weight", "PDF weight to improve the numerical fit", false, 1., "double");
-		cmd.add(WeightArg);
-
 		// Parse the argv array.
 		cmd.parse(argv, argc);
 
 		// Get the value parsed by each arg.
         nentries = EArg.getValue();
         edm = EdmArg.getValue();
-        weight = WeightArg.getValue();
 
 	}
 	catch (TCLAP::ArgException &e)  {
@@ -147,7 +142,6 @@ int main(int argv, char** argc)
 
     auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
                                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots, LowerLimit, UpperLimit);
-
 
 
     //---------------------------------
@@ -174,6 +168,7 @@ int main(int argv, char** argc)
 
     #ifdef _ROOT_AVAILABLE_
 
+        // Plot of the dataset
         TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 20);
         TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
         TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin",100, -1, 1);
@@ -187,22 +182,30 @@ int main(int argv, char** argc)
             phidist.Fill( (double)hydra::get<3>(x) );
         }
 
-        TCanvas canvas("canvas","canvas",3200,800);
-        canvas.Divide(4,1);
+        TCanvas canvas1("canvas","canvas",3200,800);
+        canvas1.Divide(4,1);
 
-        canvas.cd(1);
+        canvas1.cd(1);
+        gPad->SetLogy(1);
         timedist.Draw();
 
-        canvas.cd(2);
+        canvas1.cd(2);
         thetahdist.Draw();
 
-        canvas.cd(3);
+        canvas1.cd(3);
         thetaldist.Draw();
 
-        canvas.cd(4);
+        canvas1.cd(4);
         phidist.Draw();
 
-        canvas.SaveAs("Dataset_B0s_JpsiPhi.pdf");
+        canvas1.SaveAs("Dataset_B0s_JpsiPhi.pdf");
+
+
+        // Plot of the cubic spline
+        TCanvas canvas2("canvas","canvas",3200,800);
+        canvas2.cd();
+        Model.CreateHistogramPlot("Cubic Spline", "Cubic Spline", 100, 0, 20) -> Draw();
+        canvas2.SaveAs("Cubic_Spline.pdf");
 
     #endif //_ROOT_AVAILABLE_
 
@@ -210,9 +213,6 @@ int main(int argv, char** argc)
     //---------------------------------
     //          PDF generation
     //---------------------------------
-
-    // set the weight in front of the PDF to improve the numerical fit
-    Model.SetWeight(weight);
 
     // Integrator (it always returns the value 1.0, because the normalization is computed
     // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
@@ -244,7 +244,7 @@ int main(int argv, char** argc)
 	MnStrategy strategy(2);
 
     // create Minimize minimizer
-	MnMinimize minimize(fcn, fcn.GetParameters().GetMnState(), strategy);
+	MnMigrad minimize(fcn, fcn.GetParameters().GetMnState(), strategy);
 
 	// print parameters before fitting
 	std::cout << fcn.GetParameters().GetMnState() << std::endl;

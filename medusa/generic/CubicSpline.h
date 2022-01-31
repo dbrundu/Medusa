@@ -132,12 +132,12 @@ namespace medusa {
                 a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
 
                 a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
-                        + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
-                        + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
+                            + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
+                            + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
 
                 a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
-                        -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
-                        -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
+                            -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
+                            -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
 
                 a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
     
@@ -145,12 +145,12 @@ namespace medusa {
                 a2[0][i] = 3*u[i+4]/P[i];
 
                 a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
-                        -(u[i+2]+u[i+4]+u[i+5])/Q[i]
-                        -(2*u[i+5]+u[i+3])/R[i];
+                            -(u[i+2]+u[i+4]+u[i+5])/Q[i]
+                            -(2*u[i+5]+u[i+3])/R[i];
 
                 a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
-                        +(u[i+2]+u[i+5]+u[i+3])/R[i]
-                        +(2*u[i+3]+u[i+6])/S[i];
+                            +(u[i+2]+u[i+5]+u[i+3])/R[i]
+                            +(2*u[i+3]+u[i+6])/S[i];
 
                 a2[3][i] = -3*u[i+3]/S[i];
     
@@ -162,10 +162,7 @@ namespace medusa {
                 a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
 
                 a3[3][i] = 1./S[i];
-            }
 
-            for(size_t i=0; i<nKnots-1; i++)
-            {
                 // calculate polynomial coefficients for the current set of spline coefficients
                 AS[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
                 AS[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
@@ -191,7 +188,7 @@ namespace medusa {
             AS[1][nKnots-1] = AS[1][nKnots-2] + 2*AS[2][nKnots-2]*v + 3*AS[3][nKnots-2]*v*v;
             AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v - AS[1][nKnots-1]*v;
 
-            // determine if and where this linear part gets negative
+            // Determine if and where this linear part gets negative
             if(AS[1][nKnots-1]<0)
             {
                 NegativePart = true;
@@ -258,12 +255,12 @@ namespace medusa {
                 a1[0][i] = -3*u[i+4]*u[i+4]/P[i];
 
                 a1[1][i] = (2*u[i+1]*u[i+4]+u[i+4]*u[i+4])/P[i]
-                        + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
-                        + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
+                            + (u[i+2]*u[i+4]+u[i+2]*u[i+5]+u[i+4]*u[i+5])/Q[i]
+                            + (2*u[i+3]*u[i+5]+u[i+5]*u[i+5])/R[i];
 
                 a1[2][i] = -(2*u[i+2]*u[i+4]+u[i+2]*u[i+2])/Q[i]
-                        -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
-                        -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
+                            -(u[i+2]*u[i+3]+u[i+2]*u[i+5]+u[i+3]*u[i+5])/R[i]
+                            -(2*u[i+3]*u[i+6]+u[i+3]*u[i+3])/S[i];
 
                 a1[3][i] = 3*u[i+3]*u[i+3]/S[i];
     
@@ -271,12 +268,12 @@ namespace medusa {
                 a2[0][i] = 3*u[i+4]/P[i];
 
                 a2[1][i] = -(2*u[i+4]+u[i+1])/P[i]
-                        -(u[i+2]+u[i+4]+u[i+5])/Q[i]
-                        -(2*u[i+5]+u[i+3])/R[i];
+                            -(u[i+2]+u[i+4]+u[i+5])/Q[i]
+                            -(2*u[i+5]+u[i+3])/R[i];
 
                 a2[2][i] = (2*u[i+2]+u[i+4])/Q[i]
-                        +(u[i+2]+u[i+5]+u[i+3])/R[i]
-                        +(2*u[i+3]+u[i+6])/S[i];
+                            +(u[i+2]+u[i+5]+u[i+3])/R[i]
+                            +(2*u[i+3]+u[i+6])/S[i];
 
                 a2[3][i] = -3*u[i+3]/S[i];
     
@@ -288,10 +285,7 @@ namespace medusa {
                 a3[2][i] = -1./Q[i] - 1./R[i] - 1./S[i];
 
                 a3[3][i] = 1./S[i];
-            }
 
-            for(size_t i=0; i<nKnots-1; i++)
-            {
                 // calculate polynomial coefficients for the current set of spline coefficients
                 AS[0][i] = b[i]*a0[0][i] + b[i+1]*a0[1][i] + b[i+2]*a0[2][i] + b[i+3]*a0[3][i];
                 AS[1][i] = b[i]*a1[0][i] + b[i+1]*a1[1][i] + b[i+2]*a1[2][i] + b[i+3]*a1[3][i];
@@ -317,7 +311,7 @@ namespace medusa {
             AS[1][nKnots-1] = AS[1][nKnots-2] + 2*AS[2][nKnots-2]*v + 3*AS[3][nKnots-2]*v*v;
             AS[0][nKnots-1] = AS[0][nKnots-2] + AS[1][nKnots-2]*v + AS[2][nKnots-2]*v*v + AS[3][nKnots-2]*v*v*v - AS[1][nKnots-1]*v;
 
-            // determine if and where this linear part gets negative
+            // Determine if and where this linear part gets negative
             if(AS[1][nKnots-1]<0)
             {
                 NegativePart = true;
