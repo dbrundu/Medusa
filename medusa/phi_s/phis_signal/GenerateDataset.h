@@ -47,6 +47,8 @@
 #include <hydra/Lambda.h>
 #include <hydra/Random.h>
 #include <hydra/Tuple.h>
+#include <hydra/functions/CosHelicityAngle.h>
+#include <hydra/functions/PlanesDeltaAngle.h>
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
@@ -69,7 +71,7 @@ namespace medusa {
      */
 
     template<typename Model, typename Container>
-    size_t GenerateDataset_SignalOnly(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size)
+    size_t GenerateDataset_SignalOnly(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size, dtime_t LowerLimit, dtime_t UpperLimit)
     {
 
         // default namespaces
@@ -86,18 +88,29 @@ namespace medusa {
 
         // function that takes the four-vectors and returns the decay times and angles in the helicity basis
         auto CastToVariables  = hydra::wrap_lambda(
-                [] __hydra_dual__ (Jpsi jpsi, Phi phi, MuonP mup, MuonM mum, KaonP kaonp, KaonM kaonm, size_t n )
+                [LowerLimit, UpperLimit] __hydra_dual__ (Jpsi jpsi, Phi phi, MuonP mup, MuonM mum, KaonP kaonp, KaonM kaonm, size_t n )
         {
             hydra_thrust::default_random_engine engine;
-            hydra_thrust::uniform_real_distribution<double> uniDist(0.0, 20.0);
+            hydra_thrust::uniform_real_distribution<double> uniDist(LowerLimit, UpperLimit);
             engine.discard(n);
             dtime_t decay_time = uniDist(engine);
 
-            theta_l_t theta_l    = ::acos( medusa::functions::cos_decay_angle(jpsi + phi, phi,  kaonp) );
-            theta_h_t theta_h    = ::acos( medusa::functions::cos_decay_angle(jpsi + phi, jpsi, mup) );
-            phi_t     phiangle   = medusa::functions::phi_plane_angle(kaonm, kaonp, mup, mum);
+            // This class returns the cosine of the decay theta angle in the helicity basis.
+            // The calculated decay angle is that between the flight direction of the daughter meson, "D",
+            // in the rest frame of "Q" (the parent of "D"), with respect to "Q"'s flight direction
+            // in "P"'s (the parent of "Q") rest frame P == B0, Q = dimuon, D = muon
+            hydra::CosHelicityAngle costheta_engine;
+            costheta_h_t costheta_h = costheta_engine.Evaluate(jpsi + phi, phi,  kaonp);
+            costheta_l_t costheta_l = costheta_engine.Evaluate(jpsi + phi, jpsi, mup);
 
-            return hydra::make_tuple(decay_time, theta_h, theta_l, phiangle) ;
+            // This class evaluates the angle phi between two decay planes, formed by particles d2&d3 and h1&h2 correspondingly.
+            // The angle is evaluated in the rest frame of "mother" particles (defined as d2+d3+h1+h2)
+            // It is calculated as the angle formed by the h1 3vector projection on an x-y plane defined by d2(=x), h1+h2 (=z)
+            // For LHCb convention with B0->h+h-mu+mu- ==> d2 = h-, d3=h+, h1 = mu+, h2=mu-
+            hydra::PlanesDeltaAngle phiangle_engine;
+            phi_t phiangle = phiangle_engine(kaonm, kaonp, mup, mum);
+
+            return hydra::make_tuple(decay_time, costheta_h, costheta_l, phiangle);
 
         });
 
@@ -134,7 +147,7 @@ namespace medusa {
 
 
         // container to hold the times and helicity angles of the decay
-        hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::device::sys_t> dataset(bunch_size);
+        hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t>, hydra::device::sys_t> dataset(bunch_size);
 
 
         // random seed generator inizialized to the default
@@ -171,7 +184,7 @@ namespace medusa {
 
             hydra::copy(range, dataset);
 
-            // erase events in the dataset to model it according to the given model
+            // re-sort events in the dataset to model it according to the given model
             auto dataset_unwgt = hydra::unweight( dataset, model);
 
             // insert dataset_unwgt in final_dataset
@@ -187,8 +200,9 @@ namespace medusa {
         std::chrono::duration<double, std::milli> elapsed = end - start;
 
 
-        // erase final_dataset after nevents. This command is necessary, because we do not know
-        // the number of events that have been erased by unweight() function
+        // erase final_dataset after nevents. This command is necessary because
+        // the unweight() function re-sorts the dataset such that all of the elements
+        // that satisfy the pdf are before those not satisfy it.
         final_dataset.erase(final_dataset.begin()+nevents, final_dataset.end());
 
         // output

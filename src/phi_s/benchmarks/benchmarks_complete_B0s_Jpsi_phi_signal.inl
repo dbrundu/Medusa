@@ -68,7 +68,6 @@
 #include <hydra/Function.h>
 #include <hydra/Lambda.h>
 #include <hydra/Pdf.h>
-#include <hydra/Plain.h>
 #include <hydra/LogLikelihoodFCN.h>
 
 
@@ -111,18 +110,18 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //      model generation
     //---------------------------------
 
-    auto MODEL = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(ModelParams);
+    auto MODEL = medusa::PhisSignal<B0sbar, dtime_t, costheta_h_t, costheta_l_t, phi_t>(ModelParams);
 
 
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::host::sys_t> dataset_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t> , hydra::host::sys_t> dataset_h;
 
-    GenerateDataset_SignalOnly(MODEL, dataset_h, nentries, nentries);
+    medusa::GenerateDataset_SignalOnly(MODEL, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
     
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);
 
 
@@ -136,16 +135,16 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
 
     #ifdef _ROOT_AVAILABLE_
 
-    TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin",100, 0, 20);
-    TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
-    TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin",100, -1, 1);
-    TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin",50, 0, 2*PI);
+    TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+    TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+    TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+    TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
 
     for(auto x : dataset_h){
-         timedist.Fill( (double)hydra::get<0>(x) );
-         thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
-         thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
-         phidist.Fill( (double)hydra::get<3>(x) );
+        timedist.Fill( (double)hydra::get<0>(x) );
+        thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
+        thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
+        phidist.Fill( (double)hydra::get<3>(x) );
     }
 
     TCanvas canvas("canvas","canvas",3200,800);
@@ -171,17 +170,9 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //---------------------------------
     //      PDF and FCN generation
     //---------------------------------
-    
-    const double min_t     = 0.0;
-    const double max_t     = 20.0;
-    const double min_theta = 0.0;
-    const double max_theta = PI;
-    const double min_phi   = 0.0;
-    const double max_phi   = 2*PI;
-    const size_t N         = 4;
 
-    hydra::Plain<N, hydra::device::sys_t> Integrator( {min_t , min_theta, min_theta, min_phi},
-                                                           {max_t , max_theta, max_theta, max_phi}, 1000000);
+    auto Integrator = hydra::AnalyticalIntegral<
+                                medusa::PhisSignal< B0sbar, dtime_t, costheta_h_t, costheta_l_t, phi_t> >(LowerLimit, UpperLimit);
     
     auto Model_PDF = hydra::make_pdf(MODEL, Integrator);
     

@@ -38,17 +38,17 @@ namespace medusa {
 
 template<bool B0sbar,
 		 typename ArgTypeTime,
-		 typename ArgTypeThetah,
-		 typename ArgTypeThetal,
+		 typename ArgTypeCosThetah,
+		 typename ArgTypeCosThetal,
 		 typename ArgTypePhi,
 		 typename Signature >
-void PhisSignal<B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi, Signature>::Update_ATCoefficients()
+void PhisSignal<B0sbar, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi, Signature>::Update_ATCoefficients()
 {
 	/*
 	{
-	 0: A_0,
-	 1: A_perp,
-	 2: A_S,
+	 0: A_0^2,
+	 1: A_perp^2,
+	 2: A_S^2,
 	 3: DeltaGamma_sd,
 	 4: DeltaGamma,
 	 5: DeltaM,

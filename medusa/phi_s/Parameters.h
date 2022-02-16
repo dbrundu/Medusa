@@ -60,10 +60,10 @@ declarg(MuonP, hydra::Vector4R)
 declarg(MuonM, hydra::Vector4R)
 
 // new types for time and helicity angles
-declarg(theta_h_t,  double)
-declarg(theta_l_t,  double)
-declarg(phi_t,      double)
-declarg(dtime_t,    double)
+declarg(costheta_h_t,  double)
+declarg(costheta_l_t,  double)
+declarg(phi_t,         double)
+declarg(dtime_t,       double)
 
 // new types for tagging variables
 declarg(qOS_t, 	 int)
@@ -100,9 +100,9 @@ const bool B0sbar = false;
 // For FullAnalyticPhis.h and PhisSignal.h
 //-----------------------------------------------
 
-const double A0         = 0.7362;			// sqrt(0.542);
-const double Aperp      = 0.4539;           // sqrt(0.206);
-const double AS         = 0.0608;			// sqrt(0.0037);
+const double A02        = 0.542;
+const double Aperp2     = 0.206;
+const double AS2        = 0.0037;
 
 const double phi0       = -0.082;
 const double phipar0    = -0.043;            // phipar - phi0
@@ -110,21 +110,21 @@ const double phiperp0   = -0.074;            // phiperp - phi0
 const double phiS0      =  0.021;            // phiS - phi0
 
 const double lambda0     = 0.955; 
-const double lambdapar0  = 0.978;             // lambdapar / lambda0
-const double lambdaperp0 = 1.23;         	  // lambdaperp / lambda0
-const double lambdaS0    = 1.28;              // lambdaS / lambda0
+const double lambdapar0  = 0.978;            // lambdapar / lambda0
+const double lambdaperp0 = 1.23;         	 // lambdaperp / lambda0
+const double lambdaS0    = 1.28;             // lambdaS / lambda0
 
-const double deltapar0   = 3.030;             // deltapar - delta0
-const double deltaperp0  = 2.60;              // deltaperp - delta0
-const double deltaSperp  = -2.90;             // deltaS - deltaperp
+const double deltapar0   =  3.030;           // deltapar - delta0
+const double deltaperp0  =  2.60;            // deltaperp - delta0
+const double deltaSperp  = -2.90;            // deltaS - deltaperp
 
 const double deltagammasd = -0.0044;
-const double deltagammas  = 0.0782;
-const double deltams      = 17.713;
+const double deltagammas  =  0.0782;
+const double deltams      =  17.713;
 
-auto A0_p             = hydra::Parameter::Create("A0" ).Value(A0).Error(0.0001).Limits(0.1, 0.9);
-auto Aperp_p          = hydra::Parameter::Create("Aperp").Value(Aperp).Error(0.0001).Limits(0.1, 0.9);
-auto AS_p             = hydra::Parameter::Create("AS" ).Value(AS).Error(0.0001).Limits(-0.1, 0.8);
+auto A02_p            = hydra::Parameter::Create("A02" ).Value(A02).Error(0.0001).Limits(0., 0.9);
+auto Aperp2_p         = hydra::Parameter::Create("Aperp2").Value(Aperp2).Error(0.0001).Limits(0., 0.9);
+auto AS2_p            = hydra::Parameter::Create("AS2" ).Value(AS2).Error(0.0001).Limits(0., 0.8);
 
 auto DeltaGamma_sd_p  = hydra::Parameter::Create("DeltaGamma_sd" ).Value(deltagammasd).Error(0.0001).Limits(-0.2, 0.2);
 auto DeltaGamma_p     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas).Error(0.0001).Limits(0.03, 0.15);
@@ -144,7 +144,7 @@ auto delta_par0_p     = hydra::Parameter::Create("delta_par0").Value(deltapar0).
 auto delta_perp0_p    = hydra::Parameter::Create("delta_perp0" ).Value(deltaperp0).Error(0.0001).Limits(-6.28, 6.28);
 auto delta_Sperp_p    = hydra::Parameter::Create("delta_Sperp").Value(deltaSperp).Error(0.0001).Limits(-6.0, 6.0);
 
-hydra::Parameter ModelParams[17] = {A0_p,            Aperp_p,      AS_p,
+hydra::Parameter ModelParams[17] = {A02_p,           Aperp2_p,     AS2_p,
                                     DeltaGamma_sd_p, DeltaGamma_p, DeltaM_p,
                                     phi_0_p,         phi_par0_p,    phi_perp0_p,    phi_S0_p,
                                     lambda_0_p,      lambda_par0_p, lambda_perp0_p, lambda_S0_p,
@@ -239,7 +239,7 @@ hydra::Parameter ExpParams[31] = {b0_p, b1_p,
 								  Spline_c3_p, Spline_c4_p, Spline_c5_p,
 								  Spline_c6_p, Spline_c7_p, Spline_c8_p};
 
-std::vector<double> parameters = {A0, Aperp, AS,
+std::vector<double> parameters = {A02, Aperp2, AS2,
                                     deltagammasd, deltagammas, deltams,
                                     phi0,    phipar0,    phiperp0,    phiS0,
                                     lambda0, lambdapar0, lambdaperp0, lambdaS0,
@@ -277,46 +277,48 @@ namespace medusa {
 
 		struct AngularFunctions
 		{
-			// ctor of the angular functions f_k(theta_h, theta_l, phi)
+			// ctor of the angular functions f_k(costheta_h, costheta_l, phi)
 			__hydra_dual__
-			AngularFunctions(double theta_h, double theta_l, double phi)
+			AngularFunctions(double costheta_h, double costheta_l, double phi)
 			{
-				const double cx = ::cos(theta_h);
-				const double sx = ::sin(theta_h);
-				const double cz = ::cos(phi);
-				const double sz = ::sin(phi);
-				const double cy = ::cos(theta_l);
-				const double sy = ::sin(theta_l);
+				const double ck = costheta_h;
+				const double sk2 = 1 - costheta_h*costheta_h;
+				const double sk = ::sqrt(sk2);
+				const double cp = ::cos(phi);
+				const double sp = ::sin(phi);
+				const double cl = costheta_l;
+				const double sl2 = 1 - costheta_l*costheta_l;
+				const double sl = ::sqrt(sl2);
 
 				//::pow( ::cos(theta_h) , 2) * ::pow( ::sin(theta_l) , 2)
-				fk[0] = cx*sy; fk[0]*= fk[0];
+				fk[0] = ck*ck*sl2;
 
 				//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::cos(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-				fk[1] = 1.0 - cz*cz * sy*sy; fk[1] *= 0.5*sx*sx;
+				fk[1] = 0.5*sk2*(1.0 - cp*cp * sl2);
 
 				//0.5 * ::pow( ::sin(theta_h) , 2) * ( 1 - ::pow( ::sin(phi) , 2) *  ::pow( ::sin(theta_l) , 2) )
-				fk[2] = 1.0 - sz*sz * sy*sy; fk[2] *= 0.5*sx*sx;
+				fk[2] = 0.5*sk2*(1.0 - sp*sp * sl2);
 
 				//::pow( ::sin(theta_h) , 2) * ::pow( ::sin(theta_l) , 2) * ::sin(phi) * ::cos(phi)
-				fk[3] = sx * sy; fk[3]*=cz*sz*fk[3];
+				fk[3] = sk2*sl2*sp*cp;
 
 				//sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-				fk[4] = M_Sqrt2* sx * cx * sy * cy * cz ;
+				fk[4] = M_Sqrt2* sk * ck * sl * cl * cp ;
 
 				//-sqrt2 * ::sin(theta_h) * ::cos(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-				fk[5] = -M_Sqrt2* sx *  cx * sy * cy * sz;
+				fk[5] = -M_Sqrt2* sk * ck * sl * cl * sp;
 
 				//1./3. * ::pow( ::sin(theta_l) , 2 )
-				fk[6] = M_1_3*sy*sy;
+				fk[6] = M_1_3*sl2;
 
 				//2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::cos(phi)
-				fk[7] = M_2_Sqrt6 * sx * sy * cy * cz;
+				fk[7] = M_2_Sqrt6 * sk * sl * cl * cp;
 
 				//-2./sqrt6 * ::sin(theta_h) * ::sin(theta_l) * ::cos(theta_l) * ::sin(phi)
-				fk[8] = -M_2_Sqrt6* sx * sy * cy * sz;
+				fk[8] = -M_2_Sqrt6* sk * sl * cl * sp;
 
 				//2./sqrt3 * ::cos(theta_h) * ::pow(::sin(theta_l) , 2 )
-				fk[9] = M_2_Sqrt3 * cx * sy * sy;
+				fk[9] = M_2_Sqrt3 * ck * sl2;
 			}
 
 			double fk[10];

@@ -56,6 +56,7 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
+#include <medusa/generic/Functions.h>
 
 
 namespace medusa {
@@ -72,16 +73,16 @@ namespace medusa {
     */
     template<bool B0sbar,
              typename ArgTypeTime,
-             typename ArgTypeThetah,
-             typename ArgTypeThetal,
+             typename ArgTypeCosThetah,
+             typename ArgTypeCosThetal,
              typename ArgTypePhi,
-             typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi) >
-    class PhisSignal: public hydra::BaseFunctor< PhisSignal< B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi >, Signature, 18>
+             typename Signature=double(ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi) >
+    class PhisSignal: public hydra::BaseFunctor< PhisSignal< B0sbar, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi >, Signature, 17>
     {
 
-        using ThisBaseFunctor = hydra::BaseFunctor< PhisSignal<B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi >, Signature, 18 >;
+        using ThisBaseFunctor = hydra::BaseFunctor< PhisSignal<B0sbar, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi >, Signature, 17 >;
 
-        using hydra::BaseFunctor< PhisSignal< B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi >, Signature, 18 >::_par;
+        using hydra::BaseFunctor< PhisSignal< B0sbar, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi >, Signature, 17 >::_par;
 
 
         public:
@@ -94,17 +95,17 @@ namespace medusa {
 
         // ctor with list of hydra::Parameter
         // the user has to respect the parameter order
-        PhisSignal(hydra::Parameter const& A_0,           hydra::Parameter const& A_perp,     hydra::Parameter const& A_S, 
-                       hydra::Parameter const& DeltaGamma_sd, hydra::Parameter const& DeltaGamma, hydra::Parameter const& DeltaM,
-                       hydra::Parameter const& phi_0,         hydra::Parameter const& phi_par,
-                       hydra::Parameter const& phi_perp,      hydra::Parameter const& phi_S,
-                       hydra::Parameter const& lambda_0,      hydra::Parameter const& lambda_par,
-                       hydra::Parameter const& lambda_perp,   hydra::Parameter const& lambda_S,
-                       hydra::Parameter const& delta_0,       hydra::Parameter const& delta_par,
-                       hydra::Parameter const& delta_perp,    hydra::Parameter const& delta_S):
-        ThisBaseFunctor({A_0, A_perp, A_S, DeltaGamma_sd, DeltaGamma, DeltaM,
-                         phi_0,       phi_par,    phi_perp,    phi_S,          lambda_0,   lambda_par,
-                         lambda_perp, lambda_S,   delta_0,     delta_par,      delta_perp, delta_S })
+        PhisSignal(hydra::Parameter const& A_02,          hydra::Parameter const& A_perp2,     hydra::Parameter const& A_S2, 
+                   hydra::Parameter const& DeltaGamma_sd, hydra::Parameter const& DeltaGamma,  hydra::Parameter const& DeltaM,
+                   hydra::Parameter const& phi_0,         hydra::Parameter const& phi_par0,    hydra::Parameter const& phi_perp0,
+                   hydra::Parameter const& phi_S0,        hydra::Parameter const& lambda_0,    hydra::Parameter const& lambda_par0,       
+                   hydra::Parameter const& lambda_perp0,  hydra::Parameter const& lambda_S0,   hydra::Parameter const& delta_par0,
+                   hydra::Parameter const& delta_perp0,   hydra::Parameter const& delta_Sperp):
+        ThisBaseFunctor({A_02, A_perp2, A_S2,
+                         DeltaGamma_sd, DeltaGamma, DeltaM,
+                         phi_0, phi_par0, phi_perp0, phi_S0,
+                         lambda_0, lambda_par0, lambda_perp0, lambda_S0,
+                         delta_par0, delta_perp0, delta_Sperp })
         {
             Update();
         }
@@ -112,9 +113,9 @@ namespace medusa {
 
         // ctor with array of hydra::Parameter
         // the user has to respect the parameter order as the main ctor
-        explicit PhisSignal( const hydra::Parameter (&Hs)[18] ):
+        explicit PhisSignal( const hydra::Parameter (&Hs)[17] ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
-                         Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
+                         Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16] }
         {
             Update();
         }
@@ -122,9 +123,9 @@ namespace medusa {
 
         // ctor with array of double
         // the user has to respect the parameter order as the main ctor
-        explicit PhisSignal( const double (&Hs)[18] ):
+        explicit PhisSignal( const double (&Hs)[17] ):
         ThisBaseFunctor{ Hs[0], Hs[1], Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6], Hs[7],
-                         Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17] }
+                         Hs[8], Hs[9], Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16] }
         {
             Update();
         }
@@ -132,10 +133,9 @@ namespace medusa {
 
         // ctor with other PhisSignal instance (copy ctor)
         __hydra_dual__
-        PhisSignal(PhisSignal<B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi> const& other):
+        PhisSignal(PhisSignal<B0sbar, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi> const& other):
         ThisBaseFunctor(other)
         {
-
     	    #pragma unroll 10
     	    for(size_t i=0; i<10; i++)
     	    {   
@@ -155,8 +155,8 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        PhisSignal<B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi>& 
-        operator=( PhisSignal<B0sbar, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi> const& other)
+        PhisSignal<B0sbar, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi>& 
+        operator=( PhisSignal<B0sbar, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi> const& other)
         {
             if(this == &other) return *this;
             ThisBaseFunctor::operator=(other);
@@ -192,11 +192,20 @@ namespace medusa {
 
         // evaluate the sum in Eq. (9) in arXiv:1906.08356v4
         __hydra_dual__ 
-        inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi) const
+        inline double Evaluate(ArgTypeTime time, ArgTypeCosThetah costheta_h, ArgTypeCosThetal costheta_l, ArgTypePhi phi) const
         {
-            double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+            /*
+		     0: A_0^2,
+		     1: A_perp^2,
+		     2: A_S^2,
+		     3: DeltaGamma_sd,
+		     4: DeltaGamma,
+		     5: DeltaM
+             */
+
+            double A_par2 = 1 - _par[0] - _par[1];
             
-            double UnnormPDF = 0;
+            double UnnormPDF = 0.;
 
             // This is a safety mechanism that is necessary when A_par2 takes negative values (see Update_NFactors()).
             // UnnormPDF = 0 enables the Hydra safety mechanism for whom FCN = FcnMaxValue (see main function).
@@ -205,10 +214,10 @@ namespace medusa {
                 return UnnormPDF;
             }
 
-            auto F = parameters::AngularFunctions(theta_h, theta_l, phi);
+            auto F = parameters::AngularFunctions(costheta_h, costheta_l, phi);
 
             double T1 = 0.5 * time * _par[4];
-    	    double T2 = time * _par[5];
+            double T2 = time * _par[5];
 
             double chT1 = ::cosh(T1);
             double shT1 = ::sinh(T1);
@@ -225,17 +234,17 @@ namespace medusa {
             // This macro controls if result is NaN. If yes, it prints a warning with the parameter values for whom we obtain a NaN.
             hydra::CHECK_VALUE(UnnormPDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f, "
                                           "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f, "
-                                          "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f",
+                                          "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f",
                                           _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
                                           _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
-                                          _par[12], _par[13], _par[14], _par[15], _par[16], _par[17]);
+                                          _par[12], _par[13], _par[14], _par[15], _par[16]);
 
             // This is a safety mechanism that is necessary when the functor takes negative values due to the numerical errors.
             // Don't use the function ::abs(), because it changes the values of about 10^{-03} - 10^{-04} units.
             // Don't disable this mechanism, otherwise, there could be anomalous behaviors in the fcn computation.
             if(UnnormPDF < 0)
             {
-                return UnnormPDF = 0;
+                return UnnormPDF = 0.;
             }
             else
             {
@@ -249,34 +258,19 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetA() const
-        {
-		    return A;
-	    }
+	    const parameters::AngularTimeCoefficients& GetA() const {return A;}
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetB() const
-        {
-		    return B;
-	    }
+	    const parameters::AngularTimeCoefficients& GetB() const {return B;}
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetC() const
-        {
-		    return C;
-	    }
+	    const parameters::AngularTimeCoefficients& GetC() const {return C;}
 
         __hydra_dual__
-	    const parameters::AngularTimeCoefficients& GetD() const
-        {
-		    return D;
-	    }
+	    const parameters::AngularTimeCoefficients& GetD() const {return D;}
 
         __hydra_dual__
-	    const parameters::NFactors& GetN() const
-        {
-		    return N;
-	    }
+	    const parameters::NFactors& GetN() const {return N;}
 
 
 
@@ -294,30 +288,25 @@ namespace medusa {
         void Update_NFactors()
         {
     	    /*
-    	    0: A_0,
-            1: A_perp,
-    	    2: A_S,
-    	    3: DeltaGamma_sd,
-    	    4: DeltaGamma,
-    	    5: DeltaM,
+    	    0: A_0^2,
+            1: A_perp^2,
+    	    2: A_S^2
     	    */
 
-           double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+           double A_par2 = 1 - _par[0] - _par[1];
 
-           if(A_par2 > 0)
+           if(A_par2 >= 0)
            {
-                double A_par = ::sqrt(A_par2);
-
-    	        N.k[0] = _par[0]*_par[0];     //A_0*A_0 ;
-    	        N.k[1] =   A_par*A_par;       //A_par*A_par
-    	        N.k[2] = _par[1]*_par[1];     //A_perp*A_perp;
-    	        N.k[3] = _par[1]*A_par;       //A_perp*A_par;
-    	        N.k[4] = _par[0]*A_par;       //A_0*A_par;
-    	        N.k[5] = _par[0]*_par[1];     //A_0*A_perp;
-    	        N.k[6] = _par[2]*_par[2];     //A_S*A_S;
-    	        N.k[7] = _par[2]*A_par;       //A_S*A_par;
-    	        N.k[8] = _par[2]*_par[1];     //A_S*A_perp;
-    	        N.k[9] = _par[2]*_par[0];     //A_S*A_0;
+    	        N.k[0] = _par[0];                      //A_0*A_0 ;
+    	        N.k[1] = A_par2;                       //A_par*A_par
+    	        N.k[2] = _par[1];                      //A_perp*A_perp;
+    	        N.k[3] = ::sqrt(_par[1]*A_par2);       //A_perp*A_par;
+    	        N.k[4] = ::sqrt(_par[0]*A_par2);       //A_0*A_par;
+    	        N.k[5] = ::sqrt(_par[0]*_par[1]);      //A_0*A_perp;
+    	        N.k[6] = _par[2];                      //A_S*A_S;
+    	        N.k[7] = ::sqrt(_par[2]*A_par2);       //A_S*A_par;
+    	        N.k[8] = ::sqrt(_par[2]*_par[1]);      //A_S*A_perp;
+    	        N.k[9] = ::sqrt(_par[2]*_par[0]);      //A_S*A_0;
            }
         }
 
@@ -340,13 +329,13 @@ namespace medusa {
             double time_factor = f * ::exp( -(_par[3] + 0.65789) * time) *
                                         ( A.k[index]*chT1 + B.k[index]*shT1 +
                                             ( C.k[index]*cT2 + D.k[index]*sT2 )*CP );
-            
+
             return time_factor;
         }
 
 
 
-        constexpr static int CP  =  (B0sbar ? -1 : +1);
+        constexpr static int CP = (B0sbar ? -1 : 1);
 
         parameters::NFactors N;                     // polarization factor N_k
         parameters::AngularTimeCoefficients A;      // angular coefficient a_k
@@ -360,5 +349,6 @@ namespace medusa {
 
 // Medusa
 #include <medusa/phi_s/phis_signal/details/Update_ATCoefficients.inl>
+#include <medusa/phi_s/phis_signal/details/IntegrationFormula.inl>
 
 #endif /* PHIS_SIGNAL_H_ */

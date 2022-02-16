@@ -40,19 +40,19 @@ namespace hydra {
 
     template<bool Spline,
              typename ArgTypeTime,
-             typename ArgTypeThetah,
-             typename ArgTypeThetal,
+             typename ArgTypeCosThetah,
+             typename ArgTypeCosThetal,
              typename ArgTypePhi,
              typename ArgTypeQOS,
              typename ArgTypeQSS,
              typename ArgTypeEtaOS,
              typename ArgTypeEtaSS,
              typename ArgTypeDelta>
-    class IntegrationFormula< medusa::FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, 1>
+    class IntegrationFormula< medusa::FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
+                                                                ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, 1>
     {
-        using ThisFunctor = medusa::FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >;
+        using ThisFunctor = medusa::FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
+                                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >;
         protected:
 
         inline std::pair<double, double>

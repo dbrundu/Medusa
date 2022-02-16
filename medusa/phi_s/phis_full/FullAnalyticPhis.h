@@ -78,26 +78,26 @@ namespace medusa {
     */
     template<bool Spline,
              typename ArgTypeTime,
-             typename ArgTypeThetah,
-             typename ArgTypeThetal,
+             typename ArgTypeCosThetah,
+             typename ArgTypeCosThetal,
              typename ArgTypePhi,
              typename ArgTypeQOS,
              typename ArgTypeQSS,
              typename ArgTypeEtaOS,
              typename ArgTypeEtaSS,
              typename ArgTypeDelta,
-             typename Signature=double(ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+             typename Signature=double(ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta) >
-    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 48>,
+    class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
+                                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 48>,
                             public CubicSpline<7>
     {
 
-        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
                                                                 ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 48 >;
         using CSpline = CubicSpline<7>;
 
-        using hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+        using hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 48 >::_par;
 
 
@@ -111,7 +111,7 @@ namespace medusa {
 
         // ctor with list of hydra::Parameter
         // the user has to respect the parameter order
-        FullAnalyticPhis(hydra::Parameter const& A_0,             hydra::Parameter const& A_perp,      hydra::Parameter const& A_S,
+        FullAnalyticPhis(hydra::Parameter const& A_02,            hydra::Parameter const& A_perp2,     hydra::Parameter const& A_S2,
                          hydra::Parameter const& DeltaGamma_sd,   hydra::Parameter const& DeltaGamma,  hydra::Parameter const& DeltaM,
                          hydra::Parameter const& phi_0,           hydra::Parameter const& phi_par0,    hydra::Parameter const& phi_perp0,
                          hydra::Parameter const& phi_S0,          hydra::Parameter const& lambda_0,    hydra::Parameter const& lambda_par0,
@@ -128,7 +128,7 @@ namespace medusa {
                          hydra::Parameter const& Spline_c3,       hydra::Parameter const& Spline_c4,   hydra::Parameter const& Spline_c5,
                          hydra::Parameter const& Spline_c6,       hydra::Parameter const& Spline_c7,   hydra::Parameter const& Spline_c8,
                          double const (&SplineKnots)[7],          ArgTypeTime const& LowerLimit,       ArgTypeTime const& UpperLimit):
-        ThisBaseFunctor({A_0, A_perp, A_S,
+        ThisBaseFunctor({A_02, A_perp2, A_S2,
                          DeltaGamma_sd, DeltaGamma, DeltaM,
                          phi_0, phi_par0, phi_perp0, phi_S0,
                          lambda_0, lambda_par0, lambda_perp0, lambda_S0,
@@ -186,8 +186,8 @@ namespace medusa {
 
         // ctor with other FullAnalyticPhis instance (copy ctor)
         __hydra_dual__
-        FullAnalyticPhis(FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                        ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
+        FullAnalyticPhis(FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
+                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other):
         ThisBaseFunctor(other),
         CSpline(other)
         {
@@ -213,10 +213,10 @@ namespace medusa {
         //-------------------------------------
 
         __hydra_dual__
-        FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta>& 
-        operator=( FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
-                                        ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other)
+        FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
+                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta>& 
+        operator=( FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
+                                            ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta> const& other)
         {
             if(this == &other) return *this;
             ThisBaseFunctor::operator=(other);
@@ -256,13 +256,13 @@ namespace medusa {
 
         // evaluate the sum in Eq. (9) in arXiv:1906.08356v4
         __hydra_dual__ 
-        inline double Evaluate(ArgTypeTime time, ArgTypeThetah theta_h, ArgTypeThetal theta_l, ArgTypePhi phi,
+        inline double Evaluate(ArgTypeTime time, ArgTypeCosThetah costheta_h, ArgTypeCosThetal costheta_l, ArgTypePhi phi,
                                 ArgTypeQOS qOS, ArgTypeQSS qSS, ArgTypeEtaOS etaOS, ArgTypeEtaSS etaSS, ArgTypeDelta delta_time) const
         {
             /*
-		     0: A_0,
-		     1: A_perp,
-		     2: A_S,
+		     0: A_0^2,
+		     1: A_perp^2,
+		     2: A_S^2,
 		     3: DeltaGamma_sd,
 		     4: DeltaGamma,
 		     5: DeltaM,
@@ -275,10 +275,10 @@ namespace medusa {
             35: Omega_7,
             36: Omega_8,
             37: Omega_9,
-            38: Omega_10,
+            38: Omega_10
 		    */
 
-            double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+            double A_par2 = 1 - _par[0] - _par[1];
 
             double UnnormPDF = 0.;
             double NormFactor = 0.;
@@ -291,7 +291,7 @@ namespace medusa {
                 return PDF;
             }
 
-            auto F = parameters::AngularFunctions(theta_h, theta_l, phi);
+            auto F = parameters::AngularFunctions(costheta_h, costheta_l, phi);
 
             double TagB0s = B0sTag(qOS, qSS, etaOS, etaSS);
             double TagB0sbar = B0sbarTag(qOS, qSS, etaOS, etaSS);
@@ -318,7 +318,7 @@ namespace medusa {
                 {
             	    UnnormPDF += F.fk[i]*N.k[i]*CSplineEval(time)*( TagB0s*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
                                                                         TagB0sbar*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
-                
+
                     NormFactor += _par[29+i]*N.k[i]*
                                     ( TagB0s*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
                                         TagB0sbar*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
@@ -336,14 +336,14 @@ namespace medusa {
                 {
             	    UnnormPDF += F.fk[i]*N.k[i]*( TagB0s*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, 1) +
                                                     TagB0sbar*Convolved_Time_Factor(i, conv_exp_cosh, conv_exp_sinh, conv_exp_cos, conv_exp_sin, -1) );
-                
+
                     NormFactor += _par[29+i]*N.k[i]*
                                     ( TagB0s*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, 1) +
                                         TagB0sbar*Integrated_Convolved_Time_Factor(i, int_conv_exp_cosh, int_conv_exp_sinh, int_conv_exp_cos, int_conv_exp_sin, -1) );
                 }
             }
 
-            PDF = UnnormPDF/1.;
+            PDF = UnnormPDF/NormFactor;
 
             // This macro controls if PDF is NaN. If yes, it prints a warning
             // with the parameter value for whom we obtain a NaN.
@@ -430,30 +430,25 @@ namespace medusa {
         void Update_NFactors()
         {
     	    /*
-    	    0: A_0,
-            1: A_perp,
-    	    2: A_S,
-    	    3: DeltaGamma_sd,
-    	    4: DeltaGamma,
-    	    5: DeltaM,
+    	    0: A_0^2,
+            1: A_perp^2,
+    	    2: A_S^2
     	    */
 
-           double A_par2 = 1 - _par[0]*_par[0] - _par[1]*_par[1];
+           double A_par2 = 1 - _par[0] - _par[1];
 
-           if(A_par2 > 0)
+           if(A_par2 >= 0)
            {
-                double A_par = ::sqrt(A_par2);
-
-    	        N.k[0] = _par[0]*_par[0];     //A_0*A_0 ;
-    	        N.k[1] =   A_par*A_par;       //A_par*A_par
-    	        N.k[2] = _par[1]*_par[1];     //A_perp*A_perp;
-    	        N.k[3] = _par[1]*A_par;       //A_perp*A_par;
-    	        N.k[4] = _par[0]*A_par;       //A_0*A_par;
-    	        N.k[5] = _par[0]*_par[1];     //A_0*A_perp;
-    	        N.k[6] = _par[2]*_par[2];     //A_S*A_S;
-    	        N.k[7] = _par[2]*A_par;       //A_S*A_par;
-    	        N.k[8] = _par[2]*_par[1];     //A_S*A_perp;
-    	        N.k[9] = _par[2]*_par[0];     //A_S*A_0;
+    	        N.k[0] = _par[0];                      //A_0*A_0 ;
+    	        N.k[1] = A_par2;                       //A_par*A_par
+    	        N.k[2] = _par[1];                      //A_perp*A_perp;
+    	        N.k[3] = ::sqrt(_par[1]*A_par2);       //A_perp*A_par;
+    	        N.k[4] = ::sqrt(_par[0]*A_par2);       //A_0*A_par;
+    	        N.k[5] = ::sqrt(_par[0]*_par[1]);      //A_0*A_perp;
+    	        N.k[6] = _par[2];                      //A_S*A_S;
+    	        N.k[7] = ::sqrt(_par[2]*A_par2);       //A_S*A_par;
+    	        N.k[8] = ::sqrt(_par[2]*_par[1]);      //A_S*A_perp;
+    	        N.k[9] = ::sqrt(_par[2]*_par[0]);      //A_S*A_0;
            }
         }
 

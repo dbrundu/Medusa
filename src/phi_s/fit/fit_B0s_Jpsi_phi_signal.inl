@@ -55,7 +55,6 @@
 #include <hydra/Lambda.h>
 #include <hydra/Pdf.h>
 #include <hydra/LogLikelihoodFCN.h>
-#include <hydra/Vegas.h>
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
@@ -103,9 +102,6 @@ int main(int argv, char** argc)
     //------------------------------------------------------
 
     size_t nentries = 0;
-    size_t calls = 0;
-	size_t iterations = 0;
-	double max_error = 0.;
     double edm = 0.;
 
 	try {
@@ -115,15 +111,6 @@ int main(int argv, char** argc)
         TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events", false, 5e5, "size_t");
         cmd.add(EArg);
 
-		TCLAP::ValueArg<size_t> NCallsArg("c", "number-of-calls-vegas", "Number of calls in Vegas", false, 1e4, "size_t");
-		cmd.add(NCallsArg);
-
-		TCLAP::ValueArg<double> MaxErrorArg("r", "max-error-vegas", "Maximum error in Vegas", false, 1.0e-5, "double");
-		cmd.add(MaxErrorArg);
-
-		TCLAP::ValueArg<size_t> IterationsArg("i", "max-iterations", "Maximum number of iterations in Vegas",false, 150, "size_t");
-		cmd.add(IterationsArg);
-
         TCLAP::ValueArg<double> EdmArg("e", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
 		cmd.add(EdmArg);
 
@@ -132,9 +119,6 @@ int main(int argv, char** argc)
 
 		// Get the value parsed by each arg.
         nentries = EArg.getValue();
-        calls = NCallsArg.getValue();
-		iterations = IterationsArg.getValue();
-		max_error  = MaxErrorArg.getValue();
         edm = EdmArg.getValue();
 
 	}
@@ -156,41 +140,42 @@ int main(int argv, char** argc)
     //      Model generation
     //---------------------------------
 
-    auto Model = medusa::PhisSignal<B0sbar, dtime_t, theta_h_t, theta_l_t, phi_t>(ModelParams);
+    auto Model = medusa::PhisSignal<B0sbar, dtime_t, costheta_h_t, costheta_l_t, phi_t>(ModelParams);
 
 
     //---------------------------------
-    //  Unweighted dataset generation
+    //      dataset generation
     //---------------------------------
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::host::sys_t> dataset_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t> , hydra::host::sys_t> dataset_h;
 
-    GenerateDataset_SignalOnly(Model, dataset_h, nentries, nentries);
+    medusa::GenerateDataset_SignalOnly(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
     
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);
 
 
     //-----------------------------------------
-    //  Print and plot the unweighted dataset
+    //      Print and plot the dataset
     //-----------------------------------------
-    
+
+    // Print the first elements of the dataset
     for( size_t i=0; i<10; i++ )
         std::cout <<"Dataset_h: {"<< dataset_h[i]  << "}"<< std::endl;
 
 
     #ifdef _ROOT_AVAILABLE_
 
-        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin",100, 0, 20);
-        TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
-        TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin",100, -1, 1);
-        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin",50, 0, 2*PI);
+        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
 
         for(auto x : dataset_h)
         {
             timedist.Fill( (double)hydra::get<0>(x) );
-            thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
-            thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
+            thetahdist.Fill( (double)hydra::get<1>(x) );
+            thetaldist.Fill( (double)hydra::get<2>(x) );
             phidist.Fill( (double)hydra::get<3>(x) );
         }
 
@@ -219,34 +204,11 @@ int main(int argv, char** argc)
     //          PDF generation
     //---------------------------------
 
-    const dtime_t min_t         = 0.0;
-    const dtime_t max_t         = 20.0;
-    const theta_h_t min_theta_h = 0.0;
-    const theta_h_t max_theta_h = PI;
-    const theta_l_t min_theta_l = 0.0;
-    const theta_l_t max_theta_l = PI;
-    const phi_t min_phi         = 0.0;
-    const phi_t max_phi         = 2*PI;
-    const size_t N              = 4;
-
-    // Vegas State_d holds the resources for performing the integration
-    hydra::VegasState<N, hydra::device::sys_t> State_d({min_t, min_theta_h, min_theta_l, min_phi},
-                                                            {max_t, max_theta_h, max_theta_l, max_phi});
-
-    State_d.SetVerbose(-2);
-    State_d.SetAlpha(1.5);
-    State_d.SetIterations( iterations );
-    State_d.SetUseRelativeError(1);
-    State_d.SetMaxError( max_error );
-    State_d.SetCalls( calls );
-    State_d.SetTrainingCalls( calls/10 );
-    State_d.SetTrainingIterations(2);
-
-    // Vegas integrator
-    hydra::Vegas<N, hydra::device::sys_t> Vegas_d(State_d);
+    auto Integrator = hydra::AnalyticalIntegral<
+                                medusa::PhisSignal< B0sbar, dtime_t, costheta_h_t, costheta_l_t, phi_t> >(LowerLimit, UpperLimit);
 
     // make PDF
-    auto Model_PDF = hydra::make_pdf(Model, Vegas_d);
+    auto Model_PDF = hydra::make_pdf(Model, Integrator);
 
     // print the normalization factor
     std::cout << " "                                                            << std::endl;
@@ -275,8 +237,8 @@ int main(int argv, char** argc)
     // minimization strategy
 	MnStrategy strategy(2);
 
-    // create Minimize minimizer
-	MnMinimize minimize(fcn, fcn.GetParameters().GetMnState(), strategy);
+    // create Migrad minimizer
+	MnMigrad minimize(fcn, fcn.GetParameters().GetMnState(), strategy);
 
 	// print parameters before fitting
 	std::cout << fcn.GetParameters().GetMnState() << std::endl;
@@ -295,7 +257,7 @@ int main(int argv, char** argc)
 
 	//time
 	std::cout << "-----------------------------------------"<< std::endl;
-	std::cout << "| Time (ms) ="<< elapsed.count()          << std::endl;
+	std::cout << "| Time (ms) = "<< elapsed.count()         << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
 
     return 0;

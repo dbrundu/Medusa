@@ -38,8 +38,8 @@ namespace medusa {
 
 template<bool Spline,
 		 typename ArgTypeTime,
-		 typename ArgTypeThetah,
-		 typename ArgTypeThetal,
+		 typename ArgTypeCosThetah,
+		 typename ArgTypeCosThetal,
 		 typename ArgTypePhi,
 		 typename ArgTypeQOS,
          typename ArgTypeQSS,
@@ -47,14 +47,14 @@ template<bool Spline,
          typename ArgTypeEtaSS,
 		 typename ArgTypeDelta,
 		 typename Signature >
-void FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeThetah, ArgTypeThetal, ArgTypePhi,
+void FullAnalyticPhis<Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
 						ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta, Signature>::Update_ATCoefficients()
 {
 	/*
 	{
-	 0: A_0,
-	 1: A_perp,
-	 2: A_S,
+	 0: A_0^2,
+	 1: A_perp^2,
+	 2: A_S^2,
 	 3: DeltaGamma_sd,
 	 4: DeltaGamma,
 	 5: DeltaM,

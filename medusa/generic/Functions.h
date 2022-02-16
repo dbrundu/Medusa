@@ -54,64 +54,6 @@
 namespace medusa {
     namespace functions {
 
-        // This function returns the cosine of the decay theta angle in the helicity basis.
-        // The decay angle calculated is that between the flight direction of the daughter meson, "D",
-        // in the rest frame of "Q" (the parent of "D"), with respect to "Q"'s flight direction
-        // in "P"'s (the parent of "Q") rest frame P == B0, Q = dimuon, D = muon
-        // The formulas used here can be found also in EvtGen [EvtGen/src/EvtKine.cpp] (https://evtgen.hepforge.org/).
-        __hydra_dual__
-        inline double cos_decay_angle(hydra::Vector4R const& p, hydra::Vector4R const& q, hydra::Vector4R const& d)
-        {
-            // P == B0, Q = Jpsi, D = muon
-            double pd = p*d;
-            double pq = p*q;
-            double qd = q*d;
-            double mp2 = p.mass2();
-            double mq2 = q.mass2();
-            double md2 = d.mass2();
-
-            return (pd * mq2 - pq * qd) / ::sqrt((pq * pq - mq2 * mp2) * (qd * qd - mq2 * md2));
-        }
-
-
-        // Evaluate the angle phi between two decay planes, formed by particles d2&d3 and h1&h2 correspondingly.
-        // The angle is evaluated in the rest frame of "mother" particles (defined as d2+d3+h1+h2)
-        // It is calculated as the angle formed by the h1 3vector projection on an x-y plane defined by d2(=x), h1+h2 (=z)
-        // For LHCb convention with B0->h+h-mu+mu- ==> d2 = h-, d3=h+, h1 = mu+, h2=mu-
-        // The formulas used here can be found also in EvtGen [EvtGen/src/EvtKine.cpp] (https://evtgen.hepforge.org/).
-        __hydra_dual__
-        inline double phi_plane_angle(hydra::Vector4R d2, hydra::Vector4R d3, hydra::Vector4R h1, hydra::Vector4R h2)
-        {
-            hydra::Vector4R Mother = d2 + d3 + h1 + h2;
-            d2.applyBoostTo(Mother, /*inverse boost? == */ true);
-            d3.applyBoostTo(Mother, /*inverse boost? == */ true);
-            h1.applyBoostTo(Mother, /*inverse boost? == */ true);
-            h2.applyBoostTo(Mother, /*inverse boost? == */ true);
-
-            hydra::Vector4R D = d2 + d3;
-
-            hydra::Vector4R d1_perp = d2 - (D.dot(d2) / D.dot(D)) * D; // d2 will be mu^+
-            hydra::Vector4R h1_perp = h1 - (D.dot(h1) / D.dot(D)) * D;
-
-            // orthogonal to both D and d1_perp
-            // hydra::Vector4R d1_prime = D.cross(d1_perp);
-            hydra::Vector4R d1_prime = d1_perp.cross(D);
-
-
-            d1_perp  = d1_perp / d1_perp.d3mag();
-            d1_prime = d1_prime / d1_prime.d3mag();
-
-            double cos_phi, sin_phi;
-
-            cos_phi = d1_perp.dot(h1_perp);   //cos_chi
-            sin_phi = d1_prime.dot(h1_perp);  //sin_chi
-
-            double phi = ::atan2(sin_phi, cos_phi);
-  
-            return (phi>=0)? phi : phi + 2*PI;
-        }
-
-
         // Convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t ) with the Gaussian
         // [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
@@ -161,6 +103,34 @@ namespace medusa {
             }
 
             return 0.25*result;
+        }
+
+
+        // Integrate in the time exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+        // [tag = true -> cosh | tag = false -> sinh]
+        __hydra_dual__
+        inline double Integrate_exp_sinhcosh(double a, double b, double LowerLimit, double UpperLimit, bool tag)
+        {
+            if(tag) return ( -::exp(-a*UpperLimit) * (a*::cosh(b*UpperLimit) + b*::sinh(b*UpperLimit)) +
+                                ::exp(-a*LowerLimit) * (a*::cosh(b*LowerLimit) + b*::sinh(b*LowerLimit)) ) /
+                                                                                                ( (a - b) * (a + b));
+
+            else return ( -::exp(-a*UpperLimit) * (b*::cosh(b*UpperLimit) + a*::sinh(b*UpperLimit)) +
+                                ::exp(-a*LowerLimit) * (b*::cosh(b*LowerLimit) + a*::sinh(b*LowerLimit)) ) /
+                                                                                                ( (a - b) * (a + b));
+        }
+
+
+        // Integrate in the time exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+        // [tag = true -> cos | tag = false -> sin]
+        __hydra_dual__
+        inline double Integrate_exp_sincos(double a, double b, double LowerLimit, double UpperLimit, bool tag)
+        {
+            if(tag) return ( ::exp(-a*UpperLimit) * (-a*::cos(b*UpperLimit) + b*::sin(b*UpperLimit)) +
+                                ::exp(-a*LowerLimit) * (a*::cos(b*LowerLimit) - b*::sin(b*LowerLimit)) ) / (a*a + b*b);
+
+            else return ( -::exp(-a*UpperLimit) * (b*::cos(b*UpperLimit) + a*::sin(b*UpperLimit)) +
+                                ::exp(-a*LowerLimit) * (b*::cos(b*LowerLimit) + a*::sin(b*LowerLimit)) ) / (a*a + b*b);
         }
 
 

@@ -140,7 +140,7 @@ int main(int argv, char** argc)
     //      Model generation
     //---------------------------------
 
-    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
+    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots, LowerLimit, UpperLimit);
 
 
@@ -148,12 +148,12 @@ int main(int argv, char** argc)
     //  Unweighted dataset generation
     //---------------------------------
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
-    GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
+    medusa::GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
     
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);
 
@@ -169,10 +169,10 @@ int main(int argv, char** argc)
     #ifdef _ROOT_AVAILABLE_
 
         // Plot of the dataset
-        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 20);
-        TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
-        TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin",100, -1, 1);
-        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin",50, 0, 2*PI);
+        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
 
         for(auto x : dataset_h)
         {
@@ -218,7 +218,8 @@ int main(int argv, char** argc)
     // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
     // a normalization factor which depends from the experimental variables)
     auto Integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline,
-                                                            dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
+                                    dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
+                                                        etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
 
     // make PDF
     auto Model_PDF = hydra::make_pdf(Model, Integrator);
@@ -243,7 +244,7 @@ int main(int argv, char** argc)
     // minimization strategy
 	MnStrategy strategy(2);
 
-    // create Minimize minimizer
+    // create Migrad minimizer
 	MnMigrad minimize(fcn, fcn.GetParameters().GetMnState(), strategy);
 
 	// print parameters before fitting
