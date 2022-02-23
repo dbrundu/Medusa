@@ -141,11 +141,11 @@ namespace medusa {
     	    {   
                 // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) in arXiv:1906.08356v4
                 // polarization factor N_k in Eq. (9) in arXiv:1906.08356v4
-    		    A.k[i] = 	other.GetA().k[i];
-    		    B.k[i] = 	other.GetB().k[i];
-    		    C.k[i] = 	other.GetC().k[i];
-    		    D.k[i] = 	other.GetD().k[i];
-    		    N.k[i] =  other.GetN().k[i];
+    		    A.k[i] = other.GetA().k[i];
+    		    B.k[i] = other.GetB().k[i];
+    		    C.k[i] = other.GetC().k[i];
+    		    D.k[i] = other.GetD().k[i];
+    		    N.k[i] = other.GetN().k[i];
     	    }
         }
 
@@ -166,11 +166,11 @@ namespace medusa {
             {
                 // angular coefficients a_k, b_k, c_k, d_k in  Eq. (10) and (11) in arXiv:1906.08356v4
                 // polarization factor N_k in Eq. (9) in arXiv:1906.08356v4
-        	    A.k[i] = 	other.GetA().k[i];
-        	    B.k[i] = 	other.GetB().k[i];
-        	    C.k[i] = 	other.GetC().k[i];
-        	    D.k[i] = 	other.GetD().k[i];
-        	    N.k[i] =  other.GetN().k[i];
+        	    A.k[i] = other.GetA().k[i];
+        	    B.k[i] = other.GetB().k[i];
+        	    C.k[i] = other.GetC().k[i];
+        	    D.k[i] = other.GetD().k[i];
+        	    N.k[i] = other.GetN().k[i];
             }
 
             return *this;

@@ -86,9 +86,9 @@ namespace medusa {
             hydra::complex<double> faddeeva_z1 = hydra::exp( z1*z1 - 2*z1*x ) * faddeeva::erfc(z1-x);
             hydra::complex<double> faddeeva_z2 = hydra::exp( z2*z2 - 2*z2*x ) * faddeeva::erfc(z2-x);
 
-            hydra::complex<double> faddeeva_tot = 0.0;
-            double result = 0.0;
-            
+            hydra::complex<double> faddeeva_tot = 0.;
+            double result = 0.;
+
             if(tag)
             {
                 faddeeva_tot = faddeeva_z1 + faddeeva_z2;
@@ -147,10 +147,10 @@ namespace medusa {
             double z2 = (a + b)*sigma/M_Sqrt2;
 
             double cumulative_z1 = ( faddeeva::erf(x2) - ::exp( z1*z1 - 2*z1*x2 ) * faddeeva::erfc(z1-x2) -
-                                            ( faddeeva::erf(x1) - ::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) ) ) / (2*z1);
+                                            ( faddeeva::erf(x1) - ::exp( z1*z1 - 2*z1*x1 ) * faddeeva::erfc(z1-x1) ) ) / z1;
 
             double cumulative_z2 = ( faddeeva::erf(x2) - ::exp( z2*z2 - 2*z2*x2 ) * faddeeva::erfc(z2-x2) -
-                                            ( faddeeva::erf(x1) - ::exp( z2*z2 - 2*z2*x1 ) * faddeeva::erfc(z2-x1) ) ) / (2*z2);
+                                            ( faddeeva::erf(x1) - ::exp( z2*z2 - 2*z2*x1 ) * faddeeva::erfc(z2-x1) ) ) / z2;
 
             if(tag) return M_1_Sqrt32 * sigma * (cumulative_z1 + cumulative_z2);
 
@@ -176,18 +176,18 @@ namespace medusa {
             hydra::complex<double> cumulative_z2 = faddeeva::erf(x2) - hydra::exp( z2*z2 - 2*z2*x2 ) * faddeeva::erfc(z2-x2) -
                                                     ( faddeeva::erf(x1) - hydra::exp( z2*z2 - 2*z2*x1 ) * faddeeva::erfc(z2-x1) );
 
-            hydra::complex<double> cumulative = 0.0;
-            double result = 0.0;
+            hydra::complex<double> cumulative = 0.;
+            double result = 0.;
 
             if(tag)
             {
-                cumulative = cumulative_z1/(2*z1) + cumulative_z2/(2*z2);
+                cumulative = cumulative_z1/z1 + cumulative_z2/z2;
 
                 result = cumulative.real();
             }
             else
             {
-                cumulative = cumulative_z1/(2*z1) - cumulative_z2/(2*z2);
+                cumulative = cumulative_z1/z1 - cumulative_z2/z2;
 
                 result = cumulative.imag();
             }

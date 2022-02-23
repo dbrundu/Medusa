@@ -144,10 +144,37 @@ int main(int argv, char** argc)
                                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots, LowerLimit, UpperLimit);
 
 
+    double Gamma = deltagammasd + 0.65789;
+    double HalfDeltaGamma = 0.5*deltagammas;
+
+    double time = 9.22784;
+    double sigma_eff = 0.0250024;
+
+    double conv_exp_cosh = medusa::functions::Convolve_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, true);
+    double conv_exp_sinh = medusa::functions::Convolve_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, false);
+    double conv_exp_cos = medusa::functions::Convolve_exp_sincos(time, Gamma, deltams, 0, sigma_eff, true);
+    double conv_exp_sin = medusa::functions::Convolve_exp_sincos(time, Gamma, deltams, 0, sigma_eff, false);
+
+    double int_conv_exp_cosh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, LowerLimit, UpperLimit, true);
+    double int_conv_exp_sinh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, LowerLimit, UpperLimit, false);
+    double int_conv_exp_cos = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams, 0, sigma_eff, LowerLimit, UpperLimit, true);
+    double int_conv_exp_sin = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams, 0, sigma_eff, LowerLimit, UpperLimit, false);
+
+    std::cout << "conv_exp_cosh = " << conv_exp_cosh << std::endl;
+    std::cout << "conv_exp_sinh = " << conv_exp_sinh << std::endl;
+    std::cout << "conv_exp_cos = " << conv_exp_cos << std::endl;
+    std::cout << "conv_exp_sin = " << conv_exp_sin << std::endl;
+
+    std::cout << "int_conv_exp_cosh = " << int_conv_exp_cosh << std::endl;
+    std::cout << "int_conv_exp_sinh = " << int_conv_exp_sinh << std::endl;
+    std::cout << "int_conv_exp_cos = " << int_conv_exp_cos << std::endl;
+    std::cout << "int_conv_exp_sin = " << int_conv_exp_sin << std::endl;
+
+
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
-
+/*
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
@@ -217,9 +244,8 @@ int main(int argv, char** argc)
     // Integrator (it always returns the value 1.0, because the normalization is computed
     // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
     // a normalization factor which depends from the experimental variables)
-    auto Integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline,
-                                    dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
-                                                        etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
+    auto Integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                                                                        qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
 
     // make PDF
     auto Model_PDF = hydra::make_pdf(Model, Integrator);
@@ -266,7 +292,7 @@ int main(int argv, char** argc)
 	std::cout << "-----------------------------------------"<< std::endl;
 	std::cout << "| Time (ms) ="<< elapsed.count()          << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
-
+*/
     return 0;
 
 } // main
