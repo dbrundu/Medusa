@@ -156,8 +156,8 @@ int main(int argv, char** argc)
         for(auto x : dataset_h)
         {
             timedist.Fill( (double)hydra::get<0>(x) );
-            thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
-            thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
+            thetahdist.Fill( (double)hydra::get<1>(x) );
+            thetaldist.Fill( (double)hydra::get<2>(x) );
             phidist.Fill( (double)hydra::get<3>(x) );
         }
 
@@ -165,6 +165,7 @@ int main(int argv, char** argc)
         canvas.Divide(4,1);
 
         canvas.cd(1);
+        gPad->SetLogy(1);
         timedist.Draw();
 
         canvas.cd(2);

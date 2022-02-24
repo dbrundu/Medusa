@@ -144,8 +144,8 @@ auto delta_par0_p     = hydra::Parameter::Create("delta_par0").Value(deltapar0).
 auto delta_perp0_p    = hydra::Parameter::Create("delta_perp0" ).Value(deltaperp0).Error(0.0001).Limits(-6.28, 6.28);
 auto delta_Sperp_p    = hydra::Parameter::Create("delta_Sperp").Value(deltaSperp).Error(0.0001).Limits(-6.0, 6.0);
 
-hydra::Parameter ModelParams[17] = {A02_p,           Aperp2_p,     AS2_p,
-                                    DeltaGamma_sd_p, DeltaGamma_p, DeltaM_p,
+hydra::Parameter ModelParams[17] = {A02_p,           Aperp2_p,      AS2_p,
+                                    DeltaGamma_sd_p, DeltaGamma_p,  DeltaM_p,
                                     phi_0_p,         phi_par0_p,    phi_perp0_p,    phi_S0_p,
                                     lambda_0_p,      lambda_par0_p, lambda_perp0_p, lambda_S0_p,
                                     delta_par0_p,    delta_perp0_p, delta_Sperp_p};

@@ -52,7 +52,6 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/generic/Functions.h>
 
 
 

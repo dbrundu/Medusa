@@ -52,7 +52,6 @@
 
 // Medusa
 #include <medusa/phi_s/Parameters.h>
-#include <medusa/generic/Functions.h>
 
 
 namespace medusa {
@@ -101,7 +100,7 @@ namespace medusa {
             engine.discard(1);
             qSS_t qSS = uniDist2(engine);
 
-            hydra_thrust::uniform_real_distribution<double> uniDist3(0., 1.0);
+            hydra_thrust::uniform_real_distribution<double> uniDist3(0., 1.);
             engine.discard(1);
             etaOS_t etaOS = uniDist3(engine);
             engine.discard(1);

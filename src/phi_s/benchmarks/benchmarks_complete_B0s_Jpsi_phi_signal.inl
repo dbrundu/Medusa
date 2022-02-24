@@ -135,34 +135,36 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
 
     #ifdef _ROOT_AVAILABLE_
 
-    TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
-    TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
-    TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
-    TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
+        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
 
-    for(auto x : dataset_h){
-        timedist.Fill( (double)hydra::get<0>(x) );
-        thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
-        thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
-        phidist.Fill( (double)hydra::get<3>(x) );
-    }
+        for(auto x : dataset_h)
+        {
+            timedist.Fill( (double)hydra::get<0>(x) );
+            thetahdist.Fill( (double)hydra::get<1>(x) );
+            thetaldist.Fill( (double)hydra::get<2>(x) );
+            phidist.Fill( (double)hydra::get<3>(x) );
+        }
 
-    TCanvas canvas("canvas","canvas",3200,800);
-    canvas.Divide(4,1);
+        TCanvas canvas("canvas","canvas",3200,800);
+        canvas.Divide(4,1);
 
-    canvas.cd(1);
-    timedist.Draw();
+        canvas.cd(1);
+        gPad->SetLogy(1);
+        timedist.Draw();
 
-    canvas.cd(2);
-    thetahdist.Draw();
+        canvas.cd(2);
+        thetahdist.Draw();
 
-    canvas.cd(3);
-    thetaldist.Draw();
+        canvas.cd(3);
+        thetaldist.Draw();
 
-    canvas.cd(4);
-    phidist.Draw();
+        canvas.cd(4);
+        phidist.Draw();
 
-    canvas.SaveAs("Dataset_B0s_JpsiPhi.pdf");
+        canvas.SaveAs("Dataset_B0s_JpsiPhi.pdf");
 
     #endif //_ROOT_AVAILABLE_
 

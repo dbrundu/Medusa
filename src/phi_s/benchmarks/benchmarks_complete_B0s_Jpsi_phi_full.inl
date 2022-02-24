@@ -109,7 +109,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //      model generation
     //---------------------------------
 
-    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, theta_h_t, theta_l_t, phi_t,
+    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                             qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots,
                                                                                                             LowerLimit, UpperLimit);
 
@@ -118,12 +118,12 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //  Unweighted dataset generation
     //---------------------------------
 
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
-    GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
+    medusa::GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
     
-    hydra::multivector<hydra::tuple<dtime_t, theta_h_t, theta_l_t, phi_t,
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
     hydra::copy(dataset_h, dataset_d);
 
@@ -138,34 +138,44 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
 
     #ifdef _ROOT_AVAILABLE_
 
-    TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin",100, 0, 20);
-    TH1D thetahdist("thetahdist","Theta_h Angle; angle (rad); Candidates / bin",50, -1, 1);
-    TH1D thetaldist("thetaldist","Theta_l Angle; angle (rad); Candidates / bin",100, -1, 1);
-    TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin",50, 0, 2*PI);
+        // Plot of the dataset
+        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
 
-    for(auto x : dataset_h){
-         timedist.Fill( (double)hydra::get<0>(x) );
-         thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
-         thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
-         phidist.Fill( (double)hydra::get<3>(x) );
-    }
+        for(auto x : dataset_h)
+        {
+            timedist.Fill( (double)hydra::get<0>(x) );
+            thetahdist.Fill( (double)hydra::get<1>(x) );
+            thetaldist.Fill( (double)hydra::get<2>(x) );
+            phidist.Fill( (double)hydra::get<3>(x) );
+        }
 
-    TCanvas canvas("canvas","canvas",3200,800);
-    canvas.Divide(4,1);
+        TCanvas canvas1("canvas","canvas",3200,800);
+        canvas1.Divide(4,1);
 
-    canvas.cd(1);
-    timedist.Draw();
+        canvas1.cd(1);
+        gPad->SetLogy(1);
+        timedist.Draw();
 
-    canvas.cd(2);
-    thetahdist.Draw();
+        canvas1.cd(2);
+        thetahdist.Draw();
 
-    canvas.cd(3);
-    thetaldist.Draw();
+        canvas1.cd(3);
+        thetaldist.Draw();
 
-    canvas.cd(4);
-    phidist.Draw();
+        canvas1.cd(4);
+        phidist.Draw();
 
-    canvas.SaveAs("Dataset_B0s_JpsiPhi.pdf");
+        canvas1.SaveAs("Dataset_B0s_JpsiPhi.pdf");
+
+
+        // Plot of the cubic spline
+        TCanvas canvas2("canvas","canvas",3200,800);
+        canvas2.cd();
+        Model.CreateHistogramPlot("Cubic Spline", "Cubic Spline", 100, 0, 20) -> Draw();
+        canvas2.SaveAs("Cubic_Spline.pdf");
 
     #endif //_ROOT_AVAILABLE_
 
@@ -178,7 +188,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     // in FullAnalyticPhis.h. This choice is justified by the fact that Hydra does not support
     // a normalization factor which depends from the experimental variables)
     auto integrator = hydra::AnalyticalIntegral< medusa::FullAnalyticPhis<CubicSpline,
-                                                            dtime_t, theta_h_t, theta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
+                                                            dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
 
     // make PDF
     auto Model_PDF = hydra::make_pdf(Model, integrator);

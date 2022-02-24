@@ -143,7 +143,7 @@ int main(int argv, char** argc)
     auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots, LowerLimit, UpperLimit);
 
-
+/*
     double Gamma = deltagammasd + 0.65789;
     double HalfDeltaGamma = 0.5*deltagammas;
 
@@ -169,12 +169,12 @@ int main(int argv, char** argc)
     std::cout << "int_conv_exp_sinh = " << int_conv_exp_sinh << std::endl;
     std::cout << "int_conv_exp_cos = " << int_conv_exp_cos << std::endl;
     std::cout << "int_conv_exp_sin = " << int_conv_exp_sin << std::endl;
-
+*/
 
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
-/*
+
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
 
@@ -204,8 +204,8 @@ int main(int argv, char** argc)
         for(auto x : dataset_h)
         {
             timedist.Fill( (double)hydra::get<0>(x) );
-            thetahdist.Fill( ::cos((double)hydra::get<1>(x)) );
-            thetaldist.Fill( ::cos((double)hydra::get<2>(x)) );
+            thetahdist.Fill( (double)hydra::get<1>(x) );
+            thetaldist.Fill( (double)hydra::get<2>(x) );
             phidist.Fill( (double)hydra::get<3>(x) );
         }
 
@@ -292,7 +292,7 @@ int main(int argv, char** argc)
 	std::cout << "-----------------------------------------"<< std::endl;
 	std::cout << "| Time (ms) ="<< elapsed.count()          << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
-*/
+
     return 0;
 
 } // main
