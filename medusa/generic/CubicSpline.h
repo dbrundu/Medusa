@@ -491,27 +491,39 @@ namespace medusa {
 
 
 
-        private:
+        //private:
 
 
         //-------------------------------------------------
         //        Methods to help the integratation
         //-------------------------------------------------
 
-        // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+        // Integrate (in x) the 3rd order polynomial times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
         // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(size_t k, int iFrom, int iTo,
-                                                                            double a, double b, double mu, double sigma,
-                                                                                double LowerLimit, double UpperLimit, bool tag) const;
+        inline double Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(size_t bin, double a, double b, double mu, double sigma,
+                                                                                                    double LowerLimit, double UpperLimit, bool tag) const;
 
 
-        // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+        // Integrate (in x) the 3rd order polynomial times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
         // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_Ak_t_to_k_times_convolved_exp_sincos(size_t k, int iFrom, int iTo,
-                                                                        double a, double b, double mu, double sigma,
-                                                                            double LowerLimit, double UpperLimit, bool tag) const;
+        inline double Integrate_3_order_polynomial_times_convolved_exp_sincos(size_t bin, double a, double b, double mu, double sigma,
+                                                                                                    double LowerLimit, double UpperLimit, bool tag) const;
+
+
+        // Integrate (in x) t^k times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+        // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double mu, double sigma, double z1, double z2,
+                                                                                                        double x1, double x2, bool tag) const;
+
+
+        // Integrate (in x) t^k times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+        // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
+        __hydra_dual__
+        inline double Integrate_t_to_k_times_convolved_exp_sincos(size_t k, double mu, double sigma, hydra::complex<double> z1,
+                                                                                hydra::complex<double> z2, double x1, double x2, bool tag) const;
 
 
         //------------------------------------------------------------
@@ -530,12 +542,12 @@ namespace medusa {
 
         // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double M(size_t k, int iFrom, int iTo, double x1, double x2, double z, size_t n) const;
+        inline double M(double x1, double x2, double z, size_t n) const;
 
 
         // M_n(x1, x2; z) for z as complex (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline hydra::complex<double> M(size_t k, int iFrom, int iTo, double x1, double x2, hydra::complex<double> z, size_t n) const;
+        inline hydra::complex<double> M(double x1, double x2, hydra::complex<double> z, size_t n) const;
 
 
         //-------------------------
@@ -549,7 +561,7 @@ namespace medusa {
         double u[nKnots+6];
 
         // Overall coefficients of the polynomials. For the range x>=Knot[i] && x<Knot[i+1]
-        // the spline is then given by: y=AS0[i]+AS1[i]*x+AS2[i]*x*x+AS3[i]*x*x*x
+        // the spline is then given by: y=AS[0][i]+AS[1][i]*x+AS[2][i]*x*x+AS[3][i]*x*x*x
         double AS[4][nKnots];
 
         // The spline might get negative values due to the linear extrapolation in/after the last sector

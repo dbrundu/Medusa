@@ -86,7 +86,7 @@ const dtime_t LowerLimit = 0.3;
 const dtime_t UpperLimit = 15.0;
 
 // enable the cubic spline for FullAnalyticPhis.h
-const bool CubicSpline = false;
+const bool CubicSpline = true;
 
 // specify wether B0s is B0sbar or not for PhisSignal.h
 const bool B0sbar = false;

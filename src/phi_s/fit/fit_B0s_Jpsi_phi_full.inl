@@ -148,27 +148,46 @@ int main(int argv, char** argc)
     double HalfDeltaGamma = 0.5*deltagammas;
 
     double time = 9.22784;
+    double mu = 0.;
     double sigma_eff = 0.0250024;
 
-    double conv_exp_cosh = medusa::functions::Convolve_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, true);
-    double conv_exp_sinh = medusa::functions::Convolve_exp_sinhcosh(time, Gamma, HalfDeltaGamma, 0, sigma_eff, false);
-    double conv_exp_cos = medusa::functions::Convolve_exp_sincos(time, Gamma, deltams, 0, sigma_eff, true);
-    double conv_exp_sin = medusa::functions::Convolve_exp_sincos(time, Gamma, deltams, 0, sigma_eff, false);
+    double CSpline1[4] = {0.};
+    double CSpline2[4] = {0.};
 
-    double int_conv_exp_cosh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, LowerLimit, UpperLimit, true);
-    double int_conv_exp_sinh = medusa::functions::Integrate_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, LowerLimit, UpperLimit, false);
-    double int_conv_exp_cos = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams, 0, sigma_eff, LowerLimit, UpperLimit, true);
-    double int_conv_exp_sin = medusa::functions::Integrate_convolved_exp_sincos(Gamma, deltams, 0, sigma_eff, LowerLimit, UpperLimit, false);
+    for (size_t i=0; i<4; i++)
+    {
+        CSpline1[i] = Model.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, 0, 1, Gamma, HalfDeltaGamma, mu, sigma_eff, 0.3, 15., true);
+        CSpline2[i] = Model.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, 0, 6, Gamma, HalfDeltaGamma, mu, sigma_eff, 0.3, 15., false);
 
-    std::cout << "conv_exp_cosh = " << conv_exp_cosh << std::endl;
-    std::cout << "conv_exp_sinh = " << conv_exp_sinh << std::endl;
-    std::cout << "conv_exp_cos = " << conv_exp_cos << std::endl;
-    std::cout << "conv_exp_sin = " << conv_exp_sin << std::endl;
+        std::cout << CSpline1[i] << std::endl;
+        std::cout << CSpline2[i] << std::endl;
+    }
 
-    std::cout << "int_conv_exp_cosh = " << int_conv_exp_cosh << std::endl;
-    std::cout << "int_conv_exp_sinh = " << int_conv_exp_sinh << std::endl;
-    std::cout << "int_conv_exp_cos = " << int_conv_exp_cos << std::endl;
-    std::cout << "int_conv_exp_sin = " << int_conv_exp_sin << std::endl;
+    for (size_t i=0; i<4; i++)
+    {
+        CSpline1[i] = Model.Integrate_t_to_k_times_convolved_exp_sincos(i, 0, 1, Gamma, deltams, mu, sigma_eff, 0.3, 15., true);
+        CSpline2[i] = Model.Integrate_t_to_k_times_convolved_exp_sincos(i, 0, 6, Gamma, deltams, mu, sigma_eff, 0.3, 15., false);
+
+        std::cout << CSpline1[i] << std::endl;
+        std::cout << CSpline2[i] << std::endl;
+    }
+
+    for (size_t i=0; i<7; i++)
+    {
+        std::cout << "AS[0," << i << "] = " << Model.AS[0][i] << std::endl;
+        std::cout << "AS[1," << i << "] = " << Model.AS[1][i] << std::endl;
+        std::cout << "AS[2," << i << "] = " << Model.AS[2][i] << std::endl;
+        std::cout << "AS[3," << i << "] = " << Model.AS[3][i] << std::endl;
+    }
+
+    std::cout << Model.findKnot(LowerLimit) << std::endl;
+    std::cout << Model.findKnot(UpperLimit) << std::endl;
+
+    double x1 = (LowerLimit - mu)/(sigma_eff*M_Sqrt2);
+    double x2 = (UpperLimit - mu)/(sigma_eff*M_Sqrt2);
+
+    std::cout << Model.findKnot(x1) << std::endl;
+    std::cout << Model.findKnot(x2) << std::endl;
 */
 
     //---------------------------------

@@ -76,10 +76,22 @@ namespace medusa {
         size_t iFrom = findKnot(LowerLimit);
         size_t iTo = findKnot(UpperLimit);
 
+        // Calculate the integration on the intervals between the knots
         double sum = 0.;
-        for (size_t i=0; i<4; i++)
+        if(iFrom==iTo)
         {
-            sum = sum + Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(i, iFrom, iTo, a, b, mu, sigma, LowerLimit, UpperLimit, tag);
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iFrom, a, b, mu, sigma, LowerLimit, UpperLimit, tag);
+        }
+        else
+        {
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iFrom, a, b, mu, sigma, LowerLimit, u[4+iFrom], tag);
+
+            for(size_t i=iFrom+1; i<iTo; i++)
+            {
+                sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(i, a, b, mu, sigma, u[3+i], u[4+i], tag);
+            }
+
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iTo, a, b, mu, sigma, u[3+iTo], UpperLimit, tag);
         }
 
         // This macro controls if sum is NaN. If yes, it prints
@@ -96,7 +108,7 @@ namespace medusa {
     // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-                    Integrate_cspline_times_convolved_exp_sincos(double a, double b, double mu, double sigma,
+    Integrate_cspline_times_convolved_exp_sincos(double a, double b, double mu, double sigma,
                                                                         double LowerLimit, double UpperLimit, bool tag) const
     {
         // Integrate outside the defined region of the spline
@@ -129,10 +141,22 @@ namespace medusa {
         size_t iFrom = findKnot(LowerLimit);
         size_t iTo = findKnot(UpperLimit);
 
+        // Calculate the integration on the intervals between the knots
         double sum = 0.;
-        for (size_t i=0; i<4; i++)
+        if(iFrom==iTo)
         {
-            sum = sum + Integrate_Ak_t_to_k_times_convolved_exp_sincos(i, iFrom, iTo, a, b, mu, sigma, LowerLimit, UpperLimit, tag);
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iFrom, a, b, mu, sigma, LowerLimit, UpperLimit, tag);
+        }
+        else
+        {
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iFrom, a, b, mu, sigma, LowerLimit, u[4+iFrom], tag);
+
+            for(size_t i=iFrom+1; i<iTo; i++)
+            {
+                sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(i, a, b, mu, sigma, u[3+i], u[4+i], tag);
+            }
+
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iTo, a, b, mu, sigma, u[3+iTo], UpperLimit, tag);
         }
 
         // This macro controls if sum is NaN. If yes, it prints
@@ -149,13 +173,12 @@ namespace medusa {
     //        Methods to help the integratation
     //-------------------------------------------------
 
-    // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+    // Integrate (in x) the 3rd order polynomial times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
     // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-                    Integrate_Ak_t_to_k_times_convolved_exp_sinhcosh(size_t k, int iFrom, int iTo,
-                                                                        double a, double b, double mu, double sigma,
-                                                                            double LowerLimit, double UpperLimit, bool tag) const
+    Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(size_t bin, double a, double b, double mu, double sigma,
+                                                                                double LowerLimit, double UpperLimit, bool tag) const
     {
         double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
         double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
@@ -163,6 +186,43 @@ namespace medusa {
         double z1 = (a - b)*sigma/M_Sqrt2;
         double z2 = (a + b)*sigma/M_Sqrt2;
 
+        double sum = 0.;
+        for(size_t i=0; i<4; i++)
+        {
+            sum += AS[i][bin]*Integrate_t_to_k_times_convolved_exp_sinhcosh(i, mu, sigma, z1, z2, x1, x2, tag);
+        }
+        return sum;
+    }
+
+
+    // Integrate (in x) the 3rd order polynomial times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+    // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::
+    Integrate_3_order_polynomial_times_convolved_exp_sincos(size_t bin, double a, double b, double mu, double sigma,
+                                                                                double LowerLimit, double UpperLimit, bool tag) const
+    {
+        double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+        double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
+
+        hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
+        hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
+
+        double sum = 0.;
+        for(size_t i=0; i<4; i++)
+        {
+            sum += AS[i][bin]*Integrate_t_to_k_times_convolved_exp_sincos(i, mu, sigma, z1, z2, x1, x2, tag);
+        }
+        return sum;
+    }
+
+
+    // Integrate (in x) t^k times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
+    // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
+    template<size_t nKnots>
+    inline double CubicSpline<nKnots>::
+    Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double mu, double sigma, double z1, double z2, double x1, double x2, bool tag) const
+    {
         double sum1 = 0.;
         double sum2;
 
@@ -172,16 +232,14 @@ namespace medusa {
             {
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum1 = sum1 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) +
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum1 += ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
             }
             else
             {
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum1 = sum1 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) -
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum1 += ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
             }
             return M_1_Sqrt8*sigma*factorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
@@ -195,10 +253,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) +
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
+                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
                 }
             }
             else
@@ -208,10 +265,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) -
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
+                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
                 }
             }
             return M_1_Sqrt8*sigma*factorial[k]*sum1;
@@ -219,20 +275,13 @@ namespace medusa {
     }
 
 
-    // Integrate (in x) A_k*t^k times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
+    // Integrate (in x) t^k times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
     // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-                    Integrate_Ak_t_to_k_times_convolved_exp_sincos(size_t k, int iFrom, int iTo,
-                                                                        double a, double b, double mu, double sigma,
-                                                                            double LowerLimit, double UpperLimit, bool tag) const
+    Integrate_t_to_k_times_convolved_exp_sincos(size_t k, double mu, double sigma, hydra::complex<double> z1,
+                                                                            hydra::complex<double> z2, double x1, double x2, bool tag) const
     {
-        double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
-        double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
-
-        hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
-        hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
-
         double sum1 = 0.;
         hydra::complex<double> sum2;
             
@@ -243,8 +292,7 @@ namespace medusa {
                 sum2 = 0.;
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) +
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum2 += ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
                 sum1 = sum2.real();
             }
@@ -253,8 +301,7 @@ namespace medusa {
                 sum2 = 0.;
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, k-j) -
-                                            K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum2 += ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
                 }
                 sum1 = sum2.imag();
             }
@@ -269,10 +316,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) +
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.real();
+                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.real();
                 }
             }
             else
@@ -282,10 +328,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 = sum2 + ( K(z1, j)*M(k, iFrom, iTo, x1, x2, z1, n-j) -
-                                                K(z2, j)*M(k, iFrom, iTo, x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 = sum1 + ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.imag();
+                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.imag();
                 }
             }
             return M_1_Sqrt8*sigma*factorial[k]*sum1;
@@ -395,7 +440,7 @@ namespace medusa {
 
     // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
-    inline double CubicSpline<nKnots>::M(size_t k, int iFrom, int iTo, double x1, double x2, double z, size_t n) const
+    inline double CubicSpline<nKnots>::M(double x1, double x2, double z, size_t n) const
     {
         double From = 0.;
         double To = 0.;
@@ -403,56 +448,52 @@ namespace medusa {
         {
             case 0:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( faddeeva::erf(x2) - ::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( faddeeva::erf(x1) - ::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1) );
+                To = faddeeva::erf(x2) - ::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2);
+                From = faddeeva::erf(x1) - ::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1);
                 return To - From;
             }
             case 1:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( -M_1_SqrtPi*::exp(-x2*x2) - x2*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( -M_1_SqrtPi*::exp(-x1*x1) - x1*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = -M_1_SqrtPi*::exp(-x2*x2) - x2*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = -M_1_SqrtPi*::exp(-x1*x1) - x1*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return 2*( To - From );
             }
             case 2:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1) *
-                                                                        ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1) *
-                                                                        ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1) *::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1) *::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return 2*( To - From );
             }
             case 3:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) *
-                                                                                ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) *
-                                                                                ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) * ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) * ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return 4*( To - From );
             }
             case 4:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
+                                            (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
+                                            (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return -4*( To - From );
             }
             case 5:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                                x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                                x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                                x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                                x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return -8*( To - From );
             }
             case 6:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                                                (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) *
-                                                                                    ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                                                (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
-                                                                                    ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                                        (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) *
+                                                                                ::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                                        (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
+                                                                                ::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return -8*( To - From );
             }
             default:
@@ -471,8 +512,7 @@ namespace medusa {
 
     // M_n(x1, x2; z) for z as complex (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
-    inline hydra::complex<double> CubicSpline<nKnots>::M(size_t k, int iFrom, int iTo, double x1, double x2,
-                                                                                        hydra::complex<double> z, size_t n) const
+    inline hydra::complex<double> CubicSpline<nKnots>::M(double x1, double x2, hydra::complex<double> z, size_t n) const
     {
         hydra::complex<double> From = 0.;
         hydra::complex<double> To = 0.;
@@ -481,58 +521,52 @@ namespace medusa {
         {
             case 0:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( faddeeva::erf(x2) - hydra::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( faddeeva::erf(x1) - hydra::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1) );
+                To = faddeeva::erf(x2) - hydra::exp( z*z - 2*z*x2 ) * faddeeva::erfc(z-x2);
+                From = faddeeva::erf(x1) - hydra::exp( z*z - 2*z*x1 ) * faddeeva::erfc(z-x1);
                 return To - From;
             }
             case 1:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( -M_1_SqrtPi*::exp(-x2*x2) - x2 *
-                                                                hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( -M_1_SqrtPi*::exp(-x1*x1) - x1 * 
-                                                                hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = -M_1_SqrtPi*::exp(-x2*x2) - x2 * hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = -M_1_SqrtPi*::exp(-x1*x1) - x1 * hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return 2*( To - From );
             }
             case 2:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1) *
-                                                                    hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1) *
-                                                                    hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = -2*x2*M_1_SqrtPi*::exp(-x2*x2) - (2*x2*x2 - 1) * hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = -2*x1*M_1_SqrtPi*::exp(-x1*x1) - (2*x1*x1 - 1) * hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return 2*( To - From );
             }
             case 3:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) *
-                                                                            hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) *
-                                                                            hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = -(2*x2*x2 - 1)*M_1_SqrtPi*::exp(-x2*x2) - x2*(2*x2*x2 - 3) * hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = -(2*x1*x1 - 1)*M_1_SqrtPi*::exp(-x1*x1) - x1*(2*x1*x1 - 3) * hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return 4*( To - From );
             }
             case 4:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
-                                                (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
-                                                (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = 2*x2*(2*x2*x2 - 3)*M_1_SqrtPi*::exp(-x2*x2) +
+                                            (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = 2*x1*(2*x1*x1 - 3)*M_1_SqrtPi*::exp(-x1*x1) +
+                                            (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return -4*( To - From );
             }
             case 5:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To = (3 - 12*x2*x2 + 4*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                            x2*(15 - 20*x2*x2 + 4*x2*x2*x2*x2)*hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From = (3 - 12*x1*x1 + 4*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                            x1*(15 - 20*x1*x1 + 4*x1*x1*x1*x1)*hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return -8*( To - From );
             }
             case 6:
             {
-                if(AS[k][iTo]!=0) To = AS[k][iTo]*( x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
-                                                                (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) * 
-                                                                                hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2) );
-                if(AS[k][iFrom]!=0) From = AS[k][iFrom]*( x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
-                                                                    (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
-                                                                                hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1) );
+                To =  x2*(30 - 40*x2*x2 + 8*x2*x2*x2*x2)*M_1_SqrtPi*::exp(-x2*x2) +
+                                                        (-15 + 90*x2*x2 - 60*x2*x2*x2*x2 + 8*x2*x2*x2*x2*x2*x2) * 
+                                                                            hydra::exp( z*z - 2*z*x2 )*faddeeva::erfc(z-x2);
+                From =  x1*(30 - 40*x1*x1 + 8*x1*x1*x1*x1)*M_1_SqrtPi*::exp(-x1*x1) +
+                                                        (-15 + 90*x1*x1 - 60*x1*x1*x1*x1 + 8*x1*x1*x1*x1*x1*x1) *
+                                                                            hydra::exp( z*z - 2*z*x1 )*faddeeva::erfc(z-x1);
                 return -8*( To - From );
             }
             default:
