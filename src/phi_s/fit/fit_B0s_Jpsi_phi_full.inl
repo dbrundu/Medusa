@@ -108,7 +108,7 @@ int main(int argv, char** argc)
 
 		TCLAP::CmdLine cmd("Command line arguments for number of events and Vegas integrator", '=');
 
-        TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events", false, 5e5, "size_t");
+        TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events", false, 1e5, "size_t");
         cmd.add(EArg);
 
         TCLAP::ValueArg<double> EdmArg("e", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
@@ -140,118 +140,244 @@ int main(int argv, char** argc)
     //      Model generation
     //---------------------------------
 
-    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots, LowerLimit, UpperLimit);
+    auto Model_2015_unbiased = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams_2015_unbiased, Spline_Knots, LowerLimit, UpperLimit);
 
-/*
-    double Gamma = deltagammasd + 0.65789;
-    double HalfDeltaGamma = 0.5*deltagammas;
+    auto Model_2015_biased = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams_2015_biased, Spline_Knots, LowerLimit, UpperLimit);
 
-    double time = 9.22784;
-    double mu = 0.;
-    double sigma_eff = 0.0250024;
+    auto Model_2016_unbiased = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams_2016_unbiased, Spline_Knots, LowerLimit, UpperLimit);
 
-    double CSpline1[4] = {0.};
-    double CSpline2[4] = {0.};
+    auto Model_2016_biased = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams_2016_biased, Spline_Knots, LowerLimit, UpperLimit);
 
-    for (size_t i=0; i<4; i++)
-    {
-        CSpline1[i] = Model.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, 0, 1, Gamma, HalfDeltaGamma, mu, sigma_eff, 0.3, 15., true);
-        CSpline2[i] = Model.Integrate_t_to_k_times_convolved_exp_sinhcosh(i, 0, 6, Gamma, HalfDeltaGamma, mu, sigma_eff, 0.3, 15., false);
-
-        std::cout << CSpline1[i] << std::endl;
-        std::cout << CSpline2[i] << std::endl;
-    }
-
-    for (size_t i=0; i<4; i++)
-    {
-        CSpline1[i] = Model.Integrate_t_to_k_times_convolved_exp_sincos(i, 0, 1, Gamma, deltams, mu, sigma_eff, 0.3, 15., true);
-        CSpline2[i] = Model.Integrate_t_to_k_times_convolved_exp_sincos(i, 0, 6, Gamma, deltams, mu, sigma_eff, 0.3, 15., false);
-
-        std::cout << CSpline1[i] << std::endl;
-        std::cout << CSpline2[i] << std::endl;
-    }
-
-    for (size_t i=0; i<7; i++)
-    {
-        std::cout << "AS[0," << i << "] = " << Model.AS[0][i] << std::endl;
-        std::cout << "AS[1," << i << "] = " << Model.AS[1][i] << std::endl;
-        std::cout << "AS[2," << i << "] = " << Model.AS[2][i] << std::endl;
-        std::cout << "AS[3," << i << "] = " << Model.AS[3][i] << std::endl;
-    }
-
-    std::cout << Model.findKnot(LowerLimit) << std::endl;
-    std::cout << Model.findKnot(UpperLimit) << std::endl;
-
-    double x1 = (LowerLimit - mu)/(sigma_eff*M_Sqrt2);
-    double x2 = (UpperLimit - mu)/(sigma_eff*M_Sqrt2);
-
-    std::cout << Model.findKnot(x1) << std::endl;
-    std::cout << Model.findKnot(x2) << std::endl;
-*/
 
     //---------------------------------
     //  Unweighted dataset generation
     //---------------------------------
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_2015_unbiased_h;
 
-    medusa::GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
-    
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
-    hydra::copy(dataset_h, dataset_d);
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_2015_biased_h;
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_2016_unbiased_h;
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_2016_biased_h;
+
+
+    medusa::GenerateDataset_Full(Model_2015_unbiased, dataset_2015_unbiased_h, nentries, nentries, LowerLimit, UpperLimit, "2015 unbiased");
+    
+    medusa::GenerateDataset_Full(Model_2015_biased, dataset_2015_biased_h, nentries, nentries, LowerLimit, UpperLimit, "2015 biased");
+
+    medusa::GenerateDataset_Full(Model_2016_unbiased, dataset_2016_unbiased_h, nentries, nentries, LowerLimit, UpperLimit, "2016 unbiased");
+    
+    medusa::GenerateDataset_Full(Model_2016_biased, dataset_2016_biased_h, nentries, nentries, LowerLimit, UpperLimit, "2016 biased");
+
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
+                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_2015_unbiased_d(dataset_2015_unbiased_h.size());
+    hydra::copy(dataset_2015_unbiased_h, dataset_2015_unbiased_d);
+    
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
+                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_2015_biased_d(dataset_2015_biased_h.size());
+    hydra::copy(dataset_2015_biased_h, dataset_2015_biased_d);
+    
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
+                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_2016_unbiased_d(dataset_2016_unbiased_h.size());
+    hydra::copy(dataset_2016_unbiased_h, dataset_2016_unbiased_d);
+    
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
+                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_2016_biased_d(dataset_2016_biased_h.size());
+    hydra::copy(dataset_2016_biased_h, dataset_2016_biased_d);
 
 
     //-----------------------------------------
     //  Print and plot the unweighted dataset
     //-----------------------------------------
-    
+
+    std::cout << " " << std::endl;
     for( size_t i=0; i<10; i++ )
-        std::cout <<"Dataset_h: {"<< dataset_h[i]  << "}"<< std::endl;
+        std::cout << "Dataset_2015_unbiased_h: {" << dataset_2015_unbiased_h[i]  << "}" << std::endl;
+
+    std::cout << " " << std::endl;
+    for( size_t i=0; i<10; i++ )
+        std::cout << "Dataset_2015_biased_h: {" << dataset_2015_biased_h[i]  << "}" << std::endl;
+
+    std::cout << " " << std::endl;
+    for( size_t i=0; i<10; i++ )
+        std::cout << "Dataset_2016_unbiased_h: {" << dataset_2016_unbiased_h[i]  << "}" << std::endl;
+
+    std::cout << " " << std::endl;
+    for( size_t i=0; i<10; i++ )
+        std::cout << "Dataset_2016_biased_h: {" << dataset_2016_biased_h[i]  << "}" << std::endl;
+    std::cout << " " << std::endl;
 
 
     #ifdef _ROOT_AVAILABLE_
 
-        // Plot of the dataset
-        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
-        TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
-        TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
-        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
+        // Plot of the 2015 unbiased dataset
+        TH1D timedist_2015_unbiased("timedist_2015_unbiased","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist_2015_unbiased("thetahdist_2015_unbiased","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist_2015_unbiased("thetaldist_2015_unbiased","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist_2015_unbiased("phidist_2015_unbiased","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
 
-        for(auto x : dataset_h)
+        for(auto x : dataset_2015_unbiased_h)
         {
-            timedist.Fill( (double)hydra::get<0>(x) );
-            thetahdist.Fill( (double)hydra::get<1>(x) );
-            thetaldist.Fill( (double)hydra::get<2>(x) );
-            phidist.Fill( (double)hydra::get<3>(x) );
+            timedist_2015_unbiased.Fill( (double)hydra::get<0>(x) );
+            thetahdist_2015_unbiased.Fill( (double)hydra::get<1>(x) );
+            thetaldist_2015_unbiased.Fill( (double)hydra::get<2>(x) );
+            phidist_2015_unbiased.Fill( (double)hydra::get<3>(x) );
         }
 
-        TCanvas canvas1("canvas","canvas",3200,800);
-        canvas1.Divide(4,1);
+        TCanvas canvas1_2015_unbiased("canvas1_2015_unbiased","canvas1_2015_unbiased",3200,800);
+        canvas1_2015_unbiased.Divide(4,1);
 
-        canvas1.cd(1);
+        canvas1_2015_unbiased.cd(1);
         gPad->SetLogy(1);
-        timedist.Draw();
+        timedist_2015_unbiased.Draw();
 
-        canvas1.cd(2);
-        thetahdist.Draw();
+        canvas1_2015_unbiased.cd(2);
+        thetahdist_2015_unbiased.Draw();
 
-        canvas1.cd(3);
-        thetaldist.Draw();
+        canvas1_2015_unbiased.cd(3);
+        thetaldist_2015_unbiased.Draw();
 
-        canvas1.cd(4);
-        phidist.Draw();
+        canvas1_2015_unbiased.cd(4);
+        phidist_2015_unbiased.Draw();
 
-        canvas1.SaveAs("Dataset_B0s_JpsiPhi.pdf");
+        canvas1_2015_unbiased.SaveAs("Dataset_B0s_JpsiPhi_2015_unbiased.pdf");
 
 
-        // Plot of the cubic spline
-        TCanvas canvas2("canvas","canvas",3200,800);
-        canvas2.cd();
-        Model.CreateHistogramPlot("Cubic Spline", "Cubic Spline", 100, 0, 20) -> Draw();
-        canvas2.SaveAs("Cubic_Spline.pdf");
+        // Plot of the 2015 biased dataset
+        TH1D timedist_2015_biased("timedist_2015_biased","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist_2015_biased("thetahdist_2015_biased","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist_2015_biased("thetaldist_2015_biased","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist_2015_biased("phidist_2015_biased","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
+
+        for(auto x : dataset_2015_biased_h)
+        {
+            timedist_2015_biased.Fill( (double)hydra::get<0>(x) );
+            thetahdist_2015_biased.Fill( (double)hydra::get<1>(x) );
+            thetaldist_2015_biased.Fill( (double)hydra::get<2>(x) );
+            phidist_2015_biased.Fill( (double)hydra::get<3>(x) );
+        }
+
+        TCanvas canvas1_2015_biased("canvas1_2015_biased","canvas1_2015_biased",3200,800);
+        canvas1_2015_biased.Divide(4,1);
+
+        canvas1_2015_biased.cd(1);
+        gPad->SetLogy(1);
+        timedist_2015_biased.Draw();
+
+        canvas1_2015_biased.cd(2);
+        thetahdist_2015_biased.Draw();
+
+        canvas1_2015_biased.cd(3);
+        thetaldist_2015_biased.Draw();
+
+        canvas1_2015_biased.cd(4);
+        phidist_2015_biased.Draw();
+
+        canvas1_2015_biased.SaveAs("Dataset_B0s_JpsiPhi_2015_biased.pdf");
+
+
+        // Plot of the 2016 unbiased dataset
+        TH1D timedist_2016_unbiased("timedist_2016_unbiased","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist_2016_unbiased("thetahdist_2016_unbiased","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist_2016_unbiased("thetaldist_2016_unbiased","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist_2016_unbiased("phidist_2016_unbiased","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
+
+        for(auto x : dataset_2016_unbiased_h)
+        {
+            timedist_2016_unbiased.Fill( (double)hydra::get<0>(x) );
+            thetahdist_2016_unbiased.Fill( (double)hydra::get<1>(x) );
+            thetaldist_2016_unbiased.Fill( (double)hydra::get<2>(x) );
+            phidist_2016_unbiased.Fill( (double)hydra::get<3>(x) );
+        }
+
+        TCanvas canvas1_2016_unbiased("canvas1_2016_unbiased","canvas1_2016_unbiased",3200,800);
+        canvas1_2016_unbiased.Divide(4,1);
+
+        canvas1_2016_unbiased.cd(1);
+        gPad->SetLogy(1);
+        timedist_2016_unbiased.Draw();
+
+        canvas1_2016_unbiased.cd(2);
+        thetahdist_2016_unbiased.Draw();
+
+        canvas1_2016_unbiased.cd(3);
+        thetaldist_2016_unbiased.Draw();
+
+        canvas1_2016_unbiased.cd(4);
+        phidist_2016_unbiased.Draw();
+
+        canvas1_2016_unbiased.SaveAs("Dataset_B0s_JpsiPhi_2016_unbiased.pdf");
+
+
+        // Plot of the 2016 biased dataset
+        TH1D timedist_2016_biased("timedist_2016_biased","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
+        TH1D thetahdist_2016_biased("thetahdist_2016_biased","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
+        TH1D thetaldist_2016_biased("thetaldist_2016_biased","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
+        TH1D phidist_2016_biased("phidist_2016_biased","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
+
+        for(auto x : dataset_2016_biased_h)
+        {
+            timedist_2016_biased.Fill( (double)hydra::get<0>(x) );
+            thetahdist_2016_biased.Fill( (double)hydra::get<1>(x) );
+            thetaldist_2016_biased.Fill( (double)hydra::get<2>(x) );
+            phidist_2016_biased.Fill( (double)hydra::get<3>(x) );
+        }
+
+        TCanvas canvas1_2016_biased("canvas1_2016_biased","canvas1_2016_biased",3200,800);
+        canvas1_2016_biased.Divide(4,1);
+
+        canvas1_2016_biased.cd(1);
+        gPad->SetLogy(1);
+        timedist_2016_biased.Draw();
+
+        canvas1_2016_biased.cd(2);
+        thetahdist_2016_biased.Draw();
+
+        canvas1_2016_biased.cd(3);
+        thetaldist_2016_biased.Draw();
+
+        canvas1_2016_biased.cd(4);
+        phidist_2016_biased.Draw();
+
+        canvas1_2016_biased.SaveAs("Dataset_B0s_JpsiPhi_2016_biased.pdf");
+
+
+        // Plot of the 2015 unbiased cubic spline
+        TCanvas canvas2_2015_unbiased("canvas2_2015_unbiased","canvas2_2015_unbiased",3200,800);
+        canvas2_2015_unbiased.cd();
+        Model_2015_unbiased.CreateHistogramPlot("Cubic Spline_2015_unbiased", "Cubic Spline_2015_unbiased", 100, 0, 20) -> Draw();
+        canvas2_2015_unbiased.SaveAs("Cubic_Spline_2015_unbiased.pdf");
+
+
+        // Plot of the 2015 biased cubic spline
+        TCanvas canvas2_2015_biased("canvas2_2015_biased","canvas2_2015_biased",3200,800);
+        canvas2_2015_biased.cd();
+        Model_2015_biased.CreateHistogramPlot("Cubic Spline_2015_biased", "Cubic Spline_2015_biased", 100, 0, 20) -> Draw();
+        canvas2_2015_biased.SaveAs("Cubic_Spline_2015_biased.pdf");
+
+
+        // Plot of the 2016 unbiased cubic spline
+        TCanvas canvas2_2016_unbiased("canvas2_2016_unbiased","canvas2_2016_unbiased",3200,800);
+        canvas2_2016_unbiased.cd();
+        Model_2016_unbiased.CreateHistogramPlot("Cubic Spline_2016_unbiased", "Cubic Spline_2016_unbiased", 100, 0, 20) -> Draw();
+        canvas2_2016_unbiased.SaveAs("Cubic_Spline_2016_unbiased.pdf");
+
+
+        // Plot of the 2016 biased cubic spline
+        TCanvas canvas2_2016_biased("canvas2_2016_biased","canvas2_2016_biased",3200,800);
+        canvas2_2016_biased.cd();
+        Model_2016_biased.CreateHistogramPlot("Cubic Spline_2016_biased", "Cubic Spline_2016_biased", 100, 0, 20) -> Draw();
+        canvas2_2016_biased.SaveAs("Cubic_Spline_2016_biased.pdf");
 
     #endif //_ROOT_AVAILABLE_
 
@@ -267,16 +393,29 @@ int main(int argv, char** argc)
                                                                                         qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
 
     // make PDF
-    auto Model_PDF = hydra::make_pdf(Model, Integrator);
+    auto PDF_2015_unbiased = hydra::make_pdf(Model_2015_unbiased, Integrator);
+    auto PDF_2015_biased = hydra::make_pdf(Model_2015_biased, Integrator);
+    auto PDF_2016_unbiased = hydra::make_pdf(Model_2016_unbiased, Integrator);
+    auto PDF_2016_biased = hydra::make_pdf(Model_2016_biased, Integrator);
 
 
     //---------------------------------
     //          FCN generation
     //---------------------------------
 
-    auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+    auto fcn_2015_unbiased = hydra::make_loglikehood_fcn(PDF_2015_unbiased, dataset_2015_unbiased_d);
+    fcn_2015_unbiased.SetFcnMaxValue(2.22507e+12);
+    
+    auto fcn_2015_biased = hydra::make_loglikehood_fcn(PDF_2015_biased, dataset_2015_biased_d);
+    fcn_2015_biased.SetFcnMaxValue(2.22507e+12);
+    
+    auto fcn_2016_unbiased = hydra::make_loglikehood_fcn(PDF_2016_unbiased, dataset_2016_unbiased_d);
+    fcn_2016_unbiased.SetFcnMaxValue(2.22507e+12);
+    
+    auto fcn_2016_biased = hydra::make_loglikehood_fcn(PDF_2016_biased, dataset_2016_biased_d);
+    fcn_2016_biased.SetFcnMaxValue(2.22507e+12);
 
-    fcn.SetFcnMaxValue(2.22507e+12);
+    auto sim_fcn = hydra::make_simultaneous_fcn(fcn_2015_unbiased, fcn_2015_biased, fcn_2016_unbiased, fcn_2016_biased);
 
 
     //---------------------------------
@@ -290,10 +429,10 @@ int main(int argv, char** argc)
 	MnStrategy strategy(2);
 
     // create Migrad minimizer
-	MnMigrad minimize(fcn, fcn.GetParameters().GetMnState(), strategy);
+	MnMigrad minimize(sim_fcn, sim_fcn.GetParameters().GetMnState(), strategy);
 
 	// print parameters before fitting
-	std::cout << fcn.GetParameters().GetMnState() << std::endl;
+	std::cout << sim_fcn.GetParameters().GetMnState() << std::endl;
 
 	// minimize and profile the time
 	auto start = std::chrono::high_resolution_clock::now();

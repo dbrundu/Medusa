@@ -86,7 +86,7 @@ const dtime_t LowerLimit = 0.3;
 const dtime_t UpperLimit = 15.0;
 
 // enable the cubic spline for FullAnalyticPhis.h
-const bool CubicSpline = true;
+const bool CubicSpline = false;
 
 // specify wether B0s is B0sbar or not for PhisSignal.h
 const bool B0sbar = false;
@@ -174,25 +174,45 @@ const double DeltaP0_SS = 0.;
 const double DeltaP1_SS = 0.;
 const double AvgEta_SS = 0.4167;
 
-const double Spline_Knots[7] = {0.3, 0.58, 0.91,
-								1.35, 1.96, 3.01,
-												7.00};
 
-double Spline_coeffs[9] = {1.0, 1.49, 2.06,
-							2.12, 2.28, 2.29,
-							2.46, 2.25, 2.34};
+const double Spline_Knots[7] = {0.3, 0.58, 0.91, 1.35, 1.96, 3.01, 7.00};
 
-const double Omega[10] = {1.0, 1.0336, 1.0336,
-						  0.0028, 0.00298, -0.0002,
-							1.0196, 0.00019, 0.00019,
-													0.0057};
+double Spline_Coeffs_2015_unbiased[9] = {1.0, 1.05, 1.097, 0.969, 1.051, 1.05, 1.028, 1.094, 1.051};
 
-const double OmegaErr[10] = {0.0, 0.0015, 0.0015,
-							 0.0013, 0.00074, 0.00072,
-							 0.0011, 0.00094, 0.00094,
-							 						0.0019};
+double Spline_Coeffs_2015_biased[9] = {1.0, 1.69, 1.73, 1.85, 1.99, 1.92, 2.0, 2.19, 1.95};
+
+double Spline_Coeffs_2016_unbiased[9] = {1.0, 1.008, 1.031, 1.001, 0.984, 1.0, 1.009, 0.989, 0.987};
+
+double Spline_Coeffs_2016_biased[9] = {1.0, 1.49, 2.06, 2.12, 2.28, 2.29, 2.46, 2.25, 2.34};
+
+double Spline_CoeffErr_2015_unbiased[9] = {0., 0.07, 0.049, 0.049, 0.051, 0.047, 0.064, 0.06, 0.05};
+
+double Spline_CoeffErr_2015_biased[9] = {0., 0.31, 0.21, 0.27, 0.26, 0.26, 0.3, 0.31, 0.27};
+
+double Spline_CoeffErr_2016_unbiased[9] = {0., 0.028, 0.018, 0.021, 0.018, 0.019, 0.024, 0.024, 0.02};
+
+double Spline_CoeffErr_2016_biased[9] = {0., 0.16, 0.13, 0.17, 0.16, 0.17, 0.19, 0.18, 0.17};
+
+
+const double Omega_2015_unbiased[10] = {1.0, 1.0434, 1.0442, -0.0026, -0.00142, 0.00139, 1.0156, -0.0014, 0.0006, -0.0171};
+
+const double Omega_2015_biased[10] = {1.0, 1.0463, 1.0445, -0.0105, 0.0037, 0.0023, 1.0262, -0.0045, -0.0007, -0.0348};
+
+const double Omega_2016_unbiased[10] = {1.0, 1.03788, 1.03765, -0.00079, 0.00026, 0.00023, 1.01022, 0.00004, 0.00010, -0.00362};
+
+const double Omega_2016_biased[10] = {1.0, 1.0336, 1.0336, 0.0028, 0.00298, -0.0002, 1.0196, 0.00019, 0.00019, 0.0057};
+
+const double OmegaErr_2015_unbiased[10] = {0.0, 0.0020, 0.0020, 0.0016, 0.00094, 0.00093, 0.0014, 0.0012, 0.0012, 0.0026};
+
+const double OmegaErr_2015_biased[10] = {0.0, 0.0039, 0.0038, 0.0032, 0.0018, 0.0018, 0.0027, 0.0024, 0.0024, 0.0050};
+
+const double OmegaErr_2016_unbiased[10] = {0.0, 0.00070, 0.00069, 0.00054, 0.00033, 0.00033, 0.00047, 0.00042, 0.00043, 0.00089};
+
+const double OmegaErr_2016_biased[10] = {0.0, 0.0015, 0.0015, 0.0013, 0.00074, 0.00072, 0.0011, 0.00094, 0.00094, 0.0019};
+
 
 const double Csp[6] = {0.8463, 0.8756, 0.8478, 0.8833, 0.9415, 0.9756};
+
 
 auto b0_p = hydra::Parameter::Create("b0").Value(b0).Error(0.00022).Fixed();
 auto b1_p = hydra::Parameter::Create("b1").Value(b1).Error(0.0057).Fixed();
@@ -209,35 +229,137 @@ auto DeltaP0_SS_p = hydra::Parameter::Create("DeltaP0_SS").Value(DeltaP0_SS).Err
 auto DeltaP1_SS_p = hydra::Parameter::Create("DeltaP1_SS").Value(DeltaP1_SS).Error(0.03).Fixed();
 auto AvgEta_SS_p = hydra::Parameter::Create("AvgEta_SS").Value(AvgEta_SS).Error(0.0).Fixed();
 
-auto Spline_c0_p = hydra::Parameter::Create("c0").Value(Spline_coeffs[0]).Error(0.0).Fixed();
-auto Spline_c1_p = hydra::Parameter::Create("c1").Value(Spline_coeffs[1]).Error(0.16).Fixed();
-auto Spline_c2_p = hydra::Parameter::Create("c2").Value(Spline_coeffs[2]).Error(0.13).Fixed();
-auto Spline_c3_p = hydra::Parameter::Create("c3").Value(Spline_coeffs[3]).Error(0.17).Fixed();
-auto Spline_c4_p = hydra::Parameter::Create("c4").Value(Spline_coeffs[4]).Error(0.16).Fixed();
-auto Spline_c5_p = hydra::Parameter::Create("c5").Value(Spline_coeffs[5]).Error(0.17).Fixed();
-auto Spline_c6_p = hydra::Parameter::Create("c6").Value(Spline_coeffs[6]).Error(0.19).Fixed();
-auto Spline_c7_p = hydra::Parameter::Create("c7").Value(Spline_coeffs[7]).Error(0.18).Fixed();
-auto Spline_c8_p = hydra::Parameter::Create("c8").Value(Spline_coeffs[8]).Error(0.17).Fixed();
+auto c0_2015_unbiased_p = hydra::Parameter::Create("c0_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[0]).Error(Spline_CoeffErr_2015_unbiased[0]).Fixed();
+auto c1_2015_unbiased_p = hydra::Parameter::Create("c1_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[1]).Error(Spline_CoeffErr_2015_unbiased[1]).Fixed();
+auto c2_2015_unbiased_p = hydra::Parameter::Create("c2_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[2]).Error(Spline_CoeffErr_2015_unbiased[2]).Fixed();
+auto c3_2015_unbiased_p = hydra::Parameter::Create("c3_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[3]).Error(Spline_CoeffErr_2015_unbiased[3]).Fixed();
+auto c4_2015_unbiased_p = hydra::Parameter::Create("c4_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[4]).Error(Spline_CoeffErr_2015_unbiased[4]).Fixed();
+auto c5_2015_unbiased_p = hydra::Parameter::Create("c5_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[5]).Error(Spline_CoeffErr_2015_unbiased[5]).Fixed();
+auto c6_2015_unbiased_p = hydra::Parameter::Create("c6_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[6]).Error(Spline_CoeffErr_2015_unbiased[6]).Fixed();
+auto c7_2015_unbiased_p = hydra::Parameter::Create("c7_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[7]).Error(Spline_CoeffErr_2015_unbiased[7]).Fixed();
+auto c8_2015_unbiased_p = hydra::Parameter::Create("c8_2015_unbiased").Value(Spline_Coeffs_2015_unbiased[8]).Error(Spline_CoeffErr_2015_unbiased[8]).Fixed();
 
-auto Omega_1_p = hydra::Parameter::Create("Omega_1").Value(Omega[0]).Error(OmegaErr[0]).Fixed();
-auto Omega_2_p = hydra::Parameter::Create("Omega_2").Value(Omega[1]).Error(OmegaErr[1]).Fixed();
-auto Omega_3_p = hydra::Parameter::Create("Omega_3").Value(Omega[2]).Error(OmegaErr[2]).Fixed();
-auto Omega_4_p = hydra::Parameter::Create("Omega_4").Value(Omega[3]).Error(OmegaErr[3]).Fixed();
-auto Omega_5_p = hydra::Parameter::Create("Omega_5").Value(Omega[4]).Error(OmegaErr[4]).Fixed();
-auto Omega_6_p = hydra::Parameter::Create("Omega_6").Value(Omega[5]).Error(OmegaErr[5]).Fixed();
-auto Omega_7_p = hydra::Parameter::Create("Omega_7").Value(Omega[6]).Error(OmegaErr[6]).Fixed();
-auto Omega_8_p = hydra::Parameter::Create("Omega_8").Value(Omega[7]).Error(OmegaErr[7]).Fixed();
-auto Omega_9_p = hydra::Parameter::Create("Omega_9").Value(Omega[8]).Error(OmegaErr[8]).Fixed();
-auto Omega_10_p = hydra::Parameter::Create("Omega_10").Value(Omega[9]).Error(OmegaErr[9]).Fixed();
+auto c0_2015_biased_p = hydra::Parameter::Create("c0_2015_biased").Value(Spline_Coeffs_2015_biased[0]).Error(Spline_CoeffErr_2015_biased[0]).Fixed();
+auto c1_2015_biased_p = hydra::Parameter::Create("c1_2015_biased").Value(Spline_Coeffs_2015_biased[1]).Error(Spline_CoeffErr_2015_biased[1]).Fixed();
+auto c2_2015_biased_p = hydra::Parameter::Create("c2_2015_biased").Value(Spline_Coeffs_2015_biased[2]).Error(Spline_CoeffErr_2015_biased[2]).Fixed();
+auto c3_2015_biased_p = hydra::Parameter::Create("c3_2015_biased").Value(Spline_Coeffs_2015_biased[3]).Error(Spline_CoeffErr_2015_biased[3]).Fixed();
+auto c4_2015_biased_p = hydra::Parameter::Create("c4_2015_biased").Value(Spline_Coeffs_2015_biased[4]).Error(Spline_CoeffErr_2015_biased[4]).Fixed();
+auto c5_2015_biased_p = hydra::Parameter::Create("c5_2015_biased").Value(Spline_Coeffs_2015_biased[5]).Error(Spline_CoeffErr_2015_biased[5]).Fixed();
+auto c6_2015_biased_p = hydra::Parameter::Create("c6_2015_biased").Value(Spline_Coeffs_2015_biased[6]).Error(Spline_CoeffErr_2015_biased[6]).Fixed();
+auto c7_2015_biased_p = hydra::Parameter::Create("c7_2015_biased").Value(Spline_Coeffs_2015_biased[7]).Error(Spline_CoeffErr_2015_biased[7]).Fixed();
+auto c8_2015_biased_p = hydra::Parameter::Create("c8_2015_biased").Value(Spline_Coeffs_2015_biased[8]).Error(Spline_CoeffErr_2015_biased[8]).Fixed();
 
-hydra::Parameter ExpParams[31] = {b0_p, b1_p,
-                         		  p0_OS_p, p1_OS_p, DeltaP0_OS_p, DeltaP1_OS_p, AvgEta_OS_p,
-                         		  p0_SS_p, p1_SS_p, DeltaP0_SS_p, DeltaP1_SS_p, AvgEta_SS_p,
-                        		  Omega_1_p, Omega_2_p, Omega_3_p, Omega_4_p, Omega_5_p,
-                         		  Omega_6_p, Omega_7_p, Omega_8_p, Omega_9_p, Omega_10_p,
-								  Spline_c0_p, Spline_c1_p, Spline_c2_p,
-								  Spline_c3_p, Spline_c4_p, Spline_c5_p,
-								  Spline_c6_p, Spline_c7_p, Spline_c8_p};
+auto c0_2016_unbiased_p = hydra::Parameter::Create("c0_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[0]).Error(Spline_CoeffErr_2016_unbiased[0]).Fixed();
+auto c1_2016_unbiased_p = hydra::Parameter::Create("c1_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[1]).Error(Spline_CoeffErr_2016_unbiased[1]).Fixed();
+auto c2_2016_unbiased_p = hydra::Parameter::Create("c2_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[2]).Error(Spline_CoeffErr_2016_unbiased[2]).Fixed();
+auto c3_2016_unbiased_p = hydra::Parameter::Create("c3_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[3]).Error(Spline_CoeffErr_2016_unbiased[3]).Fixed();
+auto c4_2016_unbiased_p = hydra::Parameter::Create("c4_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[4]).Error(Spline_CoeffErr_2016_unbiased[4]).Fixed();
+auto c5_2016_unbiased_p = hydra::Parameter::Create("c5_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[5]).Error(Spline_CoeffErr_2016_unbiased[5]).Fixed();
+auto c6_2016_unbiased_p = hydra::Parameter::Create("c6_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[6]).Error(Spline_CoeffErr_2016_unbiased[6]).Fixed();
+auto c7_2016_unbiased_p = hydra::Parameter::Create("c7_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[7]).Error(Spline_CoeffErr_2016_unbiased[7]).Fixed();
+auto c8_2016_unbiased_p = hydra::Parameter::Create("c8_2016_unbiased").Value(Spline_Coeffs_2016_unbiased[8]).Error(Spline_CoeffErr_2016_unbiased[8]).Fixed();
+
+auto c0_2016_biased_p = hydra::Parameter::Create("c0_2016_biased").Value(Spline_Coeffs_2016_biased[0]).Error(Spline_CoeffErr_2016_biased[0]).Fixed();
+auto c1_2016_biased_p = hydra::Parameter::Create("c1_2016_biased").Value(Spline_Coeffs_2016_biased[1]).Error(Spline_CoeffErr_2016_biased[1]).Fixed();
+auto c2_2016_biased_p = hydra::Parameter::Create("c2_2016_biased").Value(Spline_Coeffs_2016_biased[2]).Error(Spline_CoeffErr_2016_biased[2]).Fixed();
+auto c3_2016_biased_p = hydra::Parameter::Create("c3_2016_biased").Value(Spline_Coeffs_2016_biased[3]).Error(Spline_CoeffErr_2016_biased[3]).Fixed();
+auto c4_2016_biased_p = hydra::Parameter::Create("c4_2016_biased").Value(Spline_Coeffs_2016_biased[4]).Error(Spline_CoeffErr_2016_biased[4]).Fixed();
+auto c5_2016_biased_p = hydra::Parameter::Create("c5_2016_biased").Value(Spline_Coeffs_2016_biased[5]).Error(Spline_CoeffErr_2016_biased[5]).Fixed();
+auto c6_2016_biased_p = hydra::Parameter::Create("c6_2016_biased").Value(Spline_Coeffs_2016_biased[6]).Error(Spline_CoeffErr_2016_biased[6]).Fixed();
+auto c7_2016_biased_p = hydra::Parameter::Create("c7_2016_biased").Value(Spline_Coeffs_2016_biased[7]).Error(Spline_CoeffErr_2016_biased[7]).Fixed();
+auto c8_2016_biased_p = hydra::Parameter::Create("c8_2016_biased").Value(Spline_Coeffs_2016_biased[8]).Error(Spline_CoeffErr_2016_biased[8]).Fixed();
+
+auto Omega1_2015_unbiased_p = hydra::Parameter::Create("Omega1_2015_unbiased").Value(Omega_2015_unbiased[0]).Error(OmegaErr_2015_unbiased[0]).Fixed();
+auto Omega2_2015_unbiased_p = hydra::Parameter::Create("Omega2_2015_unbiased").Value(Omega_2015_unbiased[1]).Error(OmegaErr_2015_unbiased[1]).Fixed();
+auto Omega3_2015_unbiased_p = hydra::Parameter::Create("Omega3_2015_unbiased").Value(Omega_2015_unbiased[2]).Error(OmegaErr_2015_unbiased[2]).Fixed();
+auto Omega4_2015_unbiased_p = hydra::Parameter::Create("Omega4_2015_unbiased").Value(Omega_2015_unbiased[3]).Error(OmegaErr_2015_unbiased[3]).Fixed();
+auto Omega5_2015_unbiased_p = hydra::Parameter::Create("Omega5_2015_unbiased").Value(Omega_2015_unbiased[4]).Error(OmegaErr_2015_unbiased[4]).Fixed();
+auto Omega6_2015_unbiased_p = hydra::Parameter::Create("Omega6_2015_unbiased").Value(Omega_2015_unbiased[5]).Error(OmegaErr_2015_unbiased[5]).Fixed();
+auto Omega7_2015_unbiased_p = hydra::Parameter::Create("Omega7_2015_unbiased").Value(Omega_2015_unbiased[6]).Error(OmegaErr_2015_unbiased[6]).Fixed();
+auto Omega8_2015_unbiased_p = hydra::Parameter::Create("Omega8_2015_unbiased").Value(Omega_2015_unbiased[7]).Error(OmegaErr_2015_unbiased[7]).Fixed();
+auto Omega9_2015_unbiased_p = hydra::Parameter::Create("Omega9_2015_unbiased").Value(Omega_2015_unbiased[8]).Error(OmegaErr_2015_unbiased[8]).Fixed();
+auto Omega10_2015_unbiased_p = hydra::Parameter::Create("Omega10_2015_unbiased").Value(Omega_2015_unbiased[9]).Error(OmegaErr_2015_unbiased[9]).Fixed();
+
+auto Omega1_2015_biased_p = hydra::Parameter::Create("Omega1_2015_biased").Value(Omega_2015_biased[0]).Error(OmegaErr_2015_biased[0]).Fixed();
+auto Omega2_2015_biased_p = hydra::Parameter::Create("Omega2_2015_biased").Value(Omega_2015_biased[1]).Error(OmegaErr_2015_biased[1]).Fixed();
+auto Omega3_2015_biased_p = hydra::Parameter::Create("Omega3_2015_biased").Value(Omega_2015_biased[2]).Error(OmegaErr_2015_biased[2]).Fixed();
+auto Omega4_2015_biased_p = hydra::Parameter::Create("Omega4_2015_biased").Value(Omega_2015_biased[3]).Error(OmegaErr_2015_biased[3]).Fixed();
+auto Omega5_2015_biased_p = hydra::Parameter::Create("Omega5_2015_biased").Value(Omega_2015_biased[4]).Error(OmegaErr_2015_biased[4]).Fixed();
+auto Omega6_2015_biased_p = hydra::Parameter::Create("Omega6_2015_biased").Value(Omega_2015_biased[5]).Error(OmegaErr_2015_biased[5]).Fixed();
+auto Omega7_2015_biased_p = hydra::Parameter::Create("Omega7_2015_biased").Value(Omega_2015_biased[6]).Error(OmegaErr_2015_biased[6]).Fixed();
+auto Omega8_2015_biased_p = hydra::Parameter::Create("Omega8_2015_biased").Value(Omega_2015_biased[7]).Error(OmegaErr_2015_biased[7]).Fixed();
+auto Omega9_2015_biased_p = hydra::Parameter::Create("Omega9_2015_biased").Value(Omega_2015_biased[8]).Error(OmegaErr_2015_biased[8]).Fixed();
+auto Omega10_2015_biased_p = hydra::Parameter::Create("Omega10_2015_biased").Value(Omega_2015_biased[9]).Error(OmegaErr_2015_biased[9]).Fixed();
+
+auto Omega1_2016_unbiased_p = hydra::Parameter::Create("Omega1_2016_unbiased").Value(Omega_2016_unbiased[0]).Error(OmegaErr_2016_unbiased[0]).Fixed();
+auto Omega2_2016_unbiased_p = hydra::Parameter::Create("Omega2_2016_unbiased").Value(Omega_2016_unbiased[1]).Error(OmegaErr_2016_unbiased[1]).Fixed();
+auto Omega3_2016_unbiased_p = hydra::Parameter::Create("Omega3_2016_unbiased").Value(Omega_2016_unbiased[2]).Error(OmegaErr_2016_unbiased[2]).Fixed();
+auto Omega4_2016_unbiased_p = hydra::Parameter::Create("Omega4_2016_unbiased").Value(Omega_2016_unbiased[3]).Error(OmegaErr_2016_unbiased[3]).Fixed();
+auto Omega5_2016_unbiased_p = hydra::Parameter::Create("Omega5_2016_unbiased").Value(Omega_2016_unbiased[4]).Error(OmegaErr_2016_unbiased[4]).Fixed();
+auto Omega6_2016_unbiased_p = hydra::Parameter::Create("Omega6_2016_unbiased").Value(Omega_2016_unbiased[5]).Error(OmegaErr_2016_unbiased[5]).Fixed();
+auto Omega7_2016_unbiased_p = hydra::Parameter::Create("Omega7_2016_unbiased").Value(Omega_2016_unbiased[6]).Error(OmegaErr_2016_unbiased[6]).Fixed();
+auto Omega8_2016_unbiased_p = hydra::Parameter::Create("Omega8_2016_unbiased").Value(Omega_2016_unbiased[7]).Error(OmegaErr_2016_unbiased[7]).Fixed();
+auto Omega9_2016_unbiased_p = hydra::Parameter::Create("Omega9_2016_unbiased").Value(Omega_2016_unbiased[8]).Error(OmegaErr_2016_unbiased[8]).Fixed();
+auto Omega10_2016_unbiased_p = hydra::Parameter::Create("Omega10_2016_unbiased").Value(Omega_2016_unbiased[9]).Error(OmegaErr_2016_unbiased[9]).Fixed();
+
+auto Omega1_2016_biased_p = hydra::Parameter::Create("Omega1_2016_biased").Value(Omega_2016_biased[0]).Error(OmegaErr_2016_biased[0]).Fixed();
+auto Omega2_2016_biased_p = hydra::Parameter::Create("Omega2_2016_biased").Value(Omega_2016_biased[1]).Error(OmegaErr_2016_biased[1]).Fixed();
+auto Omega3_2016_biased_p = hydra::Parameter::Create("Omega3_2016_biased").Value(Omega_2016_biased[2]).Error(OmegaErr_2016_biased[2]).Fixed();
+auto Omega4_2016_biased_p = hydra::Parameter::Create("Omega4_2016_biased").Value(Omega_2016_biased[3]).Error(OmegaErr_2016_biased[3]).Fixed();
+auto Omega5_2016_biased_p = hydra::Parameter::Create("Omega5_2016_biased").Value(Omega_2016_biased[4]).Error(OmegaErr_2016_biased[4]).Fixed();
+auto Omega6_2016_biased_p = hydra::Parameter::Create("Omega6_2016_biased").Value(Omega_2016_biased[5]).Error(OmegaErr_2016_biased[5]).Fixed();
+auto Omega7_2016_biased_p = hydra::Parameter::Create("Omega7_2016_biased").Value(Omega_2016_biased[6]).Error(OmegaErr_2016_biased[6]).Fixed();
+auto Omega8_2016_biased_p = hydra::Parameter::Create("Omega8_2016_biased").Value(Omega_2016_biased[7]).Error(OmegaErr_2016_biased[7]).Fixed();
+auto Omega9_2016_biased_p = hydra::Parameter::Create("Omega9_2016_biased").Value(Omega_2016_biased[8]).Error(OmegaErr_2016_biased[8]).Fixed();
+auto Omega10_2016_biased_p = hydra::Parameter::Create("Omega10_2016_biased").Value(Omega_2016_biased[9]).Error(OmegaErr_2016_biased[9]).Fixed();
+
+hydra::Parameter ExpParams_2015_unbiased[31] = {b0_p, b1_p,
+                         		  			    p0_OS_p, p1_OS_p, DeltaP0_OS_p, DeltaP1_OS_p, AvgEta_OS_p,
+                         		  			    p0_SS_p, p1_SS_p, DeltaP0_SS_p, DeltaP1_SS_p, AvgEta_SS_p,
+                        		  			    Omega1_2015_unbiased_p, Omega2_2015_unbiased_p,
+												Omega3_2015_unbiased_p, Omega4_2015_unbiased_p,
+												Omega5_2015_unbiased_p, Omega6_2015_unbiased_p,
+												Omega7_2015_unbiased_p, Omega8_2015_unbiased_p,
+												Omega9_2015_unbiased_p, Omega10_2015_unbiased_p,
+								  			    c0_2015_unbiased_p, c1_2015_unbiased_p, c2_2015_unbiased_p,
+								  			    c3_2015_unbiased_p, c4_2015_unbiased_p, c5_2015_unbiased_p,
+								  			    c6_2015_unbiased_p, c7_2015_unbiased_p, c8_2015_unbiased_p};
+
+hydra::Parameter ExpParams_2015_biased[31] = {b0_p, b1_p,
+                         		  			  p0_OS_p, p1_OS_p, DeltaP0_OS_p, DeltaP1_OS_p, AvgEta_OS_p,
+                         		  			  p0_SS_p, p1_SS_p, DeltaP0_SS_p, DeltaP1_SS_p, AvgEta_SS_p,
+                        		  			  Omega1_2015_biased_p, Omega2_2015_biased_p,
+											  Omega3_2015_biased_p, Omega4_2015_biased_p,
+											  Omega5_2015_biased_p, Omega6_2015_biased_p,
+											  Omega7_2015_biased_p, Omega8_2015_biased_p,
+											  Omega9_2015_biased_p, Omega10_2015_biased_p,
+								  			  c0_2015_biased_p, c1_2015_biased_p, c2_2015_biased_p,
+								  			  c3_2015_biased_p, c4_2015_biased_p, c5_2015_biased_p,
+								  			  c6_2015_biased_p, c7_2015_biased_p, c8_2015_biased_p};
+
+hydra::Parameter ExpParams_2016_unbiased[31] = {b0_p, b1_p,
+                         		  			    p0_OS_p, p1_OS_p, DeltaP0_OS_p, DeltaP1_OS_p, AvgEta_OS_p,
+                         		  			    p0_SS_p, p1_SS_p, DeltaP0_SS_p, DeltaP1_SS_p, AvgEta_SS_p,
+                        		  			    Omega1_2016_unbiased_p, Omega2_2016_unbiased_p,
+												Omega3_2016_unbiased_p, Omega4_2016_unbiased_p,
+												Omega5_2016_unbiased_p, Omega6_2016_unbiased_p,
+												Omega7_2016_unbiased_p, Omega8_2016_unbiased_p,
+												Omega9_2016_unbiased_p, Omega10_2016_unbiased_p,
+								  			    c0_2016_unbiased_p, c1_2016_unbiased_p, c2_2016_unbiased_p,
+								  			    c3_2016_unbiased_p, c4_2016_unbiased_p, c5_2016_unbiased_p,
+								  			    c6_2016_unbiased_p, c7_2016_unbiased_p, c8_2016_unbiased_p};
+
+hydra::Parameter ExpParams_2016_biased[31] = {b0_p, b1_p,
+                         		  			  p0_OS_p, p1_OS_p, DeltaP0_OS_p, DeltaP1_OS_p, AvgEta_OS_p,
+                         		  			  p0_SS_p, p1_SS_p, DeltaP0_SS_p, DeltaP1_SS_p, AvgEta_SS_p,
+                        		  			  Omega1_2016_biased_p, Omega2_2016_biased_p,
+											  Omega3_2016_biased_p, Omega4_2016_biased_p,
+											  Omega5_2016_biased_p, Omega6_2016_biased_p,
+											  Omega7_2016_biased_p, Omega8_2016_biased_p,
+											  Omega9_2016_biased_p, Omega10_2016_biased_p,
+								  			  c0_2016_biased_p, c1_2016_biased_p, c2_2016_biased_p,
+								  			  c3_2016_biased_p, c4_2016_biased_p, c5_2016_biased_p,
+								  			  c6_2016_biased_p, c7_2016_biased_p, c8_2016_biased_p};
 
 std::vector<double> parameters = {A02, Aperp2, AS2,
                                   deltagammasd, deltagammas, deltams,
@@ -247,11 +369,11 @@ std::vector<double> parameters = {A02, Aperp2, AS2,
                                   b0, b1,
                          		  p0_OS, p1_OS, DeltaP0_OS, DeltaP1_OS, AvgEta_OS,
                          		  p0_SS, p1_SS, DeltaP0_SS, DeltaP1_SS, AvgEta_SS,
-                        		  Omega[0], Omega[1], Omega[2], Omega[3], Omega[4],
-                         		  Omega[5], Omega[6], Omega[7], Omega[8], Omega[9],
-								  Spline_coeffs[0], Spline_coeffs[1], Spline_coeffs[2],
-                                  Spline_coeffs[3], Spline_coeffs[4], Spline_coeffs[5],
-                                  Spline_coeffs[6], Spline_coeffs[7], Spline_coeffs[8]};
+                        		  Omega_2016_biased[0], Omega_2016_biased[1], Omega_2016_biased[2], Omega_2016_biased[3], Omega_2016_biased[4],
+                         		  Omega_2016_biased[5], Omega_2016_biased[6], Omega_2016_biased[7], Omega_2016_biased[8], Omega_2016_biased[9],
+								  Spline_Coeffs_2016_biased[0], Spline_Coeffs_2016_biased[1], Spline_Coeffs_2016_biased[2],
+                                  Spline_Coeffs_2016_biased[3], Spline_Coeffs_2016_biased[4], Spline_Coeffs_2016_biased[5],
+                                  Spline_Coeffs_2016_biased[6], Spline_Coeffs_2016_biased[7], Spline_Coeffs_2016_biased[8]};
 
 
 //---------------------------------------------------------

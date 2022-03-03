@@ -35,6 +35,7 @@
 // std
 #include <iostream>
 #include <chrono>
+#include <string>
 
 // Hydra
 #include <hydra/device/System.h>
@@ -70,7 +71,8 @@ namespace medusa {
      */
 
     template<typename Model, typename Container>
-    size_t GenerateDataset_Full(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size, dtime_t LowerLimit, dtime_t UpperLimit)
+    size_t GenerateDataset_Full(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size,
+                                                                        dtime_t LowerLimit, dtime_t UpperLimit, std::string description)
     {
 
         // default namespaces
@@ -226,6 +228,7 @@ namespace medusa {
         std::cout << std::endl;
         std::cout << "-----------Generation on Device ---------"  << std::endl;
         std::cout << "| B0s -> J/psi Phi -> mu+ mu- K+ K-      "  << std::endl;
+        std::cout << "| Dataset: " << description                 << std::endl;
         std::cout << "| Number of events: "<< nevents             << std::endl;
         std::cout << "| Number of events gen: "<< k*bunch_size    << std::endl;
         std::cout << "| Time (ms):        "<< elapsed.count()     << std::endl;
