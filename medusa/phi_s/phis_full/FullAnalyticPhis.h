@@ -89,16 +89,16 @@ namespace medusa {
              typename Signature=double(ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
                                                     ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta) >
     class FullAnalyticPhis: public hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
-                                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 48>,
+                                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 49>,
                             public CubicSpline<7>
     {
 
         using ThisBaseFunctor = hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
-                                                                ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 48 >;
+                                                                ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 49 >;
         using CSpline = CubicSpline<7>;
 
         using hydra::BaseFunctor< FullAnalyticPhis< Spline, ArgTypeTime, ArgTypeCosThetah, ArgTypeCosThetal, ArgTypePhi,
-                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 48 >::_par;
+                                                    ArgTypeQOS, ArgTypeQSS, ArgTypeEtaOS, ArgTypeEtaSS, ArgTypeDelta >, Signature, 49 >::_par;
 
 
         public:
@@ -127,7 +127,8 @@ namespace medusa {
                          hydra::Parameter const& Spline_c0,       hydra::Parameter const& Spline_c1,   hydra::Parameter const& Spline_c2,
                          hydra::Parameter const& Spline_c3,       hydra::Parameter const& Spline_c4,   hydra::Parameter const& Spline_c5,
                          hydra::Parameter const& Spline_c6,       hydra::Parameter const& Spline_c7,   hydra::Parameter const& Spline_c8,
-                         double const (&SplineKnots)[7],          ArgTypeTime const& LowerLimit,       ArgTypeTime const& UpperLimit):
+                         hydra::Parameter const& Csp,             double const (&SplineKnots)[7],      ArgTypeTime const& LowerLimit,
+                                                                                                            ArgTypeTime const& UpperLimit):
         ThisBaseFunctor({A_02, A_perp2, A_S2,
                          DeltaGamma_sd, DeltaGamma, DeltaM,
                          phi_0, phi_par0, phi_perp0, phi_S0,
@@ -140,7 +141,8 @@ namespace medusa {
                          Omega_6, Omega_7, Omega_8, Omega_9, Omega_10,
                          Spline_c0, Spline_c1, Spline_c2,
                          Spline_c3, Spline_c4, Spline_c5,
-                         Spline_c6, Spline_c7, Spline_c8 }),
+                         Spline_c6, Spline_c7, Spline_c8,
+                         Csp }),
         CSpline(SplineKnots, {_par[39], _par[40], _par[41], _par[42], _par[43], _par[44], _par[45], _par[46], _par[47] })
         {
             fLowerLimit = LowerLimit;
@@ -151,14 +153,14 @@ namespace medusa {
 
         // ctor with array of hydra::Parameter
         // the user has to respect the parameter order as the main ctor
-        FullAnalyticPhis( const hydra::Parameter (&Hs)[17], const hydra::Parameter (&Ps)[31],
+        FullAnalyticPhis( const hydra::Parameter (&Hs)[17], const hydra::Parameter (&Ps)[32],
                           const double (&SplineKnots)[7], const ArgTypeTime &LowerLimit, const ArgTypeTime &UpperLimit ):
         ThisBaseFunctor({ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
                           Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16],
                           Ps[0],  Ps[1],  Ps[2],  Ps[3],  Ps[4],  Ps[5],  Ps[6],  Ps[7],
-                          Ps[8],  Ps[9],  Ps[10], Ps[11], Ps[12], Ps[13], Ps[14], Ps[15], Ps[16], Ps[17],
-                          Ps[18], Ps[19], Ps[20], Ps[21], Ps[22], Ps[23], Ps[24], Ps[25],
-                                                                  Ps[26], Ps[27], Ps[28], Ps[29], Ps[30] }),
+                          Ps[8],  Ps[9],  Ps[10], Ps[11], Ps[12], Ps[13], Ps[14], Ps[15],
+                          Ps[16], Ps[17], Ps[18], Ps[19], Ps[20], Ps[21], Ps[22], Ps[23],
+                          Ps[24], Ps[25], Ps[26], Ps[27], Ps[28], Ps[29], Ps[30], Ps[31] }),
         CSpline(SplineKnots, {_par[39], _par[40], _par[41], _par[42], _par[43], _par[44], _par[45], _par[46], _par[47] })
         {
             fLowerLimit = LowerLimit;
@@ -169,17 +171,17 @@ namespace medusa {
 
         // ctor with array of double
         // the user has to respect the parameter order as the main ctor
-       FullAnalyticPhis( const double (&Hs)[50], const double (&SplineKnots)[7] ):
+        FullAnalyticPhis( const double (&Hs)[51], const double (&SplineKnots)[7] ):
         ThisBaseFunctor({ Hs[0],  Hs[1],  Hs[2],  Hs[3],  Hs[4],  Hs[5],  Hs[6],  Hs[7],
-                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15], Hs[16], Hs[17],
-                          Hs[18], Hs[19], Hs[20], Hs[21], Hs[22], Hs[23], Hs[24], Hs[25],
-                          Hs[26], Hs[27], Hs[28], Hs[29], Hs[30], Hs[31], Hs[32], Hs[33], Hs[34], Hs[35],
-                          Hs[36], Hs[37], Hs[38], Hs[39], Hs[40], Hs[41], Hs[42], Hs[43],
-                                                                  Hs[44], Hs[45], Hs[46], Hs[47], Hs[48] }),
+                          Hs[8],  Hs[9],  Hs[10], Hs[11], Hs[12], Hs[13], Hs[14], Hs[15],
+                          Hs[16], Hs[17], Hs[18], Hs[19], Hs[20], Hs[21], Hs[22], Hs[23],
+                          Hs[24], Hs[25], Hs[26], Hs[27], Hs[28], Hs[29], Hs[30], Hs[31],
+                          Hs[32], Hs[33], Hs[34], Hs[35], Hs[36], Hs[37], Hs[38], Hs[39],
+                          Hs[40], Hs[41], Hs[42], Hs[43], Hs[44], Hs[45], Hs[46], Hs[47], Hs[48] }),
         CSpline(SplineKnots, {_par[39], _par[40], _par[41], _par[42], _par[43], _par[44], _par[45], _par[46], _par[47] })
         {
-            fLowerLimit = Hs[48];
-            fUpperLimit = Hs[49];
+            fLowerLimit = Hs[49];
+            fUpperLimit = Hs[50];
             Update();
         }
 
@@ -312,7 +314,7 @@ namespace medusa {
                 double int_conv_exp_sinh = Integrate_cspline_times_convolved_exp_sinhcosh(Gamma, HalfDeltaGamma, 0, sigma_eff, fLowerLimit, fUpperLimit, false);
                 double int_conv_exp_cos = Integrate_cspline_times_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, true);
                 double int_conv_exp_sin = Integrate_cspline_times_convolved_exp_sincos(Gamma, _par[5], 0, sigma_eff, fLowerLimit, fUpperLimit, false);
-            
+
                 #pragma unroll 10
                 for(size_t i=0; i<10; i++)
                 {
@@ -347,16 +349,16 @@ namespace medusa {
 
             // This macro controls if PDF is NaN. If yes, it prints a warning
             // with the parameter value for whom we obtain a NaN.
-            hydra::CHECK_VALUE(PDF, "par[0]=%f, par[1]=%f, par[2]=%f, par[3]=%f, par[4]=%f, par[5]=%f,"
-                                    "par[6]=%f, par[7]=%f, par[8]=%f, par[9]=%f, par[10]=%f, par[11]=%f,"
+            hydra::CHECK_VALUE(PDF, "par[0]=%f,  par[1]=%f,  par[2]=%f,  par[3]=%f,  par[4]=%f,  par[5]=%f,"
+                                    "par[6]=%f,  par[7]=%f,  par[8]=%f,  par[9]=%f,  par[10]=%f, par[11]=%f,"
                                     "par[12]=%f, par[13]=%f, par[14]=%f, par[15]=%f, par[16]=%f, par[17]=%f,"
                                     "par[18]=%f, par[19]=%f, par[20]=%f, par[21]=%f, par[22]=%f, par[23]=%f,"
                                     "par[24]=%f, par[25]=%f, par[26]=%f, par[27]=%f, par[28]=%f, par[29]=%f,"
                                     "par[30]=%f, par[31]=%f, par[32]=%f, par[33]=%f, par[34]=%f, par[35]=%f,"
                                     "par[36]=%f, par[37]=%f, par[38]=%f, par[39]=%f, par[40]=%f, par[41]=%f,"
                                     "par[42]=%f, par[43]=%f, par[44]=%f, par[45]=%f, par[46]=%f, par[47]=%f",
-                                    _par[0], _par[1], _par[2], _par[3], _par[4], _par[5],
-                                    _par[6], _par[7], _par[8], _par[9], _par[10], _par[11],
+                                    _par[0],  _par[1],  _par[2],  _par[3],  _par[4],  _par[5],
+                                    _par[6],  _par[7],  _par[8],  _par[9],  _par[10], _par[11],
                                     _par[12], _par[13], _par[14], _par[15], _par[16], _par[17],
                                     _par[18], _par[19], _par[20], _par[21], _par[22], _par[23],
                                     _par[24], _par[25], _par[26], _par[27], _par[28], _par[29],
@@ -419,41 +421,42 @@ namespace medusa {
         private:
 
 
-        // update the values of the angular coefficients a_k, b_k, c_k, d_k
+        // Update the values of the angular coefficients a_k, b_k, c_k, d_k
         // by using the formulas in Table 3 in arXiv:1906.08356v4
         // (see implementation in Update_ATCoefficients.inl)
         void Update_ATCoefficients();
 
 
-        // update the values of the polarization factor N_k
+        // Update the values of the polarization factor N_k
         // by using the formulas in Table 3 in arXiv:1906.08356v4
         void Update_NFactors()
         {
     	    /*
     	    0: A_0^2,
             1: A_perp^2,
-    	    2: A_S^2
+    	    2: A_S^2,
+           48: Csp
     	    */
 
            double A_par2 = 1 - _par[0] - _par[1];
 
            if(A_par2 >= 0)
            {
-    	        N.k[0] = _par[0];                      //A_0*A_0 ;
-    	        N.k[1] = A_par2;                       //A_par*A_par
-    	        N.k[2] = _par[1];                      //A_perp*A_perp;
-    	        N.k[3] = ::sqrt(_par[1]*A_par2);       //A_perp*A_par;
-    	        N.k[4] = ::sqrt(_par[0]*A_par2);       //A_0*A_par;
-    	        N.k[5] = ::sqrt(_par[0]*_par[1]);      //A_0*A_perp;
-    	        N.k[6] = _par[2];                      //A_S*A_S;
-    	        N.k[7] = ::sqrt(_par[2]*A_par2);       //A_S*A_par;
-    	        N.k[8] = ::sqrt(_par[2]*_par[1]);      //A_S*A_perp;
-    	        N.k[9] = ::sqrt(_par[2]*_par[0]);      //A_S*A_0;
+    	        N.k[0] = _par[0];                               // A_0*A_0 ;
+    	        N.k[1] = A_par2;                                // A_par*A_par
+    	        N.k[2] = _par[1];                               // A_perp*A_perp;
+    	        N.k[3] = ::sqrt(_par[1]*A_par2);                // A_perp*A_par;
+    	        N.k[4] = ::sqrt(_par[0]*A_par2);                // A_0*A_par;
+    	        N.k[5] = ::sqrt(_par[0]*_par[1]);               // A_0*A_perp;
+    	        N.k[6] = _par[2];                               // A_S*A_S;
+                N.k[7] = _par[48]*::sqrt(_par[2]*A_par2);       // Csp*A_S*A_par;
+    	        N.k[8] = _par[48]*::sqrt(_par[2]*_par[1]);      // Csp*A_S*A_perp;
+    	        N.k[9] = _par[48]*::sqrt(_par[2]*_par[0]);      // Csp*A_S*A_0;
            }
         }
 
 
-        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian
+        // Time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian
         // (Reference: Eq. (10) and (11) in arXiv:1906.08356v4)
         __hydra_dual__
         inline double Convolved_Time_Factor(size_t index, double conv_exp_cosh, double conv_exp_sinh,
@@ -468,7 +471,7 @@ namespace medusa {
         }
 
 
-        // time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian and integrated in the time
+        // Time factors h_k(t|Bs0) and h_k(t|Bs0bar) convoluted with the Gaussian and integrated in the time
         // (Reference: Eq. (10) and (11) in arXiv:1906.08356v4)
         __hydra_dual__
         inline double Integrated_Convolved_Time_Factor(size_t index, double int_conv_exp_cosh, double int_conv_exp_sinh,
@@ -483,7 +486,7 @@ namespace medusa {
         }
 
 
-        // effective resolution (Reference: page 7 in arXiv:1906.08356v4)
+        // Effective resolution (Reference: page 7 in arXiv:1906.08356v4)
         __hydra_dual__
         inline double Sigma_eff(ArgTypeDelta delta_time) const
         {
@@ -556,11 +559,11 @@ namespace medusa {
 
         ArgTypeTime fLowerLimit;                    // Lower limit in the time integration
         ArgTypeTime fUpperLimit;                    // Upper limit in the time integration
-        parameters::NFactors N;                     // polarization factor N_k
-        parameters::AngularTimeCoefficients A;      // angular coefficient a_k
-        parameters::AngularTimeCoefficients B;      // angular coefficient b_k
-        parameters::AngularTimeCoefficients C;      // angular coefficient c_k
-        parameters::AngularTimeCoefficients D;      // angular coefficient d_k
+        parameters::NFactors N;                     // Polarization factor N_k
+        parameters::AngularTimeCoefficients A;      // Angular coefficient a_k
+        parameters::AngularTimeCoefficients B;      // Angular coefficient b_k
+        parameters::AngularTimeCoefficients C;      // Angular coefficient c_k
+        parameters::AngularTimeCoefficients D;      // Angular coefficient d_k
 
     };
 

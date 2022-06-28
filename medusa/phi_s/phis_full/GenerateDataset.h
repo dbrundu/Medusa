@@ -72,7 +72,7 @@ namespace medusa {
 
     template<typename Model, typename Container>
     size_t GenerateDataset_Full(Model const& model, Container& final_dataset, size_t nevents, size_t bunch_size,
-                                                                        dtime_t LowerLimit, dtime_t UpperLimit, std::string description)
+                                                    dtime_t LowerLimit, dtime_t UpperLimit, std::string description, bool print = false)
     {
 
         // default namespaces
@@ -127,7 +127,7 @@ namespace medusa {
             hydra::PlanesDeltaAngle phiangle_engine;
             phi_t phiangle = phiangle_engine(kaonm, kaonp, mup, mum);
 
-            return hydra::make_tuple(decay_time, costheta_h, costheta_l, phiangle, qOS, qSS, etaOS, etaSS, delta_time) ;
+            return hydra::make_tuple(decay_time, costheta_h, costheta_l, phiangle, qOS, qSS, etaOS, etaSS, delta_time);
 
         });
 
@@ -223,16 +223,19 @@ namespace medusa {
         // that satisfy the pdf are before those not satisfy it.
         final_dataset.erase(final_dataset.begin()+nevents, final_dataset.end());
 
-        // output
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "-----------Generation on Device ---------"  << std::endl;
-        std::cout << "| B0s -> J/psi Phi -> mu+ mu- K+ K-      "  << std::endl;
-        std::cout << "| Dataset: " << description                 << std::endl;
-        std::cout << "| Number of events: "<< nevents             << std::endl;
-        std::cout << "| Number of events gen: "<< k*bunch_size    << std::endl;
-        std::cout << "| Time (ms):        "<< elapsed.count()     << std::endl;
-        std::cout << "-----------------------------------------"  << std::endl;
+        if(print)
+        {
+            // output
+            std::cout << std::endl;
+            std::cout << std::endl;
+            std::cout << "-----------Generation on Device ---------"  << std::endl;
+            std::cout << "| B0s -> J/psi Phi -> mu+ mu- K+ K-      "  << std::endl;
+            std::cout << "| Dataset: " << description                 << std::endl;
+            std::cout << "| Number of events: "<< nevents             << std::endl;
+            std::cout << "| Number of events gen: "<< k*bunch_size    << std::endl;
+            std::cout << "| Time (ms):        "<< elapsed.count()     << std::endl;
+            std::cout << "-----------------------------------------"  << std::endl;
+        }
 
         return final_dataset.size();
 
