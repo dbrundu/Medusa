@@ -57,18 +57,7 @@
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
-
-#include <TROOT.h>
-#include <TH1D.h>
-#include <TF1.h>
-#include <TH2D.h>
-#include <TH3D.h>
-#include <TApplication.h>
-#include <TCanvas.h>
-#include <TColor.h>
-#include <TString.h>
-#include <TStyle.h>
-
+#include <medusa/generic/Print.h>
 #endif //_ROOT_AVAILABLE_
 
 // Medusa
@@ -123,7 +112,7 @@ int main(int argv, char** argc)
     //      Model generation
     //---------------------------------
 
-    auto Model = medusa::PhisSignal<B0sbar, dtime_t, costheta_h_t, costheta_l_t, phi_t>(ModelParams);
+    auto Model = medusa::PhisSignal<B0sbar, dtime_t, costheta_h_t, costheta_l_t, phi_t>(ModelParams_S1);
 
 
     //---------------------------------
@@ -141,43 +130,11 @@ int main(int argv, char** argc)
     //-----------------------------------------
     //  Print and plot the unweighted dataset
     //-----------------------------------------
-    
-    for( size_t i=0; i<10; i++ )
-        std::cout <<"Dataset_h: {"<< dataset_h[i]  << "}"<< std::endl;
-
 
     #ifdef _ROOT_AVAILABLE_
 
-        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
-        TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
-        TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
-        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
-
-        for(auto x : dataset_h)
-        {
-            timedist.Fill( (double)hydra::get<0>(x) );
-            thetahdist.Fill( (double)hydra::get<1>(x) );
-            thetaldist.Fill( (double)hydra::get<2>(x) );
-            phidist.Fill( (double)hydra::get<3>(x) );
-        }
-
-        TCanvas canvas("canvas","canvas",3200,800);
-        canvas.Divide(4,1);
-
-        canvas.cd(1);
-        gPad->SetLogy(1);
-        timedist.Draw();
-
-        canvas.cd(2);
-        thetahdist.Draw();
-
-        canvas.cd(3);
-        thetaldist.Draw();
-
-        canvas.cd(4);
-        phidist.Draw();
-
-        canvas.SaveAs("Dataset_B0s_JpsiPhi.pdf");
+        // Plot the dataset with the S-wave in the first mass bin
+        medusa::print::PrintDataset_B0s(dataset_h, "S1");
 
     #endif //_ROOT_AVAILABLE_
 

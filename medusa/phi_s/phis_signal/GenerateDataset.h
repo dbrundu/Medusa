@@ -48,9 +48,9 @@
 #include <hydra/Random.h>
 #include <hydra/Tuple.h>
 #include <hydra/functions/CosHelicityAngle.h>
-#include <hydra/functions/PlanesDeltaAngle.h>
 
 // Medusa
+#include <medusa/generic/PlanesDeltaAngle.h>
 #include <medusa/phi_s/Parameters.h>
 
 
@@ -106,8 +106,8 @@ namespace medusa {
             // The angle is evaluated in the rest frame of "mother" particles (defined as d2+d3+h1+h2)
             // It is calculated as the angle formed by the h1 3vector projection on an x-y plane defined by d2(=x), h1+h2 (=z)
             // For LHCb convention with B0->h+h-mu+mu- ==> d2 = h-, d3=h+, h1 = mu+, h2=mu-
-            hydra::PlanesDeltaAngle phiangle_engine;
-            phi_t phiangle = phiangle_engine(kaonm, kaonp, mup, mum);
+            medusa::PlanesDeltaAngle phiangle_engine;
+            phi_t phiangle = phiangle_engine(kaonm, kaonp, mup);
 
             return hydra::make_tuple(decay_time, costheta_h, costheta_l, phiangle);
 

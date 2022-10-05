@@ -478,8 +478,10 @@ int main(int argv, char** argc)
     //          fit by Minuit2
     //---------------------------------
 
-    // print level
+    // print level (command for ROOT 6.22.08)
     MnPrint::SetLevel(3);
+    // print level (command for ROOT 6.26)
+//    MnPrint::SetGlobalLevel(2);
 
     // minimization strategy
 	MnStrategy strategy(2);

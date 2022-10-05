@@ -149,6 +149,7 @@ int main(int argv, char** argc)
     //-----------------------------------------
 
     #ifdef _ROOT_AVAILABLE_
+    // Plot the dataset with the S-wave in the first mass bin
     medusa::print::PrintDataset_B0s(dataset_h, "S1");
     #endif //_ROOT_AVAILABLE_
 
@@ -184,8 +185,10 @@ int main(int argv, char** argc)
     //          fit by Minuit2
     //---------------------------------
 
-    // print level
+    // print level (command for ROOT 6.22.08)
     MnPrint::SetLevel(3);
+    // print level (command for ROOT 6.26)
+//    MnPrint::SetGlobalLevel(2);
 
     // minimization strategy
 	MnStrategy strategy(2);

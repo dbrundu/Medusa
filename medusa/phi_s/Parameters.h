@@ -146,14 +146,14 @@ auto DeltaGamma_p     = hydra::Parameter::Create("DeltaGamma").Value(deltagammas
 auto DeltaM_p         = hydra::Parameter::Create("DeltaM" ).Value(deltams).Error(0.0001).Limits(16.0, 20.0);
 
 auto phi_0_p          = hydra::Parameter::Create("phi_0").Value(phi0).Error(0.0001).Limits(-1.0, 1.0);
-auto phi_par0_p       = hydra::Parameter::Create("phi_par0" ).Value(phipar0).Error(0.0001).Fixed();//Limits(-1.0, 1.0);
-auto phi_perp0_p      = hydra::Parameter::Create("phi_perp0").Value(phiperp0).Error(0.0001).Fixed();//Limits(-1.0, 1.0);
+auto phi_par0_p       = hydra::Parameter::Create("phi_par0" ).Value(phipar0).Error(0.0001).Limits(-1.0, 1.0);
+auto phi_perp0_p      = hydra::Parameter::Create("phi_perp0").Value(phiperp0).Error(0.0001).Limits(-1.0, 1.0);
 auto phi_S0_p         = hydra::Parameter::Create("phi_S0" ).Value(phiS0).Error(0.0001).Limits(-1.0, 1.0);
 
 auto lambda_0_p       = hydra::Parameter::Create("lambda_0").Value(lambda0).Error(0.0001).Limits(0.7, 1.6);
-auto lambda_par0_p    = hydra::Parameter::Create("lambda_par0" ).Value(lambdapar0).Error(0.0001).Fixed();//Limits(0.7, 1.6);
-auto lambda_perp0_p   = hydra::Parameter::Create("lambda_perp0").Value(lambdaperp0).Error(0.0001).Fixed();//Limits(0.7, 1.6);
-auto lambda_S0_p      = hydra::Parameter::Create("lambda_S0" ).Value(lambdaS0).Error(0.0001).Fixed();//Limits(0.7, 1.6);
+auto lambda_par0_p    = hydra::Parameter::Create("lambda_par0" ).Value(lambdapar0).Error(0.0001).Limits(0.7, 1.6);
+auto lambda_perp0_p   = hydra::Parameter::Create("lambda_perp0").Value(lambdaperp0).Error(0.0001).Limits(0.7, 1.6);
+auto lambda_S0_p      = hydra::Parameter::Create("lambda_S0" ).Value(lambdaS0).Error(0.0001).Limits(0.7, 1.6);
 
 auto delta_par0_p     = hydra::Parameter::Create("delta_par0").Value(deltapar0).Error(0.0001).Limits(-6.28, 6.28);
 auto delta_perp0_p    = hydra::Parameter::Create("delta_perp0" ).Value(deltaperp0).Error(0.0001).Limits(-6.28, 6.28);

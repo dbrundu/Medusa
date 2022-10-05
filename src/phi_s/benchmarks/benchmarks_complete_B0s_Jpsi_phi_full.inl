@@ -73,18 +73,7 @@
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
-
-#include <TROOT.h>
-#include <TH1D.h>
-#include <TF1.h>
-#include <TH2D.h>
-#include <TH3D.h>
-#include <TApplication.h>
-#include <TCanvas.h>
-#include <TColor.h>
-#include <TString.h>
-#include <TStyle.h>
-
+#include <medusa/generic/Print.h>
 #endif //_ROOT_AVAILABLE_
 
 
@@ -108,10 +97,9 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //---------------------------------
     //      model generation
     //---------------------------------
-
-    auto Model = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                            qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams, ExpParams, Spline_Knots,
-                                                                                                            LowerLimit, UpperLimit);
+    
+    auto Model_2015_unbiased_S1 = medusa::FullAnalyticPhis<CubicSpline, dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t>(ModelParams_S1, ExpParams_2015_unbiased_S1, Spline_Knots, LowerLimit, UpperLimit);
 
 
     //---------------------------------
@@ -119,63 +107,29 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //---------------------------------
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_h;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_2015_unbiased_S1_h;
 
-    medusa::GenerateDataset_Full(Model, dataset_h, nentries, nentries, LowerLimit, UpperLimit);
+    medusa::GenerateDataset_Full(Model_2015_unbiased_S1, dataset_2015_unbiased_S1_h, nentries, nentries, LowerLimit, UpperLimit, "2015 unbiased S1");
     
-    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_d(dataset_h.size());
-    hydra::copy(dataset_h, dataset_d);
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
+                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_2015_unbiased_S1_d(dataset_2015_unbiased_S1_h.size());
+    hydra::copy(dataset_2015_unbiased_S1_h, dataset_2015_unbiased_S1_d);
 
 
     //-----------------------------------------
     //  Print and plot the unweighted dataset
     //-----------------------------------------
-    
-    for( size_t i=0; i<10; i++ )
-        std::cout <<"Dataset_h: {"<< dataset_h[i]  << "}"<< std::endl;
-
 
     #ifdef _ROOT_AVAILABLE_
 
-        // Plot of the dataset
-        TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
-        TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
-        TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
-        TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
+        // Plot the 2015-2016 datasets with the S-wave in the first mass bin
+        medusa::print::PrintDataset_B0s(dataset_2015_unbiased_S1_h, "2015_unbiased_S1");
 
-        for(auto x : dataset_h)
-        {
-            timedist.Fill( (double)hydra::get<0>(x) );
-            thetahdist.Fill( (double)hydra::get<1>(x) );
-            thetaldist.Fill( (double)hydra::get<2>(x) );
-            phidist.Fill( (double)hydra::get<3>(x) );
-        }
-
-        TCanvas canvas1("canvas","canvas",3200,800);
-        canvas1.Divide(4,1);
-
-        canvas1.cd(1);
-        gPad->SetLogy(1);
-        timedist.Draw();
-
-        canvas1.cd(2);
-        thetahdist.Draw();
-
-        canvas1.cd(3);
-        thetaldist.Draw();
-
-        canvas1.cd(4);
-        phidist.Draw();
-
-        canvas1.SaveAs("Dataset_B0s_JpsiPhi.pdf");
-
-
-        // Plot of the cubic spline
-        TCanvas canvas2("canvas","canvas",3200,800);
-        canvas2.cd();
-        Model.CreateHistogramPlot("Cubic Spline", "Cubic Spline", 100, 0, 20) -> Draw();
-        canvas2.SaveAs("Cubic_Spline.pdf");
+        // Plot of the 2015 unbiased cubic spline
+        TCanvas canvas2_2015_unbiased_S1("canvas2_2015_unbiased_S1","canvas2_2015_unbiased_S1",3200,800);
+        canvas2_2015_unbiased_S1.cd();
+        Model_2015_unbiased_S1.CreateHistogramPlot("Cubic Spline_2015_unbiased_S1", "Cubic Spline_2015_unbiased_S1", 100, 0, 20) -> Draw();
+        canvas2_2015_unbiased_S1.SaveAs("Cubic_Spline_2015_unbiased_S1.pdf");
 
     #endif //_ROOT_AVAILABLE_
 
@@ -191,9 +145,9 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
                                                             dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> >(LowerLimit, UpperLimit);
 
     // make PDF
-    auto Model_PDF = hydra::make_pdf(Model, integrator);
+    auto Model_PDF = hydra::make_pdf(Model_2015_unbiased_S1, integrator);
     
-    auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_d);
+    auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_2015_unbiased_S1_d);
 
 
 
@@ -237,15 +191,15 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
      * Benchmark for direct functor call on 1 event
      *-----------------------------------------------------*/
     hydra::SeedRNG S{};
-    auto rng = hydra::detail::RndUniform<size_t , hydra::default_random_engine >(S(), 0, dataset_d.size()-1);
+    auto rng = hydra::detail::RndUniform<size_t , hydra::default_random_engine >(S(), 0, dataset_2015_unbiased_S1_d.size()-1);
     size_t index=0;
     
     BENCHMARK_ADVANCED( "Simple Functor call on 1 event" )(Catch::Benchmark::Chronometer meter)
     {
         const size_t i = rng(index++);
-        auto x = dataset_d[i];
+        auto x = dataset_2015_unbiased_S1_d[i];
 
-        meter.measure( [=] { return Model(x); });
+        meter.measure( [=] { return Model_2015_unbiased_S1(x); });
     };
 
 
