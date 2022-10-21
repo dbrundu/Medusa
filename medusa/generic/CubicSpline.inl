@@ -43,7 +43,7 @@ namespace medusa {
     // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-                    Integrate_cspline_times_convolved_exp_sinhcosh(double a, double b, double mu, double sigma,
+    Integrate_cspline_times_convolved_exp_sinhcosh(double a, double b, double mu, double sigma,
                                                                             double LowerLimit, double UpperLimit, bool tag) const
     {
         // Integrate outside the defined region of the spline
@@ -76,22 +76,120 @@ namespace medusa {
         size_t iFrom = findKnot(LowerLimit);
         size_t iTo = findKnot(UpperLimit);
 
+        // Compute the powers (Reference: arXiv:1407.0748v1)
+        double powS[4], powM[4];
+
+        powS[0] = ::pow(M_1_Sqrt2*sigma, 0);
+        powS[1] = ::pow(M_1_Sqrt2*sigma, 1);
+        powS[2] = ::pow(M_1_Sqrt2*sigma, 2);
+        powS[3] = ::pow(M_1_Sqrt2*sigma, 3);
+
+        powM[0] = ::pow(mu, 0);
+        powM[1] = ::pow(mu, 1);
+        powM[2] = ::pow(mu, 2);
+        powM[3] = ::pow(mu, 3);
+
+        // Compute z1 and z2 (Reference: arXiv:1407.0748v1)
+        double z1 = (a - b)*sigma/M_Sqrt2;
+        double z2 = (a + b)*sigma/M_Sqrt2;
+
+        // x1 and x2 (Reference: arXiv:1407.0748v1)
+        double x1 = 0;
+        double x2 = 0;
+
+        // K_n(z) for z as double (Reference: arXiv:1407.0748v1)
+        double Kz1[4], Kz2[4];
+
+        Kz1[0] = K(z1, 0);
+        Kz1[1] = K(z1, 1);
+        Kz1[2] = K(z1, 2);
+        Kz1[3] = K(z1, 3);
+
+        Kz2[0] = K(z2, 0);
+        Kz2[1] = K(z2, 1);
+        Kz2[2] = K(z2, 2);
+        Kz2[3] = K(z2, 3);
+
+        // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+        double Mz1[4] = {0};
+        double Mz2[4] = {0};
+
         // Calculate the integration on the intervals between the knots
         double sum = 0.;
         if(iFrom==iTo)
         {
-            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iFrom, a, b, mu, sigma, LowerLimit, UpperLimit, tag);
+            // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+            x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
+
+            // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+            Mz1[0] = M(x1, x2, z1, 0);
+            Mz1[1] = M(x1, x2, z1, 1);
+            Mz1[2] = M(x1, x2, z1, 2);
+            Mz1[3] = M(x1, x2, z1, 3);
+
+            Mz2[0] = M(x1, x2, z2, 0);
+            Mz2[1] = M(x1, x2, z2, 1);
+            Mz2[2] = M(x1, x2, z2, 2);
+            Mz2[3] = M(x1, x2, z2, 3);
+            
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iFrom, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
         }
         else
         {
-            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iFrom, a, b, mu, sigma, LowerLimit, u[4+iFrom], tag);
+            // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+            x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            x2 = (u[4+iFrom] - mu)/(sigma*M_Sqrt2);
+
+            // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+            Mz1[0] = M(x1, x2, z1, 0);
+            Mz1[1] = M(x1, x2, z1, 1);
+            Mz1[2] = M(x1, x2, z1, 2);
+            Mz1[3] = M(x1, x2, z1, 3);
+
+            Mz2[0] = M(x1, x2, z2, 0);
+            Mz2[1] = M(x1, x2, z2, 1);
+            Mz2[2] = M(x1, x2, z2, 2);
+            Mz2[3] = M(x1, x2, z2, 3);
+
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iFrom, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
 
             for(size_t i=iFrom+1; i<iTo; i++)
             {
-                sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(i, a, b, mu, sigma, u[3+i], u[4+i], tag);
+                // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+                x1 = (u[3+i] - mu)/(sigma*M_Sqrt2);
+                x2 = (u[4+i] - mu)/(sigma*M_Sqrt2);
+
+                // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+                Mz1[0] = M(x1, x2, z1, 0);
+                Mz1[1] = M(x1, x2, z1, 1);
+                Mz1[2] = M(x1, x2, z1, 2);
+                Mz1[3] = M(x1, x2, z1, 3);
+
+                Mz2[0] = M(x1, x2, z2, 0);
+                Mz2[1] = M(x1, x2, z2, 1);
+                Mz2[2] = M(x1, x2, z2, 2);
+                Mz2[3] = M(x1, x2, z2, 3);
+
+                sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(i, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
             }
 
-            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iTo, a, b, mu, sigma, u[3+iTo], UpperLimit, tag);
+            // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+            x1 = (u[3+iTo] - mu)/(sigma*M_Sqrt2);
+            x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
+
+            // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+            Mz1[0] = M(x1, x2, z1, 0);
+            Mz1[1] = M(x1, x2, z1, 1);
+            Mz1[2] = M(x1, x2, z1, 2);
+            Mz1[3] = M(x1, x2, z1, 3);
+
+            Mz2[0] = M(x1, x2, z2, 0);
+            Mz2[1] = M(x1, x2, z2, 1);
+            Mz2[2] = M(x1, x2, z2, 2);
+            Mz2[3] = M(x1, x2, z2, 3);
+
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(iTo, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
         }
 
         // This macro controls if sum is NaN. If yes, it prints
@@ -141,22 +239,120 @@ namespace medusa {
         size_t iFrom = findKnot(LowerLimit);
         size_t iTo = findKnot(UpperLimit);
 
+        // Compute the powers (Reference: arXiv:1407.0748v1)
+        double powS[4], powM[4];
+
+        powS[0] = ::pow(M_1_Sqrt2*sigma, 0);
+        powS[1] = ::pow(M_1_Sqrt2*sigma, 1);
+        powS[2] = ::pow(M_1_Sqrt2*sigma, 2);
+        powS[3] = ::pow(M_1_Sqrt2*sigma, 3);
+
+        powM[0] = ::pow(mu, 0);
+        powM[1] = ::pow(mu, 1);
+        powM[2] = ::pow(mu, 2);
+        powM[3] = ::pow(mu, 3);
+
+        // Compute z1 and z2 (Reference: arXiv:1407.0748v1)
+        hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
+        hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
+
+        // x1 and x2 (Reference: arXiv:1407.0748v1)
+        double x1 = 0;
+        double x2 = 0;
+
+        // K_n(z) for z as double (Reference: arXiv:1407.0748v1)
+        hydra::complex<double> Kz1[4], Kz2[4];
+
+        Kz1[0] = K(z1, 0);
+        Kz1[1] = K(z1, 1);
+        Kz1[2] = K(z1, 2);
+        Kz1[3] = K(z1, 3);
+
+        Kz2[0] = K(z2, 0);
+        Kz2[1] = K(z2, 1);
+        Kz2[2] = K(z2, 2);
+        Kz2[3] = K(z2, 3);
+
+        // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+        hydra::complex<double> Mz1[4] = {0};
+        hydra::complex<double> Mz2[4] = {0};
+
         // Calculate the integration on the intervals between the knots
         double sum = 0.;
         if(iFrom==iTo)
         {
-            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iFrom, a, b, mu, sigma, LowerLimit, UpperLimit, tag);
+            // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+            x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
+
+            // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+            Mz1[0] = M(x1, x2, z1, 0);
+            Mz1[1] = M(x1, x2, z1, 1);
+            Mz1[2] = M(x1, x2, z1, 2);
+            Mz1[3] = M(x1, x2, z1, 3);
+
+            Mz2[0] = M(x1, x2, z2, 0);
+            Mz2[1] = M(x1, x2, z2, 1);
+            Mz2[2] = M(x1, x2, z2, 2);
+            Mz2[3] = M(x1, x2, z2, 3);
+            
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iFrom, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
         }
         else
         {
-            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iFrom, a, b, mu, sigma, LowerLimit, u[4+iFrom], tag);
+            // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+            x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
+            x2 = (u[4+iFrom] - mu)/(sigma*M_Sqrt2);
+
+            // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+            Mz1[0] = M(x1, x2, z1, 0);
+            Mz1[1] = M(x1, x2, z1, 1);
+            Mz1[2] = M(x1, x2, z1, 2);
+            Mz1[3] = M(x1, x2, z1, 3);
+
+            Mz2[0] = M(x1, x2, z2, 0);
+            Mz2[1] = M(x1, x2, z2, 1);
+            Mz2[2] = M(x1, x2, z2, 2);
+            Mz2[3] = M(x1, x2, z2, 3);
+
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iFrom, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
 
             for(size_t i=iFrom+1; i<iTo; i++)
             {
-                sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(i, a, b, mu, sigma, u[3+i], u[4+i], tag);
+                // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+                x1 = (u[3+i] - mu)/(sigma*M_Sqrt2);
+                x2 = (u[4+i] - mu)/(sigma*M_Sqrt2);
+
+                // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+                Mz1[0] = M(x1, x2, z1, 0);
+                Mz1[1] = M(x1, x2, z1, 1);
+                Mz1[2] = M(x1, x2, z1, 2);
+                Mz1[3] = M(x1, x2, z1, 3);
+
+                Mz2[0] = M(x1, x2, z2, 0);
+                Mz2[1] = M(x1, x2, z2, 1);
+                Mz2[2] = M(x1, x2, z2, 2);
+                Mz2[3] = M(x1, x2, z2, 3);
+
+                sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(i, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
             }
 
-            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iTo, a, b, mu, sigma, u[3+iTo], UpperLimit, tag);
+            // Compute x1 and x2 (Reference: arXiv:1407.0748v1)
+            x1 = (u[3+iTo] - mu)/(sigma*M_Sqrt2);
+            x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
+
+            // M_n(x1, x2; z) for z as double (Reference: arXiv:1407.0748v1)
+            Mz1[0] = M(x1, x2, z1, 0);
+            Mz1[1] = M(x1, x2, z1, 1);
+            Mz1[2] = M(x1, x2, z1, 2);
+            Mz1[3] = M(x1, x2, z1, 3);
+
+            Mz2[0] = M(x1, x2, z2, 0);
+            Mz2[1] = M(x1, x2, z2, 1);
+            Mz2[2] = M(x1, x2, z2, 2);
+            Mz2[3] = M(x1, x2, z2, 3);
+
+            sum += Integrate_3_order_polynomial_times_convolved_exp_sincos(iTo, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
         }
 
         // This macro controls if sum is NaN. If yes, it prints
@@ -177,19 +373,13 @@ namespace medusa {
     // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-    Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(size_t bin, double a, double b, double mu, double sigma,
-                                                                                double LowerLimit, double UpperLimit, bool tag) const
+    Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(size_t bin, double Kz1[4], double Kz2[4],
+                                            double Mz1[4], double Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const
     {
-        double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
-        double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
-
-        double z1 = (a - b)*sigma/M_Sqrt2;
-        double z2 = (a + b)*sigma/M_Sqrt2;
-
         double sum = 0.;
         for(size_t i=0; i<4; i++)
         {
-            sum += AS[i][bin]*Integrate_t_to_k_times_convolved_exp_sinhcosh(i, mu, sigma, z1, z2, x1, x2, tag);
+            sum += AS[i][bin]*Integrate_t_to_k_times_convolved_exp_sinhcosh(i, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
         }
         return sum;
     }
@@ -199,19 +389,13 @@ namespace medusa {
     // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-    Integrate_3_order_polynomial_times_convolved_exp_sincos(size_t bin, double a, double b, double mu, double sigma,
-                                                                                double LowerLimit, double UpperLimit, bool tag) const
+    Integrate_3_order_polynomial_times_convolved_exp_sincos(size_t bin, hydra::complex<double> Kz1[4], hydra::complex<double> Kz2[4],
+                            hydra::complex<double> Mz1[4], hydra::complex<double> Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const
     {
-        double x1 = (LowerLimit - mu)/(sigma*M_Sqrt2);
-        double x2 = (UpperLimit - mu)/(sigma*M_Sqrt2);
-
-        hydra::complex<double> z1( a*sigma/M_Sqrt2, -b*sigma/M_Sqrt2 );
-        hydra::complex<double> z2( a*sigma/M_Sqrt2,  b*sigma/M_Sqrt2 );
-
         double sum = 0.;
         for(size_t i=0; i<4; i++)
         {
-            sum += AS[i][bin]*Integrate_t_to_k_times_convolved_exp_sincos(i, mu, sigma, z1, z2, x1, x2, tag);
+            sum += AS[i][bin]*Integrate_t_to_k_times_convolved_exp_sincos(i, Kz1, Kz2, Mz1, Mz2, mu, sigma, powS, powM, tag);
         }
         return sum;
     }
@@ -221,7 +405,8 @@ namespace medusa {
     // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-    Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double mu, double sigma, double z1, double z2, double x1, double x2, bool tag) const
+    Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double Kz1[4], double Kz2[4],
+                                        double Mz1[4], double Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const
     {
         double sum1 = 0.;
         double sum2;
@@ -232,17 +417,17 @@ namespace medusa {
             {
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum1 += ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum1 += ( Kz1[j]*Mz1[k-j] + Kz2[j]*Mz2[k-j] ) / (factorial[j]*factorial[k-j]);
                 }
             }
             else
             {
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum1 += ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum1 += ( Kz1[j]*Mz1[k-j] - Kz2[j]*Mz2[k-j] ) / (factorial[j]*factorial[k-j]);
                 }
             }
-            return M_1_Sqrt8*sigma*factorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
+            return M_1_Sqrt8*sigma*factorial[k]*powS[k]*sum1;
         }
         else
         {
@@ -253,9 +438,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( Kz1[j]*Mz1[n-j] + Kz2[j]*Mz2[n-j] ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
+                    sum1 += powS[n]*powM[k-n]/factorial[k-n] * sum2;
                 }
             }
             else
@@ -265,9 +450,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( Kz1[j]*Mz1[n-j] - Kz2[j]*Mz2[n-j] ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2;
+                    sum1 += powS[n]*powM[k-n]/factorial[k-n] * sum2;
                 }
             }
             return M_1_Sqrt8*sigma*factorial[k]*sum1;
@@ -279,8 +464,8 @@ namespace medusa {
     // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
     template<size_t nKnots>
     inline double CubicSpline<nKnots>::
-    Integrate_t_to_k_times_convolved_exp_sincos(size_t k, double mu, double sigma, hydra::complex<double> z1,
-                                                                            hydra::complex<double> z2, double x1, double x2, bool tag) const
+    Integrate_t_to_k_times_convolved_exp_sincos(size_t k, hydra::complex<double> Kz1[4], hydra::complex<double> Kz2[4],
+                                hydra::complex<double> Mz1[4], hydra::complex<double> Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const
     {
         double sum1 = 0.;
         hydra::complex<double> sum2;
@@ -292,7 +477,7 @@ namespace medusa {
                 sum2 = 0.;
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum2 += ( K(z1, j)*M(x1, x2, z1, k-j) + K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum2 += ( Kz1[j]*Mz1[k-j] + Kz2[j]*Mz2[k-j] ) / (factorial[j]*factorial[k-j]);
                 }
                 sum1 = sum2.real();
             }
@@ -301,11 +486,11 @@ namespace medusa {
                 sum2 = 0.;
                 for(size_t j=0; j<k+1; j++)
                 {
-                    sum2 += ( K(z1, j)*M(x1, x2, z1, k-j) - K(z2, j)*M(x1, x2, z2, k-j) ) / (factorial[j]*factorial[k-j]);
+                    sum2 += ( Kz1[j]*Mz1[k-j] - Kz2[j]*Mz2[k-j] ) / (factorial[j]*factorial[k-j]);
                 }
                 sum1 = sum2.imag();
             }
-            return M_1_Sqrt8*sigma*factorial[k]*::pow(M_1_Sqrt2*sigma, k)*sum1;
+            return M_1_Sqrt8*sigma*factorial[k]*powS[k]*sum1;
         }
         else
         {
@@ -316,9 +501,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) + K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( Kz1[j]*Mz1[n-j] + Kz2[j]*Mz2[n-j] ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.real();
+                    sum1 += powS[n]*powM[k-n]/factorial[k-n] * sum2.real();
                 }
             }
             else
@@ -328,9 +513,9 @@ namespace medusa {
                     sum2 = 0.;
                     for(size_t j=0; j<n+1; j++)
                     {
-                        sum2 += ( K(z1, j)*M(x1, x2, z1, n-j) - K(z2, j)*M(x1, x2, z2, n-j) ) / (factorial[j]*factorial[n-j]);
+                        sum2 += ( Kz1[j]*Mz1[n-j] - Kz2[j]*Mz2[n-j] ) / (factorial[j]*factorial[n-j]);
                     }
-                    sum1 += ::pow(M_1_Sqrt2*sigma, n)*::pow(mu, k-n)/factorial[k-n] * sum2.imag();
+                    sum1 += powS[n]*powM[k-n]/factorial[k-n] * sum2.imag();
                 }
             }
             return M_1_Sqrt8*sigma*factorial[k]*sum1;

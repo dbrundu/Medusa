@@ -501,29 +501,29 @@ namespace medusa {
         // Integrate (in x) the 3rd order polynomial times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
         // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(size_t bin, double a, double b, double mu, double sigma,
-                                                                                                    double LowerLimit, double UpperLimit, bool tag) const;
+        inline double Integrate_3_order_polynomial_times_convolved_exp_sinhcosh(size_t bin, double Kz1[4], double Kz2[4],
+                                                        double Mz1[4], double Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const;
 
 
         // Integrate (in x) the 3rd order polynomial times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
         // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_3_order_polynomial_times_convolved_exp_sincos(size_t bin, double a, double b, double mu, double sigma,
-                                                                                                    double LowerLimit, double UpperLimit, bool tag) const;
+        inline double Integrate_3_order_polynomial_times_convolved_exp_sincos(size_t bin, hydra::complex<double> Kz1[4], hydra::complex<double> Kz2[4],
+                                                hydra::complex<double> Mz1[4], hydra::complex<double> Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const;
 
 
         // Integrate (in x) t^k times the convolution of exp( -a*t )*cosh( b*t ) or exp( -a*t )*sinh( b*t )
         // with the Gaussian [tag = true -> cosh | tag = false -> sinh] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double mu, double sigma, double z1, double z2,
-                                                                                                        double x1, double x2, bool tag) const;
+        inline double Integrate_t_to_k_times_convolved_exp_sinhcosh(size_t k, double Kz1[4], double Kz2[4],
+                                                        double Mz1[4], double Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const;
 
 
         // Integrate (in x) t^k times the convolution of exp( -a*t )*cos( b*t ) or exp( -a*t )*sin( b*t )
         // with the Gaussian [tag = true -> cos | tag = false -> sin] (Reference: arXiv:1407.0748v1)
         __hydra_dual__
-        inline double Integrate_t_to_k_times_convolved_exp_sincos(size_t k, double mu, double sigma, hydra::complex<double> z1,
-                                                                                hydra::complex<double> z2, double x1, double x2, bool tag) const;
+        inline double Integrate_t_to_k_times_convolved_exp_sincos(size_t k, hydra::complex<double> Kz1[4], hydra::complex<double> Kz2[4],
+                                                hydra::complex<double> Mz1[4], hydra::complex<double> Mz2[4], double mu, double sigma, double powS[4], double powM[4], bool tag) const;
 
 
         //------------------------------------------------------------
