@@ -20,20 +20,18 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*----------------------------------------------------------------
- *  benchmarks_B0s_Jpsi_phi.inl
- *
+/*---------------------------------------------------------------------------
  *  Created on: 08/06/2020
  *      Author: Davide Brundu
  *      Updated by Alessandro Maria Ricci in 04/07/2021
  * 
- *  Complete benchmarks for fit_B0s_Jpsi_phi_full.inl
- *----------------------------------------------------------------*/
+ *  Complete benchmarks for fit_sim_phis_full_model.inl
+ *---------------------------------------------------------------------------*/
 
 
 
-#ifndef BENCHMARKS_COMPLETE_B0S_JPSI_PHI_INL_
-#define BENCHMARKS_COMPLETE_B0S_JPSI_PHI_INL_
+#ifndef BENCHMARKS_COMPLETE_SIM_PHIS_FULL_MODEL_INL_
+#define BENCHMARKS_COMPLETE_SIM_PHIS_FULL_MODEL_INL_
 
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
@@ -205,4 +203,4 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
 
 } // TEST_CASE
 
-#endif // BENCHMARKS_COMPLETE_B0S_JPSI_PHI_INL_
+#endif // BENCHMARKS_COMPLETE_SIM_PHIS_FULL_MODEL_INL_

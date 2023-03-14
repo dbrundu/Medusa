@@ -25,7 +25,9 @@
  *
  *  Author: Alessandro Maria Ricci
  *
- *  This library contains the implementation of the cubic spline.
+ *  This library contains the implementation of the cubic spline used
+ *  inside the PDF in the physics analysis. The constructor needs
+ *  the knot vector and the list of the spline coefficients.
  *---------------------------------------------------------------------------*/
 
 #ifndef MEDUSA_CUBIC_SPLINE_H

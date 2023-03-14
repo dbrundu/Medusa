@@ -20,19 +20,12 @@
  *   along with Medusa.  If not, see <http://www.gnu.org/licenses/>.
  *
  *---------------------------------------------------------------------------*/
-/*----------------------------------------
- *  Created:
+/*---------------------------------------------------------------------------
+ *  Created: 04/07/2021
  *
- *  Author:
- *
- *----------------------------------------*/
+ *  Author: Alessandro Maria Ricci
+ * 
+ *  Complete benchmarks_sim_phis_only_signal.cu
+ *---------------------------------------------------------------------------*/
 
-#ifndef SOMETHING
-#define SOMETHING
-
-
-namespace medusa {
-    
-} // namespace medusa
-
-#endif // SOMETHING
+#include <src/phi_s/benchmarks/benchmarks_complete_sim_phis_only_signal.inl>

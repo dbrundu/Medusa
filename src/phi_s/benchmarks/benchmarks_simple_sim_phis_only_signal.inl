@@ -21,17 +21,15 @@
  *
  *---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------
- * benchmarks2_B0s_Jpsi_phi.inl
- *
  *  Created: 18/08/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  Simple benchmarks for fit_B0s_Jpsi_phi_signal.inl
+ *  Simple benchmarks for fit_sim_phis_only_signal.inl
  *---------------------------------------------------------------------------*/
 
-#ifndef BENCHMARKS_SIMPLE_B0S_JPSI_PHI_SIGNAL_INL_
-#define BENCHMARKS_SIMPLE_B0S_JPSI_PHI_SIGNAL_INL_
+#ifndef BENCHMARKS_SIMPLE_SIM_PHIS_ONLY_SIGNAL_INL_
+#define BENCHMARKS_SIMPLE_SIM_PHIS_ONLY_SIGNAL_INL_
 
 
 //---------------------------------
@@ -213,4 +211,4 @@ int main(int argv, char** argc)
 
 } // main
 
-#endif // BENCHMARKS_SIMPLE_B0S_JPSI_PHI_SIGNAL_INL_
+#endif // BENCHMARKS_SIMPLE_SIM_PHIS_ONLY_SIGNAL_INL_

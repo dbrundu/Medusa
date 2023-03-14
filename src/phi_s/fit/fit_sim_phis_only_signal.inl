@@ -31,8 +31,8 @@
  *  Fit with signal-only model
  *----------------------------------------*/
 
-#ifndef FIT_B0S_JPSI_PHI_SIGNAL_INL_
-#define FIT_B0S_JPSI_PHI_SIGNAL_INL_
+#ifndef FIT_SIM_PHIS_ONLY_SIGNAL_INL_
+#define FIT_SIM_PHIS_ONLY_SIGNAL_INL_
 
 
 //---------------------------------
@@ -220,4 +220,4 @@ int main(int argv, char** argc)
 
 } // main
 
-#endif // FIT_B0S_JPSI_PHI_SIGNAL_INL_
+#endif // FIT_SIM_PHIS_ONLY_SIGNAL_INL_

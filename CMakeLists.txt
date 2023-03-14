@@ -176,12 +176,12 @@ MESSAGE(STATUS "Project build dir: ${PROJECT_BINARY_DIR}" )
 #+++++++++++++++++++++++++++
 #   targets    +
 #+++++++++++++++++++++++++++
-include(${MEDUSA_CMAKE_DIR}/AddTarget_Fit.cmake)
-include(${MEDUSA_CMAKE_DIR}/AddTarget_Benchmarks.cmake)
+include(${MEDUSA_CMAKE_DIR}/AddTarget_PhiS.cmake)
 
-ADD_TARGET_FIT(fit_B0s_Jpsi_phi_signal)
-ADD_TARGET_FIT(fit_B0s_Jpsi_phi_full)
-ADD_TARGET_BENCHMARKS(benchmarks_complete_B0s_Jpsi_phi_signal)
-ADD_TARGET_BENCHMARKS(benchmarks_simple_B0s_Jpsi_phi_signal)
-ADD_TARGET_BENCHMARKS(benchmarks_complete_B0s_Jpsi_phi_full)
-ADD_TARGET_BENCHMARKS(benchmarks_simple_B0s_Jpsi_phi_full)
+ADD_TARGET_PHIS_FIT(fit_sim_phis_only_signal)
+ADD_TARGET_PHIS_FIT(fit_sim_phis_full_model)
+#ADD_TARGET_PHIS_FIT(fit_real_phis_full_model)
+ADD_TARGET_PHIS_BENCHMARKS(benchmarks_complete_sim_phis_only_signal)
+ADD_TARGET_PHIS_BENCHMARKS(benchmarks_simple_sim_phis_only_signal)
+ADD_TARGET_PHIS_BENCHMARKS(benchmarks_complete_sim_phis_full_model)
+ADD_TARGET_PHIS_BENCHMARKS(benchmarks_simple_sim_phis_full_model)

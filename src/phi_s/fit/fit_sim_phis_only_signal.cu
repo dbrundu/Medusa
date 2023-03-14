@@ -25,7 +25,7 @@
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  fit_B0s_Jpsi_phi_signal.cu
+ *  fit_sim_phis_only_signal.cu
  *----------------------------------------*/
 
-#include <src/phi_s/fit/fit_B0s_Jpsi_phi_signal.inl>
+#include <src/phi_s/fit/fit_sim_phis_only_signal.inl>

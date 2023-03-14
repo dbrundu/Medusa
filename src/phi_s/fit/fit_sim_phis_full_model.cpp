@@ -21,18 +21,11 @@
  *
  *---------------------------------------------------------------------------*/
 /*----------------------------------------
- *  Created:
+ *  Created: 29/10/2021
  *
- *  Author:
- *
+ *  Author: Alessandro Maria Ricci
+ * 
+ *  fit_sim_phis_full_model.cpp
  *----------------------------------------*/
 
-#ifndef SOMETHING
-#define SOMETHING
-
-
-namespace medusa {
-    
-} // namespace medusa
-
-#endif // SOMETHING
+#include <src/phi_s/fit/fit_sim_phis_full_model.inl>

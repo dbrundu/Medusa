@@ -21,11 +21,11 @@
  *
  *---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------
- *  Created: 04/07/2021
+ *  Created: 18/08/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  Complete benchmarks_B0s_Jpsi_phi_signal.cpp
+ *  Simple benchmarks_sim_phis_full_model.cpp
  *---------------------------------------------------------------------------*/
 
-#include <src/phi_s/benchmarks/benchmarks_complete_B0s_Jpsi_phi_signal.inl>
+#include <src/phi_s/benchmarks/benchmarks_simple_sim_phis_full_model.inl>

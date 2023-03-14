@@ -28,13 +28,13 @@
  *  B0s -> J/psi  (Phi -> K+ K-)
  *          |-> mu+ mu-
  * 
- *  Fit with full analytic model, i.e. signal plus experimental artifacts
- *  (tagging, time resolution and acceptances) with analytical convolution
- *  and integration.
+ *  Fit with Monte Carlo dataset and full analytic model, i.e. signal plus
+ *  experimental artifacts (tagging, time resolution and acceptances) with
+ *  analytical convolution and integration.
  *---------------------------------------------------------------------------*/
 
-#ifndef FIT_B0S_JPSI_PHI_FULL_INL_
-#define FIT_B0S_JPSI_PHI_FULL_INL_
+#ifndef FIT_SIM_PHIS_FULL_MODEL_INL_
+#define FIT_SIM_PHIS_FULL_MODEL_INL_
 
 
 //---------------------------------
@@ -74,7 +74,7 @@
 #include <medusa/phi_s/phis_full/FullAnalyticPhis.h>
 #include <medusa/phi_s/phis_full/GenerateDataset.h>
 
-//default namespaces
+// default namespaces
 using namespace ROOT::Minuit2;
 
 
@@ -97,7 +97,7 @@ int main(int argv, char** argc)
 
 		TCLAP::CmdLine cmd("Command line arguments for number of events and Vegas integrator", '=');
 
-        TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events", false, 2e4, "size_t");
+        TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events per dataset", false, 2e4, "size_t");
         cmd.add(EArg);
 
         TCLAP::ValueArg<double> EdmArg("e", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
@@ -513,4 +513,4 @@ int main(int argv, char** argc)
 
 } // main
 
-#endif // FIT_B0S_JPSI_PHI_FULL_INL_
+#endif // FIT_SIM_PHIS_FULL_MODEL_INL_

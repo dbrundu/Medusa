@@ -21,11 +21,11 @@
  *
  *---------------------------------------------------------------------------*/
 /*----------------------------------------
- *  Created: 18/08/2021
+ *  Created: 29/10/2021
  *
  *  Author: Alessandro Maria Ricci
  * 
- *  Simple benchmarks_B0s_Jpsi_phi_full.cu
+ *  fit_real_phis_full_model.cpp
  *----------------------------------------*/
 
-#include <src/phi_s/benchmarks/benchmarks_simple_B0s_Jpsi_phi_full.inl>
+#include <src/phi_s/fit/fit_real_phis_full_model.inl>

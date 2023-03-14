@@ -68,6 +68,10 @@ namespace medusa {
      * final_dataset    = container where to save the Monte Carlo dataset
      * nevents          = number of events, namely dimension of final_dataset
      * bunch_size       = number of events generated from Hydra's Monte Carlo per filling cycle
+     * LowerLimit       = lower limit of the decay time
+     * UpperLimit       = upper limit of the decay time
+     * description      = description of the dataset
+     * print            = true or false to have an additional printout
      */
 
     template<typename Model, typename Container>
@@ -238,8 +242,6 @@ namespace medusa {
         }
 
         return final_dataset.size();
-
-
     } // GenerateDataset_Full()
 
 } // namespace medusa

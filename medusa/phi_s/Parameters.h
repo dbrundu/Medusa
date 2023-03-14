@@ -24,7 +24,8 @@
  * 	Parameters.h
  *
  *  Created on: 04/06/2021
- *      Author: Alessandro Maria Ricci
+ * 
+ *  Author: Alessandro Maria Ricci
  * 
  * 	This library contains all parameters used by PhisSignal.h
  *  and FullAnalyticPhis.h.
@@ -70,8 +71,17 @@ declarg(qOS_t, 	 int)
 declarg(qSS_t, 	 int)
 declarg(etaOS_t, double)
 declarg(etaSS_t, double)
-declarg(delta_t, double)
 
+// New types for time resolution, mKK and background weights
+declarg(delta_t, 	  double)
+declarg(mKK_t, 		  double)
+declarg(weight_t,     double)
+
+// New types for trigger (biased, unbiased)
+declarg(Jpsi_Hlt2DiMuonDetachedJPsiDecision_TOS, bool)
+declarg(Jpsi_Hlt1DiMuonHighMassDecision_TOS, 	 bool)
+declarg(B_Hlt1TrackMuonDecision_TOS, 		  	 bool)
+declarg(B_Hlt1TwoTrackMVADecision_TOS, 		  	 bool)
 
 //-----------------------------------------------
 // Constant parameters for:
@@ -247,7 +257,7 @@ const double OmegaErr_2016_biased[10] = {0.0, 0.0015, 0.0015, 0.0013, 0.00074, 0
 
 
 const double Csp[6] = {0.8463, 0.8756, 0.8478, 0.8833, 0.9415, 0.9756};
-const int KKmass[7] = {990, 1008, 1016, 1020, 1024, 1032, 1050};
+const int mKKbins[6][2] = { {990, 1008}, {1008, 1016}, {1016, 1020}, {1020, 1024}, {1024, 1032}, {1032,1050} };
 
 
 auto b0_p = hydra::Parameter::Create("b0").Value(b0).Error(0.00022).Fixed();
