@@ -90,15 +90,11 @@ int main(int argv, char** argc)
     //   TCLAP: read the arguments from the command line
     //------------------------------------------------------
 
-    size_t nentries = 0;
     double edm = 0.;
 
 	try {
 
 		TCLAP::CmdLine cmd("Command line arguments for number of events and Vegas integrator", '=');
-
-        TCLAP::ValueArg<size_t> EArg("n", "number-of-events","Number of events per dataset", false, 2e4, "size_t");
-        cmd.add(EArg);
 
         TCLAP::ValueArg<double> EdmArg("e", "EDM", "Estimated vertical distance to minimum", false, 0.1, "double");
 		cmd.add(EdmArg);
@@ -107,7 +103,6 @@ int main(int argv, char** argc)
 		cmd.parse(argv, argc);
 
 		// Get the value parsed by each arg.
-        nentries = EArg.getValue();
         edm = EdmArg.getValue();
 
 	}
@@ -186,68 +181,261 @@ int main(int argv, char** argc)
 
 
     //---------------------------------
-    //          Dataset import
+    //       Import 2015 dataset
     //---------------------------------
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_unbiased_S1_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S1_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_unbiased_S2_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S2_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_unbiased_S3_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S3_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_unbiased_S4_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S4_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_unbiased_S5_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S5_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_unbiased_S6_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S6_h;
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_biased_S1_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_biased_S1_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_biased_S2_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_biased_S2_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_biased_S3_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_biased_S3_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_biased_S4_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_biased_S4_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_biased_S5_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_biased_S5_h;
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t, weight_t> , hydra::device::sys_t> dataset_2015_biased_S6_d;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_biased_S6_h;
+
+    hydra::host::vector<weight_t> wgt_2015_unbiased_S1_h;
+    hydra::host::vector<weight_t> wgt_2015_unbiased_S2_h;
+    hydra::host::vector<weight_t> wgt_2015_unbiased_S3_h;
+    hydra::host::vector<weight_t> wgt_2015_unbiased_S4_h;
+    hydra::host::vector<weight_t> wgt_2015_unbiased_S5_h;
+    hydra::host::vector<weight_t> wgt_2015_unbiased_S6_h;
+
+    hydra::host::vector<weight_t> wgt_2015_biased_S1_h;
+    hydra::host::vector<weight_t> wgt_2015_biased_S2_h;
+    hydra::host::vector<weight_t> wgt_2015_biased_S3_h;
+    hydra::host::vector<weight_t> wgt_2015_biased_S4_h;
+    hydra::host::vector<weight_t> wgt_2015_biased_S5_h;
+    hydra::host::vector<weight_t> wgt_2015_biased_S6_h;
+
+    medusa::ImportDataset("/home/aricci/Bs2JpsiPhi_data/2015/Bs2JpsiPhi_2015_selected_bdt_sw_v0r5.root",
+                            dts_2015_unbiased_S1_h, dts_2015_unbiased_S2_h, dts_2015_unbiased_S3_h,
+                            dts_2015_unbiased_S4_h, dts_2015_unbiased_S5_h, dts_2015_unbiased_S6_h,
+                            dts_2015_biased_S1_h,   dts_2015_biased_S2_h,   dts_2015_biased_S3_h,
+                            dts_2015_biased_S4_h,   dts_2015_biased_S5_h,   dts_2015_biased_S6_h,
+                            wgt_2015_unbiased_S1_h, wgt_2015_unbiased_S2_h, wgt_2015_unbiased_S3_h,
+                            wgt_2015_unbiased_S4_h, wgt_2015_unbiased_S5_h, wgt_2015_unbiased_S6_h,
+                            wgt_2015_biased_S1_h,   wgt_2015_biased_S2_h,   wgt_2015_biased_S3_h,
+                            wgt_2015_biased_S4_h,   wgt_2015_biased_S5_h,   wgt_2015_biased_S6_h,
+                                                                        mKKbins, "2015, biased & unbiased, S1-S6");
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S1_d(dts_2015_unbiased_S1_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S2_d(dts_2015_unbiased_S2_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S3_d(dts_2015_unbiased_S3_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S4_d(dts_2015_unbiased_S4_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S5_d(dts_2015_unbiased_S5_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S6_d(dts_2015_unbiased_S6_h.size());
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_biased_S1_d(dts_2015_biased_S1_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_biased_S2_d(dts_2015_biased_S2_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_biased_S3_d(dts_2015_biased_S3_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_biased_S4_d(dts_2015_biased_S4_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_biased_S5_d(dts_2015_biased_S5_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_biased_S6_d(dts_2015_biased_S6_h.size());
+
+    hydra::device::vector<double> wgt_2015_unbiased_S1_d(wgt_2015_unbiased_S1_h.size());
+    hydra::device::vector<double> wgt_2015_unbiased_S2_d(wgt_2015_unbiased_S2_h.size());
+    hydra::device::vector<double> wgt_2015_unbiased_S3_d(wgt_2015_unbiased_S3_h.size());
+    hydra::device::vector<double> wgt_2015_unbiased_S4_d(wgt_2015_unbiased_S4_h.size());
+    hydra::device::vector<double> wgt_2015_unbiased_S5_d(wgt_2015_unbiased_S5_h.size());
+    hydra::device::vector<double> wgt_2015_unbiased_S6_d(wgt_2015_unbiased_S6_h.size());
+
+    hydra::device::vector<double> wgt_2015_biased_S1_d(wgt_2015_biased_S1_h.size());
+    hydra::device::vector<double> wgt_2015_biased_S2_d(wgt_2015_biased_S2_h.size());
+    hydra::device::vector<double> wgt_2015_biased_S3_d(wgt_2015_biased_S3_h.size());
+    hydra::device::vector<double> wgt_2015_biased_S4_d(wgt_2015_biased_S4_h.size());
+    hydra::device::vector<double> wgt_2015_biased_S5_d(wgt_2015_biased_S5_h.size());
+    hydra::device::vector<double> wgt_2015_biased_S6_d(wgt_2015_biased_S6_h.size());
+
+    hydra::copy(dts_2015_unbiased_S1_h, dts_2015_unbiased_S1_d);
+    hydra::copy(dts_2015_unbiased_S2_h, dts_2015_unbiased_S2_d);
+    hydra::copy(dts_2015_unbiased_S3_h, dts_2015_unbiased_S3_d);
+    hydra::copy(dts_2015_unbiased_S4_h, dts_2015_unbiased_S4_d);
+    hydra::copy(dts_2015_unbiased_S5_h, dts_2015_unbiased_S5_d);
+    hydra::copy(dts_2015_unbiased_S6_h, dts_2015_unbiased_S6_d);
+
+    hydra::copy(dts_2015_biased_S1_h, dts_2015_biased_S1_d);
+    hydra::copy(dts_2015_biased_S2_h, dts_2015_biased_S2_d);
+    hydra::copy(dts_2015_biased_S3_h, dts_2015_biased_S3_d);
+    hydra::copy(dts_2015_biased_S4_h, dts_2015_biased_S4_d);
+    hydra::copy(dts_2015_biased_S5_h, dts_2015_biased_S5_d);
+    hydra::copy(dts_2015_biased_S6_h, dts_2015_biased_S6_d);
+
+    hydra::copy(wgt_2015_unbiased_S1_h, wgt_2015_unbiased_S1_d);
+    hydra::copy(wgt_2015_unbiased_S2_h, wgt_2015_unbiased_S2_d);
+    hydra::copy(wgt_2015_unbiased_S3_h, wgt_2015_unbiased_S3_d);
+    hydra::copy(wgt_2015_unbiased_S4_h, wgt_2015_unbiased_S4_d);
+    hydra::copy(wgt_2015_unbiased_S5_h, wgt_2015_unbiased_S5_d);
+    hydra::copy(wgt_2015_unbiased_S6_h, wgt_2015_unbiased_S6_d);
+
+    hydra::copy(wgt_2015_biased_S1_h, wgt_2015_biased_S1_d);
+    hydra::copy(wgt_2015_biased_S2_h, wgt_2015_biased_S2_d);
+    hydra::copy(wgt_2015_biased_S3_h, wgt_2015_biased_S3_d);
+    hydra::copy(wgt_2015_biased_S4_h, wgt_2015_biased_S4_d);
+    hydra::copy(wgt_2015_biased_S5_h, wgt_2015_biased_S5_d);
+    hydra::copy(wgt_2015_biased_S6_h, wgt_2015_biased_S6_d);
+
+
+    //---------------------------------
+    //       Import 2016 dataset
+    //---------------------------------
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_unbiased_S1_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_unbiased_S2_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_unbiased_S3_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_unbiased_S4_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_unbiased_S5_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_unbiased_S6_h;
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_biased_S1_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_biased_S2_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_biased_S3_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_biased_S4_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_biased_S5_h;
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2016_biased_S6_h;
+
+    hydra::host::vector<weight_t> wgt_2016_unbiased_S1_h;
+    hydra::host::vector<weight_t> wgt_2016_unbiased_S2_h;
+    hydra::host::vector<weight_t> wgt_2016_unbiased_S3_h;
+    hydra::host::vector<weight_t> wgt_2016_unbiased_S4_h;
+    hydra::host::vector<weight_t> wgt_2016_unbiased_S5_h;
+    hydra::host::vector<weight_t> wgt_2016_unbiased_S6_h;
+
+    hydra::host::vector<weight_t> wgt_2016_biased_S1_h;
+    hydra::host::vector<weight_t> wgt_2016_biased_S2_h;
+    hydra::host::vector<weight_t> wgt_2016_biased_S3_h;
+    hydra::host::vector<weight_t> wgt_2016_biased_S4_h;
+    hydra::host::vector<weight_t> wgt_2016_biased_S5_h;
+    hydra::host::vector<weight_t> wgt_2016_biased_S6_h;
 
     medusa::ImportDataset("/home/aricci/Bs2JpsiPhi_data/2016/Bs2JpsiPhi_2016_selected_bdt_sw_v0r5.root",
-                            dataset_2015_unbiased_S1_d, dataset_2015_unbiased_S2_d, dataset_2015_unbiased_S3_d,
-                            dataset_2015_unbiased_S4_d, dataset_2015_unbiased_S5_d, dataset_2015_unbiased_S6_d,
-                            dataset_2015_biased_S1_d, dataset_2015_biased_S2_d, dataset_2015_biased_S3_d,
-                            dataset_2015_biased_S4_d, dataset_2015_biased_S5_d, dataset_2015_biased_S6_d,
-                                                                        mKKbins, "2016, biased & unbiased, S1-S6", true);
-    
-    for(size_t i = 0; i < 1; i++)
-    {
-        std::cout << "dataset_2015_unbiased_S1_d = " << dataset_2015_unbiased_S1_d[i] << std::endl;
-        std::cout << "dataset_2015_unbiased_S2_d = " << dataset_2015_unbiased_S2_d[i] << std::endl;
-        std::cout << "dataset_2015_unbiased_S3_d = " << dataset_2015_unbiased_S3_d[i] << std::endl;
-        std::cout << "dataset_2015_unbiased_S4_d = " << dataset_2015_unbiased_S4_d[i] << std::endl;
-        std::cout << "dataset_2015_unbiased_S5_d = " << dataset_2015_unbiased_S5_d[i] << std::endl;
-        std::cout << "dataset_2015_unbiased_S6_d = " << dataset_2015_unbiased_S6_d[i] << std::endl;
+                            dts_2016_unbiased_S1_h, dts_2016_unbiased_S2_h, dts_2016_unbiased_S3_h,
+                            dts_2016_unbiased_S4_h, dts_2016_unbiased_S5_h, dts_2016_unbiased_S6_h,
+                            dts_2016_biased_S1_h,   dts_2016_biased_S2_h,   dts_2016_biased_S3_h,
+                            dts_2016_biased_S4_h,   dts_2016_biased_S5_h,   dts_2016_biased_S6_h,
+                            wgt_2016_unbiased_S1_h, wgt_2016_unbiased_S2_h, wgt_2016_unbiased_S3_h,
+                            wgt_2016_unbiased_S4_h, wgt_2016_unbiased_S5_h, wgt_2016_unbiased_S6_h,
+                            wgt_2016_biased_S1_h,   wgt_2016_biased_S2_h,   wgt_2016_biased_S3_h,
+                            wgt_2016_biased_S4_h,   wgt_2016_biased_S5_h,   wgt_2016_biased_S6_h,
+                                                                        mKKbins, "2016, biased & unbiased, S1-S6");
 
-        std::cout << "dataset_2015_biased_S1_d = " << dataset_2015_biased_S1_d[i] << std::endl;
-        std::cout << "dataset_2015_biased_S2_d = " << dataset_2015_biased_S2_d[i] << std::endl;
-        std::cout << "dataset_2015_biased_S3_d = " << dataset_2015_biased_S3_d[i] << std::endl;
-        std::cout << "dataset_2015_biased_S4_d = " << dataset_2015_biased_S4_d[i] << std::endl;
-        std::cout << "dataset_2015_biased_S5_d = " << dataset_2015_biased_S5_d[i] << std::endl;
-        std::cout << "dataset_2015_biased_S6_d = " << dataset_2015_biased_S6_d[i] << std::endl;
-    }
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_unbiased_S1_d(dts_2016_unbiased_S1_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_unbiased_S2_d(dts_2016_unbiased_S2_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_unbiased_S3_d(dts_2016_unbiased_S3_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_unbiased_S4_d(dts_2016_unbiased_S4_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_unbiased_S5_d(dts_2016_unbiased_S5_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_unbiased_S6_d(dts_2016_unbiased_S6_h.size());
+
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_biased_S1_d(dts_2016_biased_S1_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_biased_S2_d(dts_2016_biased_S2_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_biased_S3_d(dts_2016_biased_S3_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_biased_S4_d(dts_2016_biased_S4_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_biased_S5_d(dts_2016_biased_S5_h.size());
+    hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_biased_S6_d(dts_2016_biased_S6_h.size());
+
+    hydra::device::vector<double> wgt_2016_unbiased_S1_d(wgt_2016_unbiased_S1_h.size());
+    hydra::device::vector<double> wgt_2016_unbiased_S2_d(wgt_2016_unbiased_S2_h.size());
+    hydra::device::vector<double> wgt_2016_unbiased_S3_d(wgt_2016_unbiased_S3_h.size());
+    hydra::device::vector<double> wgt_2016_unbiased_S4_d(wgt_2016_unbiased_S4_h.size());
+    hydra::device::vector<double> wgt_2016_unbiased_S5_d(wgt_2016_unbiased_S5_h.size());
+    hydra::device::vector<double> wgt_2016_unbiased_S6_d(wgt_2016_unbiased_S6_h.size());
+
+    hydra::device::vector<double> wgt_2016_biased_S1_d(wgt_2016_biased_S1_h.size());
+    hydra::device::vector<double> wgt_2016_biased_S2_d(wgt_2016_biased_S2_h.size());
+    hydra::device::vector<double> wgt_2016_biased_S3_d(wgt_2016_biased_S3_h.size());
+    hydra::device::vector<double> wgt_2016_biased_S4_d(wgt_2016_biased_S4_h.size());
+    hydra::device::vector<double> wgt_2016_biased_S5_d(wgt_2016_biased_S5_h.size());
+    hydra::device::vector<double> wgt_2016_biased_S6_d(wgt_2016_biased_S6_h.size());
+
+    hydra::copy(dts_2016_unbiased_S1_h, dts_2016_unbiased_S1_d);
+    hydra::copy(dts_2016_unbiased_S2_h, dts_2016_unbiased_S2_d);
+    hydra::copy(dts_2016_unbiased_S3_h, dts_2016_unbiased_S3_d);
+    hydra::copy(dts_2016_unbiased_S4_h, dts_2016_unbiased_S4_d);
+    hydra::copy(dts_2016_unbiased_S5_h, dts_2016_unbiased_S5_d);
+    hydra::copy(dts_2016_unbiased_S6_h, dts_2016_unbiased_S6_d);
+
+    hydra::copy(dts_2016_biased_S1_h, dts_2016_biased_S1_d);
+    hydra::copy(dts_2016_biased_S2_h, dts_2016_biased_S2_d);
+    hydra::copy(dts_2016_biased_S3_h, dts_2016_biased_S3_d);
+    hydra::copy(dts_2016_biased_S4_h, dts_2016_biased_S4_d);
+    hydra::copy(dts_2016_biased_S5_h, dts_2016_biased_S5_d);
+    hydra::copy(dts_2016_biased_S6_h, dts_2016_biased_S6_d);
+
+    hydra::copy(wgt_2016_unbiased_S1_h, wgt_2016_unbiased_S1_d);
+    hydra::copy(wgt_2016_unbiased_S2_h, wgt_2016_unbiased_S2_d);
+    hydra::copy(wgt_2016_unbiased_S3_h, wgt_2016_unbiased_S3_d);
+    hydra::copy(wgt_2016_unbiased_S4_h, wgt_2016_unbiased_S4_d);
+    hydra::copy(wgt_2016_unbiased_S5_h, wgt_2016_unbiased_S5_d);
+    hydra::copy(wgt_2016_unbiased_S6_h, wgt_2016_unbiased_S6_d);
+
+    hydra::copy(wgt_2016_biased_S1_h, wgt_2016_biased_S1_d);
+    hydra::copy(wgt_2016_biased_S2_h, wgt_2016_biased_S2_d);
+    hydra::copy(wgt_2016_biased_S3_h, wgt_2016_biased_S3_d);
+    hydra::copy(wgt_2016_biased_S4_h, wgt_2016_biased_S4_d);
+    hydra::copy(wgt_2016_biased_S5_h, wgt_2016_biased_S5_d);
+    hydra::copy(wgt_2016_biased_S6_h, wgt_2016_biased_S6_d);
 
 
     //-----------------------------------------
     //      Print and plot the dataset
     //-----------------------------------------
-/*
+
     #ifdef _ROOT_AVAILABLE_
 
         // Plot the 2015-2016 datasets with the S-wave in the first mass bin
-        medusa::print::PrintDataset_B0s(dataset_2015_unbiased_S1_h, "2015_unbiased_S1");
+        medusa::print::PrintDataset_B0s(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
 
         // Plot of the 2015 unbiased cubic spline
         TCanvas canvas2_2015_unbiased_S1("canvas2_2015_unbiased_S1","canvas2_2015_unbiased_S1",3200,800);
@@ -303,12 +491,12 @@ int main(int argv, char** argc)
     //          FCN generation
     //---------------------------------
 
-    auto fcn_2015_unbiased_S1 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S1, dataset_2015_unbiased_S1_d);
-    auto fcn_2015_unbiased_S2 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S2, dataset_2015_unbiased_S2_d);
-    auto fcn_2015_unbiased_S3 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S3, dataset_2015_unbiased_S3_d);
-    auto fcn_2015_unbiased_S4 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S4, dataset_2015_unbiased_S4_d);
-    auto fcn_2015_unbiased_S5 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S5, dataset_2015_unbiased_S5_d);
-    auto fcn_2015_unbiased_S6 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S6, dataset_2015_unbiased_S6_d);
+    auto fcn_2015_unbiased_S1 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S1, dts_2015_unbiased_S1_d, wgt_2015_unbiased_S1_d);
+    auto fcn_2015_unbiased_S2 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S2, dts_2015_unbiased_S2_d, wgt_2015_unbiased_S2_d);
+    auto fcn_2015_unbiased_S3 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S3, dts_2015_unbiased_S3_d, wgt_2015_unbiased_S3_d);
+    auto fcn_2015_unbiased_S4 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S4, dts_2015_unbiased_S4_d, wgt_2015_unbiased_S4_d);
+    auto fcn_2015_unbiased_S5 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S5, dts_2015_unbiased_S5_d, wgt_2015_unbiased_S5_d);
+    auto fcn_2015_unbiased_S6 = hydra::make_loglikehood_fcn(PDF_2015_unbiased_S6, dts_2015_unbiased_S6_d, wgt_2015_unbiased_S6_d);
     fcn_2015_unbiased_S1.SetFcnMaxValue(2.22507e+12);
     fcn_2015_unbiased_S2.SetFcnMaxValue(2.22507e+12);
     fcn_2015_unbiased_S3.SetFcnMaxValue(2.22507e+12);
@@ -316,12 +504,12 @@ int main(int argv, char** argc)
     fcn_2015_unbiased_S5.SetFcnMaxValue(2.22507e+12);
     fcn_2015_unbiased_S6.SetFcnMaxValue(2.22507e+12);
     
-    auto fcn_2015_biased_S1 = hydra::make_loglikehood_fcn(PDF_2015_biased_S1, dataset_2015_biased_S1_d);
-    auto fcn_2015_biased_S2 = hydra::make_loglikehood_fcn(PDF_2015_biased_S2, dataset_2015_biased_S2_d);
-    auto fcn_2015_biased_S3 = hydra::make_loglikehood_fcn(PDF_2015_biased_S3, dataset_2015_biased_S3_d);
-    auto fcn_2015_biased_S4 = hydra::make_loglikehood_fcn(PDF_2015_biased_S4, dataset_2015_biased_S4_d);
-    auto fcn_2015_biased_S5 = hydra::make_loglikehood_fcn(PDF_2015_biased_S5, dataset_2015_biased_S5_d);
-    auto fcn_2015_biased_S6 = hydra::make_loglikehood_fcn(PDF_2015_biased_S6, dataset_2015_biased_S6_d);
+    auto fcn_2015_biased_S1 = hydra::make_loglikehood_fcn(PDF_2015_biased_S1, dts_2015_biased_S1_d, wgt_2015_biased_S1_d);
+    auto fcn_2015_biased_S2 = hydra::make_loglikehood_fcn(PDF_2015_biased_S2, dts_2015_biased_S2_d, wgt_2015_biased_S2_d);
+    auto fcn_2015_biased_S3 = hydra::make_loglikehood_fcn(PDF_2015_biased_S3, dts_2015_biased_S3_d, wgt_2015_biased_S3_d);
+    auto fcn_2015_biased_S4 = hydra::make_loglikehood_fcn(PDF_2015_biased_S4, dts_2015_biased_S4_d, wgt_2015_biased_S4_d);
+    auto fcn_2015_biased_S5 = hydra::make_loglikehood_fcn(PDF_2015_biased_S5, dts_2015_biased_S5_d, wgt_2015_biased_S5_d);
+    auto fcn_2015_biased_S6 = hydra::make_loglikehood_fcn(PDF_2015_biased_S6, dts_2015_biased_S6_d, wgt_2015_biased_S6_d);
     fcn_2015_biased_S1.SetFcnMaxValue(2.22507e+12);
     fcn_2015_biased_S2.SetFcnMaxValue(2.22507e+12);
     fcn_2015_biased_S3.SetFcnMaxValue(2.22507e+12);
@@ -329,12 +517,12 @@ int main(int argv, char** argc)
     fcn_2015_biased_S5.SetFcnMaxValue(2.22507e+12);
     fcn_2015_biased_S6.SetFcnMaxValue(2.22507e+12);
     
-    auto fcn_2016_unbiased_S1 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S1, dataset_2016_unbiased_S1_d);
-    auto fcn_2016_unbiased_S2 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S2, dataset_2016_unbiased_S2_d);
-    auto fcn_2016_unbiased_S3 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S3, dataset_2016_unbiased_S3_d);
-    auto fcn_2016_unbiased_S4 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S4, dataset_2016_unbiased_S4_d);
-    auto fcn_2016_unbiased_S5 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S5, dataset_2016_unbiased_S5_d);
-    auto fcn_2016_unbiased_S6 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S6, dataset_2016_unbiased_S6_d);
+    auto fcn_2016_unbiased_S1 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S1, dts_2016_unbiased_S1_d, wgt_2016_unbiased_S1_d);
+    auto fcn_2016_unbiased_S2 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S2, dts_2016_unbiased_S2_d, wgt_2016_unbiased_S2_d);
+    auto fcn_2016_unbiased_S3 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S3, dts_2016_unbiased_S3_d, wgt_2016_unbiased_S3_d);
+    auto fcn_2016_unbiased_S4 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S4, dts_2016_unbiased_S4_d, wgt_2016_unbiased_S4_d);
+    auto fcn_2016_unbiased_S5 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S5, dts_2016_unbiased_S5_d, wgt_2016_unbiased_S5_d);
+    auto fcn_2016_unbiased_S6 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S6, dts_2016_unbiased_S6_d, wgt_2016_unbiased_S6_d);
     fcn_2016_unbiased_S1.SetFcnMaxValue(2.22507e+12);
     fcn_2016_unbiased_S2.SetFcnMaxValue(2.22507e+12);
     fcn_2016_unbiased_S3.SetFcnMaxValue(2.22507e+12);
@@ -342,12 +530,12 @@ int main(int argv, char** argc)
     fcn_2016_unbiased_S5.SetFcnMaxValue(2.22507e+12);
     fcn_2016_unbiased_S6.SetFcnMaxValue(2.22507e+12);
     
-    auto fcn_2016_biased_S1 = hydra::make_loglikehood_fcn(PDF_2016_biased_S1, dataset_2016_biased_S1_d);
-    auto fcn_2016_biased_S2 = hydra::make_loglikehood_fcn(PDF_2016_biased_S2, dataset_2016_biased_S2_d);
-    auto fcn_2016_biased_S3 = hydra::make_loglikehood_fcn(PDF_2016_biased_S3, dataset_2016_biased_S3_d);
-    auto fcn_2016_biased_S4 = hydra::make_loglikehood_fcn(PDF_2016_biased_S4, dataset_2016_biased_S4_d);
-    auto fcn_2016_biased_S5 = hydra::make_loglikehood_fcn(PDF_2016_biased_S5, dataset_2016_biased_S5_d);
-    auto fcn_2016_biased_S6 = hydra::make_loglikehood_fcn(PDF_2016_biased_S6, dataset_2016_biased_S6_d);
+    auto fcn_2016_biased_S1 = hydra::make_loglikehood_fcn(PDF_2016_biased_S1, dts_2016_biased_S1_d, wgt_2016_biased_S1_d);
+    auto fcn_2016_biased_S2 = hydra::make_loglikehood_fcn(PDF_2016_biased_S2, dts_2016_biased_S2_d, wgt_2016_biased_S2_d);
+    auto fcn_2016_biased_S3 = hydra::make_loglikehood_fcn(PDF_2016_biased_S3, dts_2016_biased_S3_d, wgt_2016_biased_S3_d);
+    auto fcn_2016_biased_S4 = hydra::make_loglikehood_fcn(PDF_2016_biased_S4, dts_2016_biased_S4_d, wgt_2016_biased_S4_d);
+    auto fcn_2016_biased_S5 = hydra::make_loglikehood_fcn(PDF_2016_biased_S5, dts_2016_biased_S5_d, wgt_2016_biased_S5_d);
+    auto fcn_2016_biased_S6 = hydra::make_loglikehood_fcn(PDF_2016_biased_S6, dts_2016_biased_S6_d, wgt_2016_biased_S6_d);
     fcn_2016_biased_S1.SetFcnMaxValue(2.22507e+12);
     fcn_2016_biased_S2.SetFcnMaxValue(2.22507e+12);
     fcn_2016_biased_S3.SetFcnMaxValue(2.22507e+12);
@@ -397,7 +585,7 @@ int main(int argv, char** argc)
 	std::cout << "-----------------------------------------"<< std::endl;
 	std::cout << "| Time (ms) ="<< elapsed.count()          << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
-*/
+
     return 0;
 
 } // main

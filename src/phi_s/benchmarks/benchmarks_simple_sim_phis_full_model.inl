@@ -119,13 +119,13 @@ int main(int argv, char** argc)
     //---------------------------------
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_2015_unbiased_S1_h;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S1_h;
 
-    medusa::GenerateDataset_Full(Model_2015_unbiased_S1, dataset_2015_unbiased_S1_h, nentries, nentries, LowerLimit, UpperLimit, "2015 unbiased S1");
+    medusa::GenerateDataset_Full(Model_2015_unbiased_S1, dts_2015_unbiased_S1_h, nentries, nentries, LowerLimit, UpperLimit, "2015 unbiased S1");
     
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
-                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_2015_unbiased_S1_d(dataset_2015_unbiased_S1_h.size());
-    hydra::copy(dataset_2015_unbiased_S1_h, dataset_2015_unbiased_S1_d);
+                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S1_d(dts_2015_unbiased_S1_h.size());
+    hydra::copy(dts_2015_unbiased_S1_h, dts_2015_unbiased_S1_d);
 
 
     //-----------------------------------------
@@ -135,7 +135,7 @@ int main(int argv, char** argc)
     #ifdef _ROOT_AVAILABLE_
 
         // Plot the 2015-2016 datasets with the S-wave in the first mass bin
-        medusa::print::PrintDataset_B0s(dataset_2015_unbiased_S1_h, "2015_unbiased_S1");
+        medusa::print::PrintDataset_B0s(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
 
         // Plot of the 2015 unbiased cubic spline
         TCanvas canvas2_2015_unbiased_S1("canvas2_2015_unbiased_S1","canvas2_2015_unbiased_S1",3200,800);
@@ -164,7 +164,7 @@ int main(int argv, char** argc)
     //          FCN generation
     //---------------------------------
 
-    auto fcn = hydra::make_loglikehood_fcn(model_PDF, dataset_2015_unbiased_S1_d);
+    auto fcn = hydra::make_loglikehood_fcn(model_PDF, dts_2015_unbiased_S1_d);
 
     fcn.SetFcnMaxValue(2.22507e+12);
 
@@ -174,7 +174,7 @@ int main(int argv, char** argc)
     //---------------------------------
 
     // print functor evaluation on 1 event
-    auto x = dataset_2015_unbiased_S1_d[0];
+    auto x = dts_2015_unbiased_S1_d[0];
 
     auto start_functor = std::chrono::high_resolution_clock::now();
     Model_2015_unbiased_S1(x);

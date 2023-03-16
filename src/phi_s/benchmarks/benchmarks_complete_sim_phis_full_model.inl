@@ -105,13 +105,13 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     //---------------------------------
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
-                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dataset_2015_unbiased_S1_h;
+                                    qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::host::sys_t> dts_2015_unbiased_S1_h;
 
-    medusa::GenerateDataset_Full(Model_2015_unbiased_S1, dataset_2015_unbiased_S1_h, nentries, nentries, LowerLimit, UpperLimit, "2015 unbiased S1");
+    medusa::GenerateDataset_Full(Model_2015_unbiased_S1, dts_2015_unbiased_S1_h, nentries, nentries, LowerLimit, UpperLimit, "2015 unbiased S1");
     
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t, qOS_t, qSS_t,
-                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dataset_2015_unbiased_S1_d(dataset_2015_unbiased_S1_h.size());
-    hydra::copy(dataset_2015_unbiased_S1_h, dataset_2015_unbiased_S1_d);
+                                etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S1_d(dts_2015_unbiased_S1_h.size());
+    hydra::copy(dts_2015_unbiased_S1_h, dts_2015_unbiased_S1_d);
 
 
     //-----------------------------------------
@@ -121,7 +121,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     #ifdef _ROOT_AVAILABLE_
 
         // Plot the 2015-2016 datasets with the S-wave in the first mass bin
-        medusa::print::PrintDataset_B0s(dataset_2015_unbiased_S1_h, "2015_unbiased_S1");
+        medusa::print::PrintDataset_B0s(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
 
         // Plot of the 2015 unbiased cubic spline
         TCanvas canvas2_2015_unbiased_S1("canvas2_2015_unbiased_S1","canvas2_2015_unbiased_S1",3200,800);
@@ -145,7 +145,7 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
     // make PDF
     auto Model_PDF = hydra::make_pdf(Model_2015_unbiased_S1, integrator);
     
-    auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dataset_2015_unbiased_S1_d);
+    auto fcn = hydra::make_loglikehood_fcn(Model_PDF, dts_2015_unbiased_S1_d);
 
 
 
@@ -189,13 +189,13 @@ TEST_CASE( "Benchmarks for B0s -> J/psi Phi -> mu+ mu- K+ K-")
      * Benchmark for direct functor call on 1 event
      *-----------------------------------------------------*/
     hydra::SeedRNG S{};
-    auto rng = hydra::detail::RndUniform<size_t , hydra::default_random_engine >(S(), 0, dataset_2015_unbiased_S1_d.size()-1);
+    auto rng = hydra::detail::RndUniform<size_t , hydra::default_random_engine >(S(), 0, dts_2015_unbiased_S1_d.size()-1);
     size_t index=0;
     
     BENCHMARK_ADVANCED( "Simple Functor call on 1 event" )(Catch::Benchmark::Chronometer meter)
     {
         const size_t i = rng(index++);
-        auto x = dataset_2015_unbiased_S1_d[i];
+        auto x = dts_2015_unbiased_S1_d[i];
 
         meter.measure( [=] { return Model_2015_unbiased_S1(x); });
     };

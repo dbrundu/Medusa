@@ -61,10 +61,10 @@ declarg(MuonP, hydra::Vector4R)
 declarg(MuonM, hydra::Vector4R)
 
 // New types for time and helicity angles
-declarg(costheta_h_t,  double)
-declarg(costheta_l_t,  double)
-declarg(phi_t,         double)
-declarg(dtime_t,       double)
+declarg(costheta_h_t, double)
+declarg(costheta_l_t, double)
+declarg(phi_t,        double)
+declarg(dtime_t,      double)
 
 // New types for tagging variables
 declarg(qOS_t, 	 int)
@@ -73,9 +73,9 @@ declarg(etaOS_t, double)
 declarg(etaSS_t, double)
 
 // New types for time resolution, mKK and background weights
-declarg(delta_t, 	  double)
-declarg(mKK_t, 		  double)
-declarg(weight_t,     double)
+declarg(delta_t,  double)
+declarg(mKK_t,    double)
+declarg(weight_t, double)
 
 // New types for trigger (biased, unbiased)
 declarg(Jpsi_Hlt2DiMuonDetachedJPsiDecision_TOS, bool)

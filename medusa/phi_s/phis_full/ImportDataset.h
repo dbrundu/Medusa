@@ -65,19 +65,26 @@ namespace medusa {
      * path             = path to the root file containing the dataset
      * dts_unbiased_SN  = containers which will contain the unbiased datasets
      * dts_biased_SN    = containers which will contain the biased datasets
+     * wgt_unbiased_SN  = containers which will contain the unbiased weights
+     * wgt_biased_SN    = containers which will contain the biased weights
      * mkk_bins         = bins of the masses of the K+K-
      * description      = description of the dataset
      * print            = true or false to have an additional printout
      */
 
     template <typename Container1,
-              typename Container2>
+              typename Container2,
+              typename Container3>
     void ImportDataset(TString path,
                          Container1& dts_unbiased_S1, Container1& dts_unbiased_S2, Container1& dts_unbiased_S3,
                          Container1& dts_unbiased_S4, Container1& dts_unbiased_S5, Container1& dts_unbiased_S6,
-                         Container1& dts_biased_S1, Container1& dts_biased_S2, Container1& dts_biased_S3,
-                         Container1& dts_biased_S4, Container1& dts_biased_S5, Container1& dts_biased_S6,
-                         Container2& mKK_bins, std::string description, bool print = false)
+                         Container1& dts_biased_S1,   Container1& dts_biased_S2,   Container1& dts_biased_S3,
+                         Container1& dts_biased_S4,   Container1& dts_biased_S5,   Container1& dts_biased_S6,
+                         Container2& wgt_unbiased_S1, Container2& wgt_unbiased_S2, Container2& wgt_unbiased_S3,
+                         Container2& wgt_unbiased_S4, Container2& wgt_unbiased_S5, Container2& wgt_unbiased_S6,
+                         Container2& wgt_biased_S1,   Container2& wgt_biased_S2,   Container2& wgt_biased_S3,
+                         Container2& wgt_biased_S4,   Container2& wgt_biased_S5,   Container2& wgt_biased_S6,
+                         Container3& mKK_bins, std::string description, bool print = false)
     {
         // open the root file
         TFile *infile=new TFile(path);
@@ -123,7 +130,7 @@ namespace medusa {
 
         // lambda which computes the S-wave bin
         auto SwaveDecision = hydra::wrap_lambda(
-            [mKK_bins](mKK_t mKK)
+            [mKK_bins]__hydra_dual__(mKK_t mKK)
             {
                 if(mKK > mKK_bins[0][0] && mKK < mKK_bins[0][1]) return 1;
                 else if(mKK > mKK_bins[1][0] && mKK < mKK_bins[1][1]) return 2;
@@ -136,18 +143,18 @@ namespace medusa {
 
         // container to save the weights and variables to compute alpha (See formula on page 108
         // of Linn's thesis: https://www.physi.uni-heidelberg.de/Publications/linn_thesis.pdf)
-        hydra::device::vector<weight_t> weights_unbiased_S1;
-        hydra::device::vector<weight_t> weights_unbiased_S2;
-        hydra::device::vector<weight_t> weights_unbiased_S3;
-        hydra::device::vector<weight_t> weights_unbiased_S4;
-        hydra::device::vector<weight_t> weights_unbiased_S5;
-        hydra::device::vector<weight_t> weights_unbiased_S6;
-        hydra::device::vector<weight_t> weights_biased_S1;
-        hydra::device::vector<weight_t> weights_biased_S2;
-        hydra::device::vector<weight_t> weights_biased_S3;
-        hydra::device::vector<weight_t> weights_biased_S4;
-        hydra::device::vector<weight_t> weights_biased_S5;
-        hydra::device::vector<weight_t> weights_biased_S6;
+        hydra::host::vector<weight_t> weights_unbiased_S1;
+        hydra::host::vector<weight_t> weights_unbiased_S2;
+        hydra::host::vector<weight_t> weights_unbiased_S3;
+        hydra::host::vector<weight_t> weights_unbiased_S4;
+        hydra::host::vector<weight_t> weights_unbiased_S5;
+        hydra::host::vector<weight_t> weights_unbiased_S6;
+        hydra::host::vector<weight_t> weights_biased_S1;
+        hydra::host::vector<weight_t> weights_biased_S2;
+        hydra::host::vector<weight_t> weights_biased_S3;
+        hydra::host::vector<weight_t> weights_biased_S4;
+        hydra::host::vector<weight_t> weights_biased_S5;
+        hydra::host::vector<weight_t> weights_biased_S6;
 
         double alphaNum_unbiased_S1 = 0.;
         double alphaNum_unbiased_S2 = 0.;
@@ -199,7 +206,7 @@ namespace medusa {
             if(Decision1 && Decision2)  // unbiased
             {
                 // create the tupla
-                auto tupla = hydra::make_tuple(decay_time, costheta_h, costheta_l, phi_angle, qOS, qSS, etaOS, etaSS, delta_time, 0.);
+                auto tupla = hydra::make_tuple(decay_time, costheta_h, costheta_l, phi_angle, qOS, qSS, etaOS, etaSS, delta_time);
 
                 // compute the S-wave bin and fill the appropriate containers
                 auto SwaveBin = SwaveDecision(mKK);
@@ -260,7 +267,7 @@ namespace medusa {
             else if(Decision1 && !Decision2 && (Decision3 || Decision4))  // biased
             {
                 // create the tupla
-                auto tupla = hydra::make_tuple(decay_time, costheta_h, costheta_l, phi_angle, qOS, qSS, etaOS, etaSS, delta_time, 0.);
+                auto tupla = hydra::make_tuple(decay_time, costheta_h, costheta_l, phi_angle, qOS, qSS, etaOS, etaSS, delta_time);
                 
                 // compute the S-wave bin and fill the appropriate containers
                 auto SwaveBin = SwaveDecision(mKK);
@@ -336,12 +343,33 @@ namespace medusa {
         alpha_biased_S5 = alphaNum_biased_S5 / alphaDenom_biased_S5;
         alpha_biased_S6 = alphaNum_biased_S6 / alphaDenom_biased_S6;
 
-        // update the weights in the approriate containers
-        for(size_t i = 0; i < 10; i++)
-        {
-            dts_unbiased_S1[hydra::placeholders::_9][i] = alpha_unbiased_S1*weights_unbiased_S1[i];
-            std::cout << dts_unbiased_S1[i] << std::endl;
-        }
+        // insert the weights in the appropriate containers
+        for(size_t i = 0; i < weights_unbiased_S1.size(); i++)
+            wgt_unbiased_S1.push_back(alpha_unbiased_S1*weights_unbiased_S1[i]);
+        for(size_t i = 0; i < weights_unbiased_S2.size(); i++)
+            wgt_unbiased_S2.push_back(alpha_unbiased_S2*weights_unbiased_S2[i]);
+        for(size_t i = 0; i < weights_unbiased_S3.size(); i++)
+            wgt_unbiased_S3.push_back(alpha_unbiased_S3*weights_unbiased_S3[i]);
+        for(size_t i = 0; i < weights_unbiased_S4.size(); i++)
+            wgt_unbiased_S4.push_back(alpha_unbiased_S4*weights_unbiased_S4[i]);
+        for(size_t i = 0; i < weights_unbiased_S5.size(); i++)
+            wgt_unbiased_S5.push_back(alpha_unbiased_S5*weights_unbiased_S5[i]);
+        for(size_t i = 0; i < weights_unbiased_S6.size(); i++)
+            wgt_unbiased_S6.push_back(alpha_unbiased_S6*weights_unbiased_S6[i]);
+        
+        for(size_t i = 0; i < weights_biased_S1.size(); i++)
+            wgt_biased_S1.push_back(alpha_biased_S1*weights_biased_S1[i]);
+        for(size_t i = 0; i < weights_biased_S2.size(); i++)
+            wgt_biased_S2.push_back(alpha_biased_S2*weights_biased_S2[i]);
+        for(size_t i = 0; i < weights_biased_S3.size(); i++)
+            wgt_biased_S3.push_back(alpha_biased_S3*weights_biased_S3[i]);
+        for(size_t i = 0; i < weights_biased_S4.size(); i++)
+            wgt_biased_S4.push_back(alpha_biased_S4*weights_biased_S4[i]);
+        for(size_t i = 0; i < weights_biased_S5.size(); i++)
+            wgt_biased_S5.push_back(alpha_biased_S5*weights_biased_S5[i]);
+        for(size_t i = 0; i < weights_biased_S6.size(); i++)
+            wgt_biased_S6.push_back(alpha_biased_S6*weights_biased_S6[i]);
+        
 
 
         // close the root file

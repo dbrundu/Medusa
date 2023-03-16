@@ -180,7 +180,7 @@ include(${MEDUSA_CMAKE_DIR}/AddTarget_PhiS.cmake)
 
 ADD_TARGET_PHIS_FIT(fit_sim_phis_only_signal)
 ADD_TARGET_PHIS_FIT(fit_sim_phis_full_model)
-#ADD_TARGET_PHIS_FIT(fit_real_phis_full_model)
+ADD_TARGET_PHIS_FIT(fit_real_phis_full_model)
 ADD_TARGET_PHIS_BENCHMARKS(benchmarks_complete_sim_phis_only_signal)
 ADD_TARGET_PHIS_BENCHMARKS(benchmarks_simple_sim_phis_only_signal)
 ADD_TARGET_PHIS_BENCHMARKS(benchmarks_complete_sim_phis_full_model)
