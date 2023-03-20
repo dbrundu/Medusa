@@ -58,7 +58,7 @@
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
-#include <medusa/generic/Print.h>
+#include <medusa/phi_s/Print.h>
 #endif //_ROOT_AVAILABLE_
 
 // Minuit2
@@ -149,8 +149,10 @@ int main(int argv, char** argc)
     //-----------------------------------------
 
     #ifdef _ROOT_AVAILABLE_
-    // Plot the dataset with the S-wave in the first mass bin
-    medusa::print::PrintDataset_B0s(dataset_h, "S1");
+        // Check the datasets
+        medusa::print::PrintDataset(dataset_h, "S1");
+        // Plot the dataset with the S-wave in the first mass bin
+        medusa::print::PlotDataset(dataset_h, "S1");
     #endif //_ROOT_AVAILABLE_
 
 

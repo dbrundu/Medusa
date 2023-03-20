@@ -55,7 +55,7 @@
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
-#include <medusa/generic/Print.h>
+#include <medusa/phi_s/Print.h>
 #endif //_ROOT_AVAILABLE_
 
 // Medusa
@@ -134,8 +134,11 @@ int main(int argv, char** argc)
 
     #ifdef _ROOT_AVAILABLE_
 
-        // Plot the 2015-2016 datasets with the S-wave in the first mass bin
-        medusa::print::PrintDataset_B0s(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
+        // Check the datasets
+        medusa::print::PrintDataset(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
+
+        // Plot the 2015 dataset with the S-wave in the first mass bin
+        medusa::print::PlotDataset(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
 
         // Plot of the 2015 unbiased cubic spline
         TCanvas canvas2_2015_unbiased_S1("canvas2_2015_unbiased_S1","canvas2_2015_unbiased_S1",3200,800);

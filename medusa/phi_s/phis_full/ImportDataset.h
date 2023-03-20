@@ -25,8 +25,9 @@
  *
  *  Author: Andrea Contu and Alessandro Maria Ricci
  *
- *  This library contains the function which reads the data from a tuple
- *  and separates them into different datasets.
+ *  This library contains the function which reads the dataset from
+ *  a ROOT tuple and divide it in multiple datasets according
+ *  to trigger and S-wave.
  *---------------------------------------------------------------------------*/
 
 #ifndef IMPORT_DATASET_H_
@@ -44,7 +45,6 @@
 #include <hydra/host/System.h>
 #include <hydra/device/System.h>
 #include <hydra/multivector.h>
-#include <hydra/Placeholders.h>
 #include <hydra/Lambda.h>
 
 // Medusa
@@ -61,6 +61,7 @@ namespace medusa {
      *
      *                          B0s -> J/psi (Phi -> K+ K-)
      *                                  |-> mu+ mu-
+     * and divides it in multiple datasets according to trigger and S-wave.
      * Parameters:
      * path             = path to the root file containing the dataset
      * dts_unbiased_SN  = containers which will contain the unbiased datasets
@@ -369,7 +370,6 @@ namespace medusa {
             wgt_biased_S5.push_back(alpha_biased_S5*weights_biased_S5[i]);
         for(size_t i = 0; i < weights_biased_S6.size(); i++)
             wgt_biased_S6.push_back(alpha_biased_S6*weights_biased_S6[i]);
-        
 
 
         // close the root file

@@ -51,10 +51,37 @@
 //Hydra
 #include <hydra/multivector.h>
 #include <hydra/Tuple.h>
+#include <hydra/Lambda.h>
 
 
 namespace medusa {
     namespace print {
+
+        /* Function that prints the Monte Carlo dataset (time and helicity angles)
+         * for the decay
+         *
+         *                    B0s -> J/psi (Phi -> K+ K-)
+         *                            |-> mu+ mu-
+         * Parameters:
+         * dataset      = container which contains the Monte Carlo dataset
+         * description  = description of the dataset
+         */
+
+        template<typename Container>
+        size_t PrintDataset(Container& dataset, std::string description)
+        {
+            // Print the first 10 lines of the dataset
+            if(dataset.size() > 10)
+            {
+                std::cout << " " << std::endl;
+                for( size_t i=0; i<10; i++ )
+                    std::cout << "Dataset_" << description << ": {" << dataset[i]  << "}" << std::endl;
+            }
+            else std::cout << "The container " << description << " is empty!" << std::endl;
+
+            return dataset.size();
+        }
+
 
         /* Function that plots the Monte Carlo dataset (time and helicity angles)
          * for the decay
@@ -62,22 +89,14 @@ namespace medusa {
          *                    B0s -> J/psi (Phi -> K+ K-)
          *                            |-> mu+ mu-
          * Parameters:
-         * dataset      = container where to save the Monte Carlo dataset
+         * dataset      = container which contains the Monte Carlo dataset
          * description  = description of the dataset
          */
 
         template<typename Container>
-        void PrintDataset_B0s(Container& dataset, std::string description)
+        void PlotDataset(Container& dataset, std::string description)
         {
-            // Print the first 10 lines of the dataset
-            if (dataset.size() > 10)
-            {
-                std::cout << " " << std::endl;
-                for( size_t i=0; i<10; i++ )
-                std::cout << "Dataset_" << description << ": {" << dataset[i]  << "}" << std::endl;
-            }
-        
-            // Plot of the dataset
+            // Create the histograms
             TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
             TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
             TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
@@ -111,9 +130,7 @@ namespace medusa {
 
             canvas1.SaveAs(FileName.c_str());
         }
-
-    }
-
+    } // namespace print
 } // namespace medusa
 
 #endif // MEDUSA_PRINT_H

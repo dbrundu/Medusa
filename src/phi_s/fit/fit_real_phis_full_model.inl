@@ -60,7 +60,7 @@
 
 // ROOT
 #ifdef _ROOT_AVAILABLE_
-#include <medusa/generic/Print.h>
+#include <medusa/phi_s/Print.h>
 #endif //_ROOT_AVAILABLE_
 
 // Minuit2
@@ -434,14 +434,38 @@ int main(int argv, char** argc)
 
     #ifdef _ROOT_AVAILABLE_
 
+        // Check the datasets
+        medusa::print::PrintDataset(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
+
         // Plot the 2015-2016 datasets with the S-wave in the first mass bin
-        medusa::print::PrintDataset_B0s(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
+        medusa::print::PlotDataset(dts_2015_unbiased_S1_h, "2015_unbiased_S1");
+        medusa::print::PlotDataset(dts_2015_biased_S1_h, "2015_biased_S1");
+        medusa::print::PlotDataset(dts_2016_unbiased_S1_h, "2016_unbiased_S1");
+        medusa::print::PlotDataset(dts_2016_biased_S1_h, "2016_biased_S1");
 
         // Plot of the 2015 unbiased cubic spline
         TCanvas canvas2_2015_unbiased_S1("canvas2_2015_unbiased_S1","canvas2_2015_unbiased_S1",3200,800);
         canvas2_2015_unbiased_S1.cd();
         Model_2015_unbiased_S1.CreateHistogramPlot("Cubic Spline_2015_unbiased_S1", "Cubic Spline_2015_unbiased_S1", 100, 0, 20) -> Draw();
         canvas2_2015_unbiased_S1.SaveAs("Cubic_Spline_2015_unbiased_S1.pdf");
+
+        // Plot of the 2015 biased cubic spline
+        TCanvas canvas2_2015_biased_S1("canvas2_2015_biased_S1","canvas2_2015_biased_S1",3200,800);
+        canvas2_2015_biased_S1.cd();
+        Model_2015_biased_S1.CreateHistogramPlot("Cubic Spline_2015_biased_S1", "Cubic Spline_2015_biased_S1", 100, 0, 20) -> Draw();
+        canvas2_2015_biased_S1.SaveAs("Cubic_Spline_2015_biased_S1.pdf");
+
+        // Plot of the 2016 unbiased cubic spline
+        TCanvas canvas2_2016_unbiased_S1("canvas2_2016_unbiased_S1","canvas2_2016_unbiased_S1",3200,800);
+        canvas2_2016_unbiased_S1.cd();
+        Model_2016_unbiased_S1.CreateHistogramPlot("Cubic Spline_2016_unbiased_S1", "Cubic Spline_2016_unbiased_S1", 100, 0, 20) -> Draw();
+        canvas2_2016_unbiased_S1.SaveAs("Cubic_Spline_2016_unbiased_S1.pdf");
+
+        // Plot of the 2016 biased cubic spline
+        TCanvas canvas2_2016_biased_S1("canvas2_2016_biased_S1","canvas2_2016_biased_S1",3200,800);
+        canvas2_2016_biased_S1.cd();
+        Model_2016_biased_S1.CreateHistogramPlot("Cubic Spline_2016_biased_S1", "Cubic Spline_2016_biased_S1", 100, 0, 20) -> Draw();
+        canvas2_2016_biased_S1.SaveAs("Cubic_Spline_2016_biased_S1.pdf");
 
     #endif //_ROOT_AVAILABLE_
 
@@ -503,7 +527,7 @@ int main(int argv, char** argc)
     fcn_2015_unbiased_S4.SetFcnMaxValue(2.22507e+12);
     fcn_2015_unbiased_S5.SetFcnMaxValue(2.22507e+12);
     fcn_2015_unbiased_S6.SetFcnMaxValue(2.22507e+12);
-    
+
     auto fcn_2015_biased_S1 = hydra::make_loglikehood_fcn(PDF_2015_biased_S1, dts_2015_biased_S1_d, wgt_2015_biased_S1_d);
     auto fcn_2015_biased_S2 = hydra::make_loglikehood_fcn(PDF_2015_biased_S2, dts_2015_biased_S2_d, wgt_2015_biased_S2_d);
     auto fcn_2015_biased_S3 = hydra::make_loglikehood_fcn(PDF_2015_biased_S3, dts_2015_biased_S3_d, wgt_2015_biased_S3_d);
@@ -516,7 +540,7 @@ int main(int argv, char** argc)
     fcn_2015_biased_S4.SetFcnMaxValue(2.22507e+12);
     fcn_2015_biased_S5.SetFcnMaxValue(2.22507e+12);
     fcn_2015_biased_S6.SetFcnMaxValue(2.22507e+12);
-    
+
     auto fcn_2016_unbiased_S1 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S1, dts_2016_unbiased_S1_d, wgt_2016_unbiased_S1_d);
     auto fcn_2016_unbiased_S2 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S2, dts_2016_unbiased_S2_d, wgt_2016_unbiased_S2_d);
     auto fcn_2016_unbiased_S3 = hydra::make_loglikehood_fcn(PDF_2016_unbiased_S3, dts_2016_unbiased_S3_d, wgt_2016_unbiased_S3_d);
@@ -529,7 +553,7 @@ int main(int argv, char** argc)
     fcn_2016_unbiased_S4.SetFcnMaxValue(2.22507e+12);
     fcn_2016_unbiased_S5.SetFcnMaxValue(2.22507e+12);
     fcn_2016_unbiased_S6.SetFcnMaxValue(2.22507e+12);
-    
+
     auto fcn_2016_biased_S1 = hydra::make_loglikehood_fcn(PDF_2016_biased_S1, dts_2016_biased_S1_d, wgt_2016_biased_S1_d);
     auto fcn_2016_biased_S2 = hydra::make_loglikehood_fcn(PDF_2016_biased_S2, dts_2016_biased_S2_d, wgt_2016_biased_S2_d);
     auto fcn_2016_biased_S3 = hydra::make_loglikehood_fcn(PDF_2016_biased_S3, dts_2016_biased_S3_d, wgt_2016_biased_S3_d);
