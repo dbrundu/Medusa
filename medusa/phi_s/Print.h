@@ -100,7 +100,7 @@ namespace medusa {
             TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
             TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
             TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
-            TH1D phidist("phidist","Phi angle; angle (rad); Candidates / bin", 100, -PI, PI);
+            TH1D phidist("phidist","Phi Angle; phi (rad); Candidates / bin", 100, -PI, PI);
 
             for(auto x : dataset)
             {
