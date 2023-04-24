@@ -607,7 +607,7 @@ int main(int argv, char** argc)
 
 	//time
 	std::cout << "-----------------------------------------"<< std::endl;
-	std::cout << "| Time (ms) = "<< elapsed.count()          << std::endl;
+	std::cout << "| Time (ms) = " << elapsed.count()        << std::endl;
 	std::cout << "-----------------------------------------"<< std::endl;
 
     return 0;
