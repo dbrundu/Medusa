@@ -233,7 +233,7 @@ int main(int argv, char** argc)
                             wgt_2015_unbiased_S4_h, wgt_2015_unbiased_S5_h, wgt_2015_unbiased_S6_h,
                             wgt_2015_biased_S1_h,   wgt_2015_biased_S2_h,   wgt_2015_biased_S3_h,
                             wgt_2015_biased_S4_h,   wgt_2015_biased_S5_h,   wgt_2015_biased_S6_h,
-                                                                        mKKbins, "2015, biased & unbiased, S1-S6");
+                                                                        mKKbins, "2015, biased & unbiased, S1-S6", true);
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2015_unbiased_S1_d(dts_2015_unbiased_S1_h.size());
@@ -357,7 +357,7 @@ int main(int argv, char** argc)
                             wgt_2016_unbiased_S4_h, wgt_2016_unbiased_S5_h, wgt_2016_unbiased_S6_h,
                             wgt_2016_biased_S1_h,   wgt_2016_biased_S2_h,   wgt_2016_biased_S3_h,
                             wgt_2016_biased_S4_h,   wgt_2016_biased_S5_h,   wgt_2016_biased_S6_h,
-                                                                        mKKbins, "2016, biased & unbiased, S1-S6");
+                                                                        mKKbins, "2016, biased & unbiased, S1-S6", true);
 
     hydra::multivector<hydra::tuple<dtime_t, costheta_h_t, costheta_l_t, phi_t,
                                     qOS_t, qSS_t, etaOS_t, etaSS_t, delta_t> , hydra::device::sys_t> dts_2016_unbiased_S1_d(dts_2016_unbiased_S1_h.size());

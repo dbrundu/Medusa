@@ -85,7 +85,7 @@ namespace medusa {
                          Container2& wgt_unbiased_S4, Container2& wgt_unbiased_S5, Container2& wgt_unbiased_S6,
                          Container2& wgt_biased_S1,   Container2& wgt_biased_S2,   Container2& wgt_biased_S3,
                          Container2& wgt_biased_S4,   Container2& wgt_biased_S5,   Container2& wgt_biased_S6,
-                         Container3& mKK_bins, std::string description, bool print = false)
+                         Container3& mKK_bins, std::string description, bool print = true)
     {
         // open the root file
         TFile *infile=new TFile(path);
@@ -377,27 +377,36 @@ namespace medusa {
 
         if(print)
         {
+            // compute the total number of imported events
+            int dts_unbiased = dts_unbiased_S1.size() + dts_unbiased_S2.size() + dts_unbiased_S3.size() +
+                                dts_unbiased_S4.size() + dts_unbiased_S5.size() + dts_unbiased_S6.size();
+            
+            int dts_biased = dts_biased_S1.size() + dts_biased_S2.size() + dts_biased_S3.size() +
+                               dts_biased_S4.size() + dts_biased_S5.size() + dts_biased_S6.size();
+
             // output
             std::cout << std::endl;
             std::cout << std::endl;
-            std::cout << "-----------Import on Device -----------------------"  << std::endl;
-            std::cout << "| B0s -> J/psi Phi -> mu+ mu- K+ K-"                  << std::endl;
-            std::cout << "| Dataset: " << description                           << std::endl;
-            std::cout << "| Unbiased:"                                          << std::endl;
-            std::cout << "| Number of events for S1: "<< dts_unbiased_S1.size() << std::endl;
-            std::cout << "| Number of events for S2: "<< dts_unbiased_S2.size() << std::endl;
-            std::cout << "| Number of events for S3: "<< dts_unbiased_S3.size() << std::endl;
-            std::cout << "| Number of events for S4: "<< dts_unbiased_S4.size() << std::endl;
-            std::cout << "| Number of events for S5: "<< dts_unbiased_S5.size() << std::endl;
-            std::cout << "| Number of events for S6: "<< dts_unbiased_S6.size() << std::endl;
-            std::cout << "| biased:"                                            << std::endl;
-            std::cout << "| Number of events for S1: "<< dts_biased_S1.size()   << std::endl;
-            std::cout << "| Number of events for S2: "<< dts_biased_S2.size()   << std::endl;
-            std::cout << "| Number of events for S3: "<< dts_biased_S3.size()   << std::endl;
-            std::cout << "| Number of events for S4: "<< dts_biased_S4.size()   << std::endl;
-            std::cout << "| Number of events for S5: "<< dts_biased_S5.size()   << std::endl;
-            std::cout << "| Number of events for S6: "<< dts_biased_S6.size()   << std::endl;
-            std::cout << "---------------------------------------------------"  << std::endl;
+            std::cout << "-----------Import on Device -----------------------"   << std::endl;
+            std::cout << "| B0s -> J/psi Phi -> mu+ mu- K+ K-"                   << std::endl;
+            std::cout << "| Dataset: " << description                            << std::endl;
+            std::cout << "| Unbiased:"                                           << std::endl;
+            std::cout << "| Number of events for S1: " << dts_unbiased_S1.size() << std::endl;
+            std::cout << "| Number of events for S2: " << dts_unbiased_S2.size() << std::endl;
+            std::cout << "| Number of events for S3: " << dts_unbiased_S3.size() << std::endl;
+            std::cout << "| Number of events for S4: " << dts_unbiased_S4.size() << std::endl;
+            std::cout << "| Number of events for S5: " << dts_unbiased_S5.size() << std::endl;
+            std::cout << "| Number of events for S6: " << dts_unbiased_S6.size() << std::endl;
+            std::cout << "| Total number of unbiased events: " << dts_unbiased   << std::endl;
+            std::cout << "| Biased:"                                             << std::endl;
+            std::cout << "| Number of events for S1: " << dts_biased_S1.size()   << std::endl;
+            std::cout << "| Number of events for S2: " << dts_biased_S2.size()   << std::endl;
+            std::cout << "| Number of events for S3: " << dts_biased_S3.size()   << std::endl;
+            std::cout << "| Number of events for S4: " << dts_biased_S4.size()   << std::endl;
+            std::cout << "| Number of events for S5: " << dts_biased_S5.size()   << std::endl;
+            std::cout << "| Number of events for S6: " << dts_biased_S6.size()   << std::endl;
+            std::cout << "| Total number of biased events: " << dts_biased       << std::endl;
+            std::cout << "---------------------------------------------------"   << std::endl;
         }
     } // ImportDataset()
 } // namespace medusa
