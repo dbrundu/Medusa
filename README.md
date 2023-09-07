@@ -10,6 +10,7 @@ Medusa also uses [Catch2](https://github.com/catchorg/Catch2/tree/v2.x) to perfo
 
 ## Installation, Build and Run the first tests
 1- Install all dependences, as ROOT and CMAKE.
+
 2- Clone [HYDRA v.3](https://github.com/MultithreadCorner/Hydra):
 ```bash
 mkdir <MedusaDevDir>
