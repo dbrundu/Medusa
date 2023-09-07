@@ -97,10 +97,10 @@ namespace medusa {
         void PlotDataset(Container& dataset, std::string description)
         {
             // Create the histograms
-            TH1D timedist("timedist","Decay Time; time (ps); Candidates / bin", 100, 0, 15);
-            TH1D thetahdist("thetahdist","CosTheta_h; CosTheta_h; Candidates / bin", 100, -1, 1);
-            TH1D thetaldist("thetaldist","CosTheta_l; CosTheta_l; Candidates / bin", 100, -1, 1);
-            TH1D phidist("phidist","Phi Angle; phi (rad); Candidates / bin", 100, -PI, PI);
+            TH1D timedist("timedist","; Bs0 decay time (ps); Candidates / bin", 100, 0, 15);
+            TH1D thetahdist("thetahdist","; cos(theta_h); Candidates / bin", 100, -1, 1);
+            TH1D thetaldist("thetaldist","; cos(theta_L); Candidates / bin", 100, -1, 1);
+            TH1D phidist("phidist","; phi (rad); Candidates / bin", 100, -PI, PI);
 
             for(auto x : dataset)
             {
@@ -115,15 +115,19 @@ namespace medusa {
 
             canvas1.cd(1);
             gPad->SetLogy(1);
+            timedist.SetStats(0);
             timedist.Draw();
 
             canvas1.cd(2);
+            thetahdist.SetStats(0);
             thetahdist.Draw();
 
             canvas1.cd(3);
+            thetaldist.SetStats(0);
             thetaldist.Draw();
 
             canvas1.cd(4);
+            phidist.SetStats(0);
             phidist.Draw();
 
             std::string FileName = "Dataset_B0s_" + description + ".pdf";

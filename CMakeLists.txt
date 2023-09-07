@@ -10,7 +10,7 @@ if(NOT UNIX)
 endif()
 
 # cmake path dir
-set(CMAKE_PREFIX_PATH "/home/aricci/Hydra")    # paths on cms server
+#set(CMAKE_PREFIX_PATH "/home/aricci/Hydra")
 set(MEDUSA_CMAKE_DIR "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_MODULE_PATH "${MEDUSA_CMAKE_DIR}" ${CMAKE_MODULE_PATH})
 set(CMAKE_VERBOSE_MAKEFILE  ON)
