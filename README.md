@@ -55,7 +55,7 @@ cmake ../
 make
 ```
 
-7- Run the executables with the command
+7- Run the executables, for example
 ```bash
 ./fit_sim_phis_full_model_tbb
 ```
