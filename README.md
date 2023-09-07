@@ -38,7 +38,7 @@ cd build
 cmake -DHYDRA_INCLUDE_DIR=$HYDRA_INCLUDE_DIR ../
 ```
 
-5.1- Alteratively, open with an editor the file /Medusa/CMakeList.txt and under the line "# cmake path dir" insert the command
+5.1- Alteratively, open with an editor the file /Medusa/CMakeLists.txt and under the line "# cmake path dir" insert the command
 ```bash
 set(CMAKE_PREFIX_PATH "<path-to-hydra>")
 ```
